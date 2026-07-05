@@ -10,6 +10,7 @@ import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
 import { getCurrentUser } from '/js/session.js';
 import { renderNav, DASHBOARD_PATHS, ROLE_BADGE_CLASS } from '/js/nav.js';
+import { hydrateIcons } from '/js/icons.js';
 
 const ROLE_LABELS = {
   client: 'Customer',
@@ -19,6 +20,10 @@ const ROLE_LABELS = {
 };
 
 async function init() {
+  // Fill static [data-icon] placeholders immediately — no need to wait
+  // for the session lookup.
+  hydrateIcons();
+
   let user;
   try {
     user = await getCurrentUser();

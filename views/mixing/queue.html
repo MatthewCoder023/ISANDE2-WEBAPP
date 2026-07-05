@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mixing Queue — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/" class="brand" data-brand-link>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Paint Production</h1>
+        <span class="badge" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <nav class="page-tabs" aria-label="Production sections">
+          <a href="/mixing" class="is-active">Mixing Queue</a>
+          <a href="/mixing/formulas">Color Formulas</a>
+          <a href="/mixing/log">Production Log</a>
+        </nav>
+
+        <section class="card">
+          <div class="toolbar">
+            <input type="search" id="search-input" class="form-input toolbar-search"
+                   placeholder="Search request # or customer…" aria-label="Search mix requests" />
+            <select id="status-filter" class="form-input form-select" aria-label="Filter by status">
+              <option value="active">Active (queued + mixing)</option>
+              <option value="queued">Queued</option>
+              <option value="mixing">Mixing</option>
+              <option value="">All statuses</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="card card--flush">
+          <div class="table-wrap">
+            <table class="table" aria-label="Mix requests">
+              <thead>
+                <tr>
+                  <th>Request #</th>
+                  <th>Color</th>
+                  <th>Customer</th>
+                  <th>Base / Qty</th>
+                  <th>Requested</th>
+                  <th>Status</th>
+                  <th><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="queue-tbody"></tbody>
+            </table>
+          </div>
+          <div id="empty-state" class="empty-state" hidden>
+            <div class="empty-state-icon" data-icon="flask-conical" data-icon-size="34"></div>
+            <p>The bench is clear — no mix requests match this filter.</p>
+          </div>
+          <div id="pagination" class="pagination"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Request detail modal -->
+  <div class="modal-backdrop" id="detail-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="detail-modal-title">Mix Request</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body" id="detail-body"></div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Close</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Complete mix modal -->
+  <div class="modal-backdrop" id="complete-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="complete-modal-title">Complete Mix</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <div class="color-readout" style="margin: 0 0 1.25rem; display: flex; align-items: center; gap: 1rem;">
+          <div id="complete-color-swatch" style="width: 48px; height: 48px; border-radius: var(--radius-md); border: 1px solid var(--border); flex-shrink: 0;"></div>
+          <div>
+            <strong id="complete-request-number"></strong>
+            <p class="text-muted" style="font-size: 0.875rem;" id="complete-color-hex"></p>
+          </div>
+        </div>
+
+        <form id="complete-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="c-formula">Formula used</label>
+            <select class="form-input form-select" id="c-formula" name="formulaId">
+              <option value="">No formula recorded</option>
+              <option value="__new__">Record a new formula…</option>
+            </select>
+            <p class="form-error" data-error-for="formulaId"></p>
+          </div>
+
+          <fieldset id="new-formula-fields" hidden style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.125rem;">
+            <legend style="font-size: 0.8125rem; font-weight: 700; padding: 0 0.375rem;">New formula</legend>
+            <div class="form-group">
+              <label class="form-label" for="nf-name">Formula name</label>
+              <input class="form-input" type="text" id="nf-name" maxlength="80"
+                     placeholder="e.g. Living Room Sage (4L base)" />
+              <p class="form-error" data-error-for="newFormula.name"></p>
+            </div>
+            <label class="form-label">Components</label>
+            <div id="nf-components"></div>
+            <button type="button" class="btn btn-outline btn-sm" id="nf-add-component">
+              <span data-icon="plus" data-icon-size="14"></span> Add component
+            </button>
+          </fieldset>
+
+          <div class="form-group">
+            <label class="form-label" for="c-notes">Mixer notes <span class="text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="c-notes" name="mixerNotes" maxlength="300"
+                   placeholder="e.g. Matched against customer swatch under daylight" />
+            <p class="form-error" data-error-for="mixerNotes"></p>
+          </div>
+        </form>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" form="complete-form" class="btn btn-primary" id="complete-submit-btn">Mark Completed</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Cancel confirmation -->
+  <div class="modal-backdrop" id="confirm-modal" hidden>
+    <div class="modal modal--sm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="confirm-modal-title">Cancel mix request?</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Keep Request</button>
+        <button type="button" class="btn btn-danger" id="confirm-btn">Cancel Request</button>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/mixing-queue.js"></script>
+</body>
+</html>

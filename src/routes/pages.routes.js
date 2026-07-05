@@ -18,7 +18,14 @@ const sendView = (relativePath) => (req, res) => {
 router.get('/client', requirePageAuth(ROLES.CLIENT), sendView('client/dashboard.html'));
 router.get('/client/products', requirePageAuth(ROLES.CLIENT), sendView('client/products.html'));
 router.get('/client/orders', requirePageAuth(ROLES.CLIENT), sendView('client/orders.html'));
+router.get('/client/colors', requirePageAuth(ROLES.CLIENT), sendView('client/colors.html'));
 router.get('/mixer', requirePageAuth(ROLES.PAINT_MIXER), sendView('mixer/dashboard.html'));
+
+// Production pages are shared by paint mixer and admin; tabs within the
+// pages switch between queue, formulas, and the production log.
+router.get('/mixing', requirePageAuth(ROLES.PAINT_MIXER, ROLES.ADMIN), sendView('mixing/queue.html'));
+router.get('/mixing/formulas', requirePageAuth(ROLES.PAINT_MIXER, ROLES.ADMIN), sendView('mixing/formulas.html'));
+router.get('/mixing/log', requirePageAuth(ROLES.PAINT_MIXER, ROLES.ADMIN), sendView('mixing/log.html'));
 router.get('/cashier', requirePageAuth(ROLES.CASHIER), sendView('cashier/dashboard.html'));
 router.get('/admin', requirePageAuth(ROLES.ADMIN), sendView('admin/dashboard.html'));
 router.get('/admin/products', requirePageAuth(ROLES.ADMIN), sendView('admin/products.html'));

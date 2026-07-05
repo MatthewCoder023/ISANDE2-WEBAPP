@@ -10,6 +10,7 @@ import { showToast } from '/js/toast.js';
 import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
 import { initModal } from '/js/modal.js';
 import { formatPrice, formatDate, escapeHtml, debounce } from '/js/format.js';
+import { icon } from '/js/icons.js';
 import { renderPagination } from '/js/pagination.js';
 
 const CATEGORY_LABELS = {
@@ -88,7 +89,7 @@ function swatchHtml(product) {
   if (product.color?.hex) {
     return `<span class="swatch" style="background-color: ${escapeHtml(product.color.hex)}"></span>`;
   }
-  return '<span class="swatch">🛠️</span>';
+  return `<span class="swatch">${icon('brush', 18)}</span>`;
 }
 
 function renderTable(products) {

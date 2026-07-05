@@ -11,6 +11,7 @@ import { initModal } from '/js/modal.js';
 import { setBusy } from '/js/form-utils.js';
 import { getCurrentUser } from '/js/session.js';
 import { getCart, addItem, setQuantity, clearCart, cartCount, cartTotal } from '/js/cart.js';
+import { icon } from '/js/icons.js';
 
 const CATEGORY_LABELS = {
   interior: 'Interior Paint',
@@ -75,7 +76,7 @@ function renderGrid(products) {
     .map((p) => {
       const swatch = p.color?.hex
         ? `<div class="product-swatch" style="background-color: ${escapeHtml(p.color.hex)}"></div>`
-        : '<div class="product-swatch">🛠️</div>';
+        : `<div class="product-swatch">${icon('brush', 32)}</div>`;
       const meta = [p.color?.name, p.finish, p.size].filter(Boolean).map(escapeHtml).join(' · ');
       const outOfStock = p.availability === 'out_of_stock';
 
@@ -95,7 +96,7 @@ function renderGrid(products) {
             <button class="btn ${outOfStock ? 'btn-outline' : 'btn-primary'} btn-sm"
                     data-add-to-cart="${p.id}" ${outOfStock ? 'disabled' : ''}
                     style="margin-top: 0.625rem;">
-              ${outOfStock ? 'Out of Stock' : '🛒 Add to Cart'}
+              ${outOfStock ? 'Out of Stock' : `${icon('shopping-cart', 15)} Add to Cart`}
             </button>
           </div>
         </article>`;
@@ -159,7 +160,7 @@ function renderCart() {
     .map(
       (item) => `
       <div class="cart-line" data-product-id="${item.id}">
-        <span class="swatch" ${item.hex ? `style="background-color: ${escapeHtml(item.hex)}"` : ''}>${item.hex ? '' : '🛠️'}</span>
+        <span class="swatch" ${item.hex ? `style="background-color: ${escapeHtml(item.hex)}"` : ''}>${item.hex ? '' : icon('brush', 16)}</span>
         <div class="cart-line-info">
           <div class="cart-line-name">${escapeHtml(item.name)}</div>
           <div class="cart-line-price">${formatPrice(item.price)}${item.size ? ` · ${escapeHtml(item.size)}` : ''}</div>
@@ -170,7 +171,7 @@ function renderCart() {
           <button type="button" data-qty-change="1" aria-label="Increase quantity">+</button>
         </span>
         <span class="cart-line-total">${formatPrice(item.price * item.quantity)}</span>
-        <button type="button" class="cart-line-remove" data-remove aria-label="Remove item">✕</button>
+        <button type="button" class="cart-line-remove" data-remove aria-label="Remove item">×</button>
       </div>`
     )
     .join('');

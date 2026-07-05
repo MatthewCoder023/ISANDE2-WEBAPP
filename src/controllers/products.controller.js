@@ -3,6 +3,7 @@ const StockMovement = require('../models/StockMovement');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
+const { HEX_COLOR_REGEX, hexToLab, deltaE } = require('../utils/color');
 const { ROLES } = require('../constants/roles');
 const { CATEGORY_VALUES, MOVEMENT_TYPES } = require('../constants/products');
 
@@ -101,6 +102,37 @@ const stats = asyncHandler(async (req, res) => {
       },
     },
   });
+});
+
+/**
+ * GET /api/products/match?hex=A1B2C3&limit=4
+ * Ranks active, colored catalog paints by perceptual closeness (CIELAB ΔE)
+ * to the requested color. Powers the Color Studio suggestions.
+ */
+const matchByColor = asyncHandler(async (req, res) => {
+  const hex = String(req.query.hex || '');
+  if (!HEX_COLOR_REGEX.test(hex)) {
+    throw new ApiError(422, 'Provide a color as a 6-digit hex value, e.g. ?hex=A1B2C3.');
+  }
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 4, 1), 8);
+
+  const targetLab = hexToLab(hex);
+  const products = await Product.find({ isActive: true, 'color.hex': { $ne: '' } });
+
+  const matches = products
+    .map((product) => {
+      const distance = deltaE(targetLab, hexToLab(product.color.hex));
+      return {
+        product: shapeForRole(product, req.user.role),
+        deltaE: Math.round(distance * 10) / 10,
+        // 0 ΔE = identical; anything beyond ~60 is effectively unrelated.
+        matchPercent: Math.max(0, Math.round(100 - distance)),
+      };
+    })
+    .sort((a, b) => a.deltaE - b.deltaE)
+    .slice(0, limit);
+
+  res.json({ success: true, data: { matches } });
 });
 
 /** GET /api/products/:id */
@@ -204,4 +236,4 @@ const archive = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { list, stats, getById, create, update, archive };
+module.exports = { list, stats, matchByColor, getById, create, update, archive };

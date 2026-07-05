@@ -25,17 +25,13 @@
   font-size: 1.0625rem;
 }
 
-.dash-sidebar .brand-mark {
-  width: 32px;
-  height: 32px;
+.brand-logo {
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--primary-500), var(--accent-400));
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 800;
+  background-color: #fff;
+  object-fit: contain;
+  padding: 2px;
   flex-shrink: 0;
 }
 
@@ -55,6 +51,10 @@
   color: #9ca3af;
   font-size: 0.9075rem;
   font-weight: 500;
+}
+
+.dash-nav a svg {
+  flex-shrink: 0;
 }
 
 .dash-nav a:hover {
@@ -200,10 +200,72 @@
   flex-shrink: 0;
 }
 
-.stat-icon-primary { background-color: var(--primary-50); }
-.stat-icon-success { background-color: var(--success-50); }
-.stat-icon-warning { background-color: var(--warning-50); }
-.stat-icon-info    { background-color: var(--info-50); }
+.stat-icon-primary { background-color: var(--primary-50); color: var(--primary-600); }
+.stat-icon-success { background-color: var(--success-50); color: var(--success-500); }
+.stat-icon-warning { background-color: var(--warning-50); color: var(--warning-500); }
+.stat-icon-info    { background-color: var(--info-50); color: var(--info-500); }
+
+/* Tab strip for page groups (e.g. mixing queue / formulas / log) */
+.page-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.page-tabs a {
+  padding: 0.5rem 0.875rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+}
+
+.page-tabs a:hover {
+  color: var(--primary-600);
+  border-color: var(--primary-500);
+  text-decoration: none;
+}
+
+.page-tabs a.is-active {
+  background-color: var(--primary-600);
+  border-color: var(--primary-600);
+  color: #fff;
+}
+
+/* Promo banner card with a photo (e.g. client dashboard) */
+.banner-card {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1.5rem;
+  align-items: center;
+  overflow: hidden;
+  padding: 0;
+}
+
+.banner-card-body {
+  padding: 1.5rem;
+}
+
+.banner-card-photo {
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+@media (max-width: 720px) {
+  .banner-card {
+    grid-template-columns: 1fr;
+  }
+
+  .banner-card-photo {
+    order: -1;
+    max-height: 160px;
+  }
+}
 
 .stat-value {
   font-size: 1.5rem;

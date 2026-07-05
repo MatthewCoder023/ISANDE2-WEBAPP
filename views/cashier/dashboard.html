@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sales Desk — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
   <link rel="stylesheet" href="/css/base.css" />
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/dashboard.css" />
@@ -12,7 +13,7 @@
   <div class="dash-layout">
     <aside class="dash-sidebar">
       <a href="/cashier" class="brand" data-brand-link>
-        <span class="brand-mark">FC</span>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
         <span>Flavor &amp; Color</span>
       </a>
 
@@ -38,34 +39,34 @@
 
       <main class="dash-content">
         <section class="dash-welcome">
-          <h2>Hello, <span data-user-first-name></span>! 💼</h2>
+          <h2>Hello, <span data-user-first-name></span>!</h2>
           <p>Today's sales and order activity at a glance.</p>
         </section>
 
         <section class="stat-grid" aria-label="Sales overview">
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-success" aria-hidden="true">💰</span>
+            <span class="stat-icon stat-icon-success" aria-hidden="true" data-icon="peso" data-icon-size="22"></span>
             <div>
               <div class="stat-value" data-stat="salesToday">—</div>
               <div class="stat-label">Sales Today</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-primary" aria-hidden="true">📦</span>
+            <span class="stat-icon stat-icon-primary" aria-hidden="true" data-icon="package" data-icon-size="22"></span>
             <div>
               <div class="stat-value" data-stat="pendingOrders">—</div>
               <div class="stat-label">Pending Orders</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-info" aria-hidden="true">🛍️</span>
+            <span class="stat-icon stat-icon-info" aria-hidden="true" data-icon="shopping-bag" data-icon-size="22"></span>
             <div>
               <div class="stat-value" data-stat="readyOrders">—</div>
               <div class="stat-label">Ready for Pickup</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-warning" aria-hidden="true">💳</span>
+            <span class="stat-icon stat-icon-warning" aria-hidden="true" data-icon="credit-card" data-icon-size="22"></span>
             <div>
               <div class="stat-value" data-stat="transactionsToday">—</div>
               <div class="stat-label">Transactions Today</div>
@@ -79,9 +80,9 @@
             Ring up a walk-in sale, process online orders, or review payments.
           </p>
           <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <a href="/pos" class="btn btn-primary">🛒 New Sale</a>
-            <a href="/orders" class="btn btn-outline">📦 Process Orders</a>
-            <a href="/transactions" class="btn btn-outline">💳 Transactions</a>
+            <a href="/pos" class="btn btn-primary"><span data-icon="shopping-cart"></span> New Sale</a>
+            <a href="/orders" class="btn btn-outline"><span data-icon="package"></span> Process Orders</a>
+            <a href="/transactions" class="btn btn-outline"><span data-icon="credit-card"></span> Transactions</a>
           </div>
         </section>
       </main>

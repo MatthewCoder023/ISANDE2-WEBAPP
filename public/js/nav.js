@@ -3,6 +3,8 @@
  * dashboard.js. Server-side page guards remain the real access control —
  * this only decides what links a user sees.
  */
+import { icon } from '/js/icons.js';
+
 export const DASHBOARD_PATHS = {
   client: '/client',
   paint_mixer: '/mixer',
@@ -19,33 +21,35 @@ export const ROLE_BADGE_CLASS = {
 
 const NAV_CONFIG = {
   client: [
-    { href: '/client', icon: '🏠', label: 'Dashboard' },
-    { href: '/client/products', icon: '🎨', label: 'Browse Products' },
-    { href: '/client/orders', icon: '📦', label: 'My Orders' },
-    { icon: '👤', label: 'My Profile', soon: true },
+    { href: '/client', icon: 'home', label: 'Dashboard' },
+    { href: '/client/products', icon: 'palette', label: 'Browse Products' },
+    { href: '/client/colors', icon: 'droplets', label: 'Color Studio' },
+    { href: '/client/orders', icon: 'package', label: 'My Orders' },
+    { icon: 'user', label: 'My Profile', soon: true },
   ],
   paint_mixer: [
-    { href: '/mixer', icon: '🏠', label: 'Dashboard' },
-    { icon: '🧪', label: 'Mixing Queue', soon: true },
-    { icon: '🎨', label: 'Color Formulas', soon: true },
-    { icon: '📋', label: 'Production Log', soon: true },
+    { href: '/mixer', icon: 'home', label: 'Dashboard' },
+    { href: '/mixing', icon: 'flask-conical', label: 'Mixing Queue' },
+    { href: '/mixing/formulas', icon: 'droplets', label: 'Color Formulas' },
+    { href: '/mixing/log', icon: 'clipboard-list', label: 'Production Log' },
   ],
   cashier: [
-    { href: '/cashier', icon: '🏠', label: 'Dashboard' },
-    { href: '/pos', icon: '🛒', label: 'Point of Sale' },
-    { href: '/orders', icon: '📦', label: 'Orders' },
-    { href: '/transactions', icon: '💳', label: 'Transactions' },
-    { icon: '👥', label: 'Customers', soon: true },
+    { href: '/cashier', icon: 'home', label: 'Dashboard' },
+    { href: '/pos', icon: 'shopping-cart', label: 'Point of Sale' },
+    { href: '/orders', icon: 'package', label: 'Orders' },
+    { href: '/transactions', icon: 'credit-card', label: 'Transactions' },
+    { icon: 'users', label: 'Customers', soon: true },
   ],
   admin: [
-    { href: '/admin', icon: '🏠', label: 'Dashboard' },
-    { href: '/admin/products', icon: '🎨', label: 'Products & Inventory' },
-    { href: '/pos', icon: '🛒', label: 'Point of Sale' },
-    { href: '/orders', icon: '📦', label: 'Orders' },
-    { href: '/transactions', icon: '💳', label: 'Transactions' },
-    { icon: '👥', label: 'Users & Roles', soon: true },
-    { icon: '📊', label: 'Reports', soon: true },
-    { icon: '⚙️', label: 'Settings', soon: true },
+    { href: '/admin', icon: 'home', label: 'Dashboard' },
+    { href: '/admin/products', icon: 'palette', label: 'Products & Inventory' },
+    { href: '/pos', icon: 'shopping-cart', label: 'Point of Sale' },
+    { href: '/orders', icon: 'package', label: 'Orders' },
+    { href: '/transactions', icon: 'credit-card', label: 'Transactions' },
+    { href: '/mixing', icon: 'flask-conical', label: 'Paint Mixing' },
+    { icon: 'users', label: 'Users & Roles', soon: true },
+    { icon: 'bar-chart', label: 'Reports', soon: true },
+    { icon: 'settings', label: 'Settings', soon: true },
   ],
 };
 
@@ -56,10 +60,10 @@ export function renderNav(container, role) {
   container.innerHTML = items
     .map((item) => {
       if (item.soon) {
-        return `<a href="#" aria-disabled="true">${item.icon} ${item.label} <span class="nav-soon">Soon</span></a>`;
+        return `<a href="#" aria-disabled="true">${icon(item.icon)} ${item.label} <span class="nav-soon">Soon</span></a>`;
       }
       const active = item.href === currentPath ? ' class="is-active"' : '';
-      return `<a href="${item.href}"${active}>${item.icon} ${item.label}</a>`;
+      return `<a href="${item.href}"${active}>${icon(item.icon)} ${item.label}</a>`;
     })
     .join('');
 }

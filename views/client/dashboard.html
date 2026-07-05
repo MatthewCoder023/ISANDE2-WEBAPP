@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Dashboard — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
   <link rel="stylesheet" href="/css/base.css" />
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/dashboard.css" />
@@ -12,7 +13,7 @@
   <div class="dash-layout">
     <aside class="dash-sidebar">
       <a href="/client" class="brand" data-brand-link>
-        <span class="brand-mark">FC</span>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
         <span>Flavor &amp; Color</span>
       </a>
 
@@ -38,41 +39,47 @@
 
       <main class="dash-content">
         <section class="dash-welcome">
-          <h2>Welcome back, <span data-user-first-name></span>! 👋</h2>
+          <h2>Welcome back, <span data-user-first-name></span>!</h2>
           <p>Here's an overview of your account with Flavor &amp; Color.</p>
         </section>
 
         <section class="stat-grid" aria-label="Account overview">
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-primary" aria-hidden="true">📦</span>
+            <span class="stat-icon stat-icon-primary" aria-hidden="true" data-icon="package" data-icon-size="22"></span>
             <div>
               <div class="stat-value" data-stat="activeOrders">—</div>
               <div class="stat-label">Active Orders</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-success" aria-hidden="true">✅</span>
+            <span class="stat-icon stat-icon-success" aria-hidden="true" data-icon="check-circle" data-icon-size="22"></span>
             <div>
               <div class="stat-value" data-stat="completedOrders">—</div>
               <div class="stat-label">Completed Orders</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-warning" aria-hidden="true">🎨</span>
+            <span class="stat-icon stat-icon-warning" aria-hidden="true" data-icon="droplets" data-icon-size="22"></span>
             <div>
-              <div class="stat-value">—</div>
-              <div class="stat-label">Custom Mixes</div>
+              <div class="stat-value" data-stat="activeMixes">—</div>
+              <div class="stat-label">Active Custom Mixes</div>
             </div>
           </div>
         </section>
 
-        <section class="card">
-          <h3 class="card-title">Shop with us</h3>
-          <p class="card-subtitle">
-            Browse the catalog, add paints to your cart, and place an order —
-            pay when you pick it up in store. Track everything under
-            <a href="/client/orders">My Orders</a>.
-          </p>
+        <section class="card banner-card">
+          <div class="banner-card-body">
+            <h3 class="card-title">Custom mixes, made by hand</h3>
+            <p class="card-subtitle" style="margin-bottom: 1.25rem;">
+              Browse the catalog, add paints to your cart, and place an order —
+              pay when you pick it up in store. Need a custom shade? Our master
+              mixers match any swatch by hand. Track everything under
+              <a href="/client/orders">My Orders</a>.
+            </p>
+            <a href="/client/products" class="btn btn-primary"><span data-icon="palette"></span> Browse Products</a>
+          </div>
+          <img src="/images/mixer.jpg" alt="A Flavor &amp; Color master mixer blending paint by hand"
+               class="banner-card-photo" />
         </section>
       </main>
     </div>

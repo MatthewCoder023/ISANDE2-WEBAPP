@@ -35,17 +35,21 @@
   text-align: center;
 }
 
-.auth-brand .brand-mark {
-  width: 44px;
-  height: 44px;
+.auth-logo {
+  width: 60px;
+  height: 60px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--primary-500), var(--accent-400));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 1.25rem;
-  font-weight: 800;
+  object-fit: contain;
+  background-color: #fff;
+  border: 1px solid var(--border);
+  padding: 4px;
+}
+
+/* Photo backdrop variant (employee portal) */
+.auth-page--photo {
+  background:
+    linear-gradient(rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.82)),
+    url('/images/storefront.jpg') center / cover no-repeat;
 }
 
 .auth-title {

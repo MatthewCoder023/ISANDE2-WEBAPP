@@ -120,6 +120,27 @@ change, cashier) and stamps `paidAt`/`completedAt`.
 **Order lifecycle**: `pending → ready → completed`, `cancelled` allowed
 before completion. Walk-in POS sales are created directly as completed.
 
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | /api/products/match?hex= | Authenticated | Closest catalog paints to a color, ranked by CIELAB ΔE with match % |
+| POST | /api/mixing/requests | Authenticated | Request a custom mix (target color, optional base paint, quantity) |
+| GET | /api/mixing/requests | Authenticated | Clients see own; mixer/cashier/admin see all (`status` accepts a value, `active`, or `history`) |
+| GET | /api/mixing/stats | Authenticated | Role-shaped: client mix counts vs. bench/queue totals |
+| GET | /api/mixing/requests/:id | Authenticated | Detail incl. formula; clients limited to own |
+| POST | /api/mixing/requests/:id/start | Mixer/Admin | queued → mixing |
+| POST | /api/mixing/requests/:id/complete | Mixer/Admin | Complete, reusing a formula or recording a new one |
+| POST | /api/mixing/requests/:id/cancel | Owner or Mixer/Admin | Clients: queued only; staff: queued or mixing |
+| GET/POST/PATCH/DELETE | /api/formulas | Mixer/Admin | Formula library CRUD (soft delete) |
+
+**Color science**: photo palette extraction runs entirely in the browser
+(median-cut quantization over canvas pixels in `public/js/color-utils.js` —
+images never leave the device). Paint matching converts colors to CIELAB
+and ranks by ΔE*76 (`src/utils/color.js`), which reflects perceived color
+difference far better than RGB distance.
+
+**Mix lifecycle**: `queued → mixing → completed`, `cancelled` allowed
+before completion. Completed/cancelled requests form the production log.
+
 ### Pages
 
 | Path | Access |
@@ -128,7 +149,9 @@ before completion. Walk-in POS sales are created directly as completed.
 | `/client` | Client only |
 | `/client/products` | Client only — browse the catalog, cart, place orders |
 | `/client/orders` | Client only — order history, details, cancel pending |
+| `/client/colors` | Client only — Color Studio: color wheel, photo palettes, paint matching, custom mix requests |
 | `/mixer` | Paint Mixer only |
+| `/mixing`, `/mixing/formulas`, `/mixing/log` | Paint Mixer + Admin — queue, formula library, production history |
 | `/cashier` | Cashier only |
 | `/admin` | Admin only |
 | `/admin/products` | Admin only — product & inventory management |
@@ -150,8 +173,9 @@ server-side.
       stock tracking with audit trail, low-stock alerts, customer browsing
 - [x] **Phase 3 — Orders & Sales**: customer cart & ordering, cashier POS,
       order lifecycle, transactions & payment records
-- [ ] **Phase 4 — Paint Production**: mixing queue, color formulas,
-      production log for the Paint Mixer role
+- [x] **Phase 4 — Paint Production & Color Tools**: mixing queue, color
+      formulas, production log; Color Studio with interactive color wheel,
+      photo color extraction, and perceptual paint matching
 - [ ] **Phase 5 — Administration**: user/employee management, reports,
       system configuration
 # ISANDE2-WEBAPP

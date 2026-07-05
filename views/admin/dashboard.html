@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Console — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
   <link rel="stylesheet" href="/css/base.css" />
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/dashboard.css" />
@@ -12,7 +13,7 @@
   <div class="dash-layout">
     <aside class="dash-sidebar">
       <a href="/admin" class="brand" data-brand-link>
-        <span class="brand-mark">FC</span>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
         <span>Flavor &amp; Color</span>
       </a>
 
@@ -38,34 +39,34 @@
 
       <main class="dash-content">
         <section class="dash-welcome">
-          <h2>Welcome, <span data-user-first-name></span>! 🛡️</h2>
+          <h2>Welcome, <span data-user-first-name></span>!</h2>
           <p>Full overview of Flavor &amp; Color operations.</p>
         </section>
 
         <section class="stat-grid" aria-label="Business overview">
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-success" aria-hidden="true">💰</span>
+            <span class="stat-icon stat-icon-success" aria-hidden="true" data-icon="peso" data-icon-size="22"></span>
             <div>
               <div class="stat-value" data-stat="revenueThisMonth">—</div>
               <div class="stat-label">Revenue This Month</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-primary" aria-hidden="true">📦</span>
+            <span class="stat-icon stat-icon-primary" aria-hidden="true" data-icon="package" data-icon-size="22"></span>
             <div>
               <div class="stat-value" data-stat="totalOrders">—</div>
               <div class="stat-label">Total Orders</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-info" aria-hidden="true">👥</span>
+            <span class="stat-icon stat-icon-info" aria-hidden="true" data-icon="users" data-icon-size="22"></span>
             <div>
               <div class="stat-value">—</div>
               <div class="stat-label">Registered Users</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-warning" aria-hidden="true">🏷️</span>
+            <span class="stat-icon stat-icon-warning" aria-hidden="true" data-icon="tag" data-icon-size="22"></span>
             <div>
               <div class="stat-value" data-stat="stockAlerts">—</div>
               <div class="stat-label">Low / Out of Stock</div>
@@ -76,8 +77,8 @@
         <section class="card">
           <h3 class="card-title">Coming soon</h3>
           <p class="card-subtitle">
-            User management, product and inventory management, reports, and
-            system settings arrive in the administration module.
+            User and employee management, reports, and system settings arrive
+            in the administration module.
           </p>
         </section>
       </main>

@@ -7,6 +7,7 @@ import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, debounce } from '/js/format.js';
 import { setBusy } from '/js/form-utils.js';
+import { icon } from '/js/icons.js';
 
 const saleLines = new Map(); // productId -> { id, name, price, hex, size, quantity, maxQuantity }
 const productsCache = new Map();
@@ -51,7 +52,7 @@ function renderProducts(products) {
       const meta = [p.sku, p.size, p.finish].filter(Boolean).map(escapeHtml).join(' · ');
       return `
         <button type="button" class="pos-product" data-product-id="${p.id}" ${out ? 'disabled' : ''}>
-          <span class="swatch" ${p.color?.hex ? `style="background-color: ${escapeHtml(p.color.hex)}"` : ''}>${p.color?.hex ? '' : '🛠️'}</span>
+          <span class="swatch" ${p.color?.hex ? `style="background-color: ${escapeHtml(p.color.hex)}"` : ''}>${p.color?.hex ? '' : icon('brush', 16)}</span>
           <span class="pos-product-info">
             <span class="pos-product-name">${escapeHtml(p.name)}</span>
             <span class="pos-product-meta">${meta} · ${out ? 'Out of stock' : `${p.stock.quantity} in stock`}</span>
@@ -107,7 +108,7 @@ function renderSale() {
     .map(
       (line) => `
       <div class="cart-line" data-product-id="${line.id}">
-        <span class="swatch" ${line.hex ? `style="background-color: ${escapeHtml(line.hex)}"` : ''}>${line.hex ? '' : '🛠️'}</span>
+        <span class="swatch" ${line.hex ? `style="background-color: ${escapeHtml(line.hex)}"` : ''}>${line.hex ? '' : icon('brush', 16)}</span>
         <div class="cart-line-info">
           <div class="cart-line-name">${escapeHtml(line.name)}</div>
           <div class="cart-line-price">${formatPrice(line.price)}${line.size ? ` · ${escapeHtml(line.size)}` : ''}</div>
@@ -118,7 +119,7 @@ function renderSale() {
           <button type="button" data-qty-change="1" aria-label="Increase quantity">+</button>
         </span>
         <span class="cart-line-total">${formatPrice(line.price * line.quantity)}</span>
-        <button type="button" class="cart-line-remove" data-remove aria-label="Remove item">✕</button>
+        <button type="button" class="cart-line-remove" data-remove aria-label="Remove item">×</button>
       </div>`
     )
     .join('');

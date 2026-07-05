@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Transactions — Flavor &amp; Color</title>
+  <title>Production Log — Flavor &amp; Color</title>
   <link rel="icon" type="image/png" href="/images/favicon.png" />
   <link rel="stylesheet" href="/css/base.css" />
   <link rel="stylesheet" href="/css/components.css" />
@@ -33,44 +33,44 @@
 
     <div class="dash-main">
       <header class="dash-topbar">
-        <h1>Transactions</h1>
+        <h1>Paint Production</h1>
         <span class="badge" data-user-role></span>
       </header>
 
       <main class="dash-content">
+        <nav class="page-tabs" aria-label="Production sections">
+          <a href="/mixing">Mixing Queue</a>
+          <a href="/mixing/formulas">Color Formulas</a>
+          <a href="/mixing/log" class="is-active">Production Log</a>
+        </nav>
+
         <section class="card">
           <div class="toolbar">
             <input type="search" id="search-input" class="form-input toolbar-search"
-                   placeholder="Search by order #…" aria-label="Search transactions" />
-            <select id="method-filter" class="form-input form-select" aria-label="Filter by payment method">
-              <option value="">All methods</option>
-              <option value="cash">Cash</option>
-              <option value="gcash">GCash</option>
-              <option value="card">Card</option>
-            </select>
+                   placeholder="Search request # or customer…" aria-label="Search production history" />
           </div>
         </section>
 
         <section class="card card--flush">
           <div class="table-wrap">
-            <table class="table" aria-label="Transactions">
+            <table class="table" aria-label="Production history">
               <thead>
                 <tr>
-                  <th>Date &amp; Time</th>
-                  <th>Order #</th>
-                  <th>Method</th>
-                  <th>Amount</th>
-                  <th>Tendered</th>
-                  <th>Change</th>
-                  <th>Received By</th>
+                  <th>Request #</th>
+                  <th>Color</th>
+                  <th>Customer</th>
+                  <th>Formula Used</th>
+                  <th>Finished</th>
+                  <th>Outcome</th>
+                  <th>Mixer Notes</th>
                 </tr>
               </thead>
-              <tbody id="transactions-tbody"></tbody>
+              <tbody id="log-tbody"></tbody>
             </table>
           </div>
           <div id="empty-state" class="empty-state" hidden>
-            <div class="empty-state-icon" data-icon="credit-card" data-icon-size="34"></div>
-            <p>No transactions yet.</p>
+            <div class="empty-state-icon" data-icon="clipboard-list" data-icon-size="34"></div>
+            <p>No production history yet.</p>
           </div>
           <div id="pagination" class="pagination"></div>
         </section>
@@ -79,6 +79,6 @@
   </div>
 
   <script type="module" src="/js/pages/dashboard.js"></script>
-  <script type="module" src="/js/pages/staff-transactions.js"></script>
+  <script type="module" src="/js/pages/production-log.js"></script>
 </body>
 </html>

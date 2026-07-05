@@ -10,6 +10,8 @@ const mongoose = require('mongoose');
 const connectDB = require('../src/config/db');
 const User = require('../src/models/User');
 const Product = require('../src/models/Product');
+const ColorFormula = require('../src/models/ColorFormula');
+const MixRequest = require('../src/models/MixRequest');
 const { ROLES } = require('../src/constants/roles');
 const { PRODUCT_CATEGORIES: CAT } = require('../src/constants/products');
 
@@ -85,8 +87,89 @@ async function seed() {
     console.log(`create ${data.sku} ${data.name} (qty ${data.stock.quantity})`);
   }
 
+  await seedMixing();
+
   console.log('\nSeeding complete. Change these passwords before any real deployment.');
   await mongoose.disconnect();
+}
+
+/** Sample formulas + a couple of queued requests so the bench has work. */
+async function seedMixing() {
+  const mixer = await User.findOne({ email: 'mixer@flavorandcolor.com' });
+  const client = await User.findOne({ email: 'client@example.com' });
+  if (!mixer || !client) return;
+
+  const SEED_FORMULAS = [
+    {
+      name: 'Sunrise Coral (4L base)',
+      colorHex: '#FF6F61',
+      components: [
+        { name: 'White base', amount: 3.6, unit: 'mL' },
+        { name: 'Red oxide', amount: 220, unit: 'mL' },
+        { name: 'Yellow oxide', amount: 90, unit: 'mL' },
+      ],
+      notes: 'Stir base 2 minutes before tinting. Matches FC-INT-1001.',
+    },
+    {
+      name: 'Deep Ocean (4L base)',
+      colorHex: '#1B4F72',
+      components: [
+        { name: 'White base', amount: 3.4, unit: 'mL' },
+        { name: 'Phthalo blue', amount: 340, unit: 'mL' },
+        { name: 'Lamp black', amount: 60, unit: 'drops' },
+      ],
+      notes: 'Deep navy — check under daylight before sealing the can.',
+    },
+    {
+      name: 'Bamboo Grove (16L base)',
+      colorHex: '#6B8E23',
+      components: [
+        { name: 'White base', amount: 14, unit: 'mL' },
+        { name: 'Chrome green', amount: 900, unit: 'mL' },
+        { name: 'Yellow oxide', amount: 400, unit: 'mL' },
+      ],
+    },
+  ];
+
+  for (const data of SEED_FORMULAS) {
+    const exists = await ColorFormula.findOne({ name: data.name });
+    if (exists) {
+      console.log(`skip   formula "${data.name}" (already exists)`);
+      continue;
+    }
+    await ColorFormula.create({ ...data, createdBy: mixer._id });
+    console.log(`create formula "${data.name}"`);
+  }
+
+  const SEED_REQUESTS = [
+    {
+      requestNumber: 'MIX-SEED-1001',
+      targetColor: { hex: '#7A9E7E', name: 'Sage Whisper' },
+      quantity: 2,
+      notes: 'For a bedroom accent wall — slightly muted is fine.',
+    },
+    {
+      requestNumber: 'MIX-SEED-1002',
+      targetColor: { hex: '#C46A2B', name: 'Toasted Caramel' },
+      quantity: 1,
+      notes: 'Matching a sample swatch from a furniture catalog.',
+    },
+  ];
+
+  for (const data of SEED_REQUESTS) {
+    const exists = await MixRequest.findOne({ requestNumber: data.requestNumber });
+    if (exists) {
+      console.log(`skip   ${data.requestNumber} (already exists)`);
+      continue;
+    }
+    await MixRequest.create({
+      ...data,
+      customer: client._id,
+      customerName: client.fullName,
+      placedBy: client._id,
+    });
+    console.log(`create ${data.requestNumber} "${data.targetColor.name}"`);
+  }
 }
 
 seed().catch((err) => {

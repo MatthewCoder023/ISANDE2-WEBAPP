@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mixing Station — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
   <link rel="stylesheet" href="/css/base.css" />
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/dashboard.css" />
@@ -12,7 +13,7 @@
   <div class="dash-layout">
     <aside class="dash-sidebar">
       <a href="/mixer" class="brand" data-brand-link>
-        <span class="brand-mark">FC</span>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
         <span>Flavor &amp; Color</span>
       </a>
 
@@ -38,45 +39,57 @@
 
       <main class="dash-content">
         <section class="dash-welcome">
-          <h2>Hello, <span data-user-first-name></span>! 🧪</h2>
+          <h2>Hello, <span data-user-first-name></span>!</h2>
           <p>Your paint production workspace at a glance.</p>
         </section>
 
         <section class="stat-grid" aria-label="Production overview">
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-warning" aria-hidden="true">🧪</span>
+            <span class="stat-icon stat-icon-warning" aria-hidden="true" data-icon="flask-conical" data-icon-size="22"></span>
             <div>
-              <div class="stat-value">—</div>
-              <div class="stat-label">Pending Mix Jobs</div>
+              <div class="stat-value" data-stat="queued">—</div>
+              <div class="stat-label">Queued Mixes</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-success" aria-hidden="true">✅</span>
+            <span class="stat-icon stat-icon-info" aria-hidden="true" data-icon="droplets" data-icon-size="22"></span>
             <div>
-              <div class="stat-value">—</div>
+              <div class="stat-value" data-stat="mixing">—</div>
+              <div class="stat-label">On the Bench</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-success" aria-hidden="true" data-icon="check-circle" data-icon-size="22"></span>
+            <div>
+              <div class="stat-value" data-stat="completedToday">—</div>
               <div class="stat-label">Completed Today</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-primary" aria-hidden="true">🎨</span>
+            <span class="stat-icon stat-icon-primary" aria-hidden="true" data-icon="palette" data-icon-size="22"></span>
             <div>
-              <div class="stat-value">—</div>
+              <div class="stat-value" data-stat="formulas">—</div>
               <div class="stat-label">Saved Formulas</div>
             </div>
           </div>
         </section>
 
         <section class="card">
-          <h3 class="card-title">Coming soon</h3>
-          <p class="card-subtitle">
-            The mixing queue, color formula library, and production logging
-            arrive in the paint production module.
+          <h3 class="card-title">Quick actions</h3>
+          <p class="card-subtitle" style="margin-bottom: 1rem;">
+            Work the queue, look up a recipe, or review past mixes.
           </p>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="/mixing" class="btn btn-primary"><span data-icon="flask-conical"></span> Open Queue</a>
+            <a href="/mixing/formulas" class="btn btn-outline"><span data-icon="droplets"></span> Color Formulas</a>
+            <a href="/mixing/log" class="btn btn-outline"><span data-icon="clipboard-list"></span> Production Log</a>
+          </div>
         </section>
       </main>
     </div>
   </div>
 
   <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/mixer-dashboard.js"></script>
 </body>
 </html>

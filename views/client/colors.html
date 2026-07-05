@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Studio — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <link rel="stylesheet" href="/css/color-studio.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/client" class="brand" data-brand-link>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Color Studio</h1>
+        <span class="badge badge-primary" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <div class="studio-grid">
+          <!-- Color wheel -->
+          <section class="card">
+            <h2 class="card-title">Pick a color</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.25rem;">
+              Click or drag on the wheel, then fine-tune the lightness.
+            </p>
+
+            <div class="wheel-wrap">
+              <canvas id="color-wheel" aria-label="Color wheel — click or drag to pick a hue and saturation"></canvas>
+              <div class="wheel-marker" id="wheel-marker"></div>
+            </div>
+            <input type="range" id="lightness-slider" class="lightness-slider"
+                   min="5" max="95" value="50" aria-label="Lightness" />
+
+            <div class="color-readout">
+              <div class="swatch-lg" id="color-swatch"></div>
+              <div class="color-values">
+                <div class="value-row">
+                  <span class="value-label">HEX</span>
+                  <input type="text" id="hex-input" class="form-input hex-input" maxlength="7"
+                         spellcheck="false" aria-label="Hex color value" />
+                </div>
+                <div class="value-row"><span class="value-label">RGB</span> <code id="rgb-value"></code></div>
+                <div class="value-row"><span class="value-label">HSL</span> <code id="hsl-value"></code></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Photo palette -->
+          <section class="card">
+            <h2 class="card-title">Or start from a photo</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.25rem;">
+              Upload a room, wall, or inspiration photo — we'll pull out its main
+              colors. The photo stays on your device.
+            </p>
+
+            <div class="upload-zone" id="upload-zone" role="button" tabindex="0"
+                 aria-label="Upload an image to extract its colors">
+              <span data-icon="image" data-icon-size="30"></span>
+              <p><strong>Click to upload</strong> or drag a photo here</p>
+              <p style="font-size: 0.8125rem;">JPG or PNG, processed locally</p>
+            </div>
+            <input type="file" id="photo-input" accept="image/*" class="visually-hidden" />
+
+            <div class="photo-preview" id="photo-preview">
+              <img id="photo-img" alt="Uploaded inspiration" />
+              <div class="palette-row" id="palette-row" aria-label="Colors detected in your photo"></div>
+              <p class="form-hint">Click a chip to select that color.</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- Matching paints -->
+        <section class="card">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+            <div>
+              <h2 class="card-title">Closest paints on our shelves</h2>
+              <p class="card-subtitle">Ranked by how similar they look to your color.</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="request-mix-btn">
+              <span data-icon="droplets"></span> Request a Custom Mix
+            </button>
+          </div>
+          <div class="match-list" id="match-list"></div>
+        </section>
+
+        <!-- My mix requests -->
+        <section class="card card--flush">
+          <div style="padding: 1.5rem 1.25rem 0.5rem;">
+            <h2 class="card-title">My mix requests</h2>
+          </div>
+          <div class="table-wrap">
+            <table class="table" aria-label="My mix requests">
+              <thead>
+                <tr>
+                  <th>Request #</th>
+                  <th>Color</th>
+                  <th>Base / Qty</th>
+                  <th>Requested</th>
+                  <th>Status</th>
+                  <th><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="mixes-tbody"></tbody>
+            </table>
+          </div>
+          <div id="mixes-empty" class="empty-state" hidden>
+            <div class="empty-state-icon" data-icon="droplets" data-icon-size="34"></div>
+            <p>No mix requests yet. Pick a color and request your first custom mix!</p>
+          </div>
+          <div id="mixes-pagination" class="pagination"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Request custom mix modal -->
+  <div class="modal-backdrop" id="mix-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mix-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="mix-modal-title">Request a Custom Mix</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <div class="color-readout" style="margin: 0 0 1.25rem;">
+          <div class="swatch-lg" id="mix-color-swatch"></div>
+          <div>
+            <strong id="mix-color-hex"></strong>
+            <p class="text-muted" style="font-size: 0.875rem;">
+              Our mixer will match this color by hand.
+            </p>
+          </div>
+        </div>
+
+        <form id="mix-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="mix-color-name">Color name <span class="text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="mix-color-name" name="targetColor.name"
+                   maxlength="50" placeholder="e.g. Living Room Sage" />
+            <p class="form-error" data-error-for="targetColor.name"></p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="mix-base">Base paint <span class="text-muted">(optional)</span></label>
+              <select class="form-input form-select" id="mix-base" name="productId">
+                <option value="">Let the mixer choose</option>
+              </select>
+              <p class="form-error" data-error-for="productId"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="mix-quantity">Cans</label>
+              <input class="form-input" type="number" id="mix-quantity" name="quantity"
+                     min="1" max="99" step="1" value="1" />
+              <p class="form-error" data-error-for="quantity"></p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mix-notes">Notes <span class="text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="mix-notes" name="notes" maxlength="300"
+                   placeholder="e.g. For a bedroom accent wall, slightly warmer is fine" />
+            <p class="form-error" data-error-for="notes"></p>
+          </div>
+        </form>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" form="mix-form" class="btn btn-primary" id="mix-submit-btn">Submit Request</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Cancel mix confirmation -->
+  <div class="modal-backdrop" id="confirm-modal" hidden>
+    <div class="modal modal--sm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="confirm-modal-title">Cancel mix request?</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Keep Request</button>
+        <button type="button" class="btn btn-danger" id="confirm-btn">Cancel Request</button>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/color-studio.js"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Formulas — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/" class="brand" data-brand-link>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Paint Production</h1>
+        <span class="badge" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <nav class="page-tabs" aria-label="Production sections">
+          <a href="/mixing">Mixing Queue</a>
+          <a href="/mixing/formulas" class="is-active">Color Formulas</a>
+          <a href="/mixing/log">Production Log</a>
+        </nav>
+
+        <section class="card">
+          <div class="toolbar">
+            <input type="search" id="search-input" class="form-input toolbar-search"
+                   placeholder="Search by name or hex…" aria-label="Search formulas" />
+            <select id="status-filter" class="form-input form-select" aria-label="Filter by status">
+              <option value="active">Active</option>
+              <option value="archived">Archived</option>
+              <option value="all">All</option>
+            </select>
+            <span class="toolbar-spacer"></span>
+            <button type="button" id="add-formula-btn" class="btn btn-primary">
+              <span data-icon="plus"></span> New Formula
+            </button>
+          </div>
+        </section>
+
+        <section class="card card--flush">
+          <div class="table-wrap">
+            <table class="table" aria-label="Color formulas">
+              <thead>
+                <tr>
+                  <th>Formula</th>
+                  <th>Recipe</th>
+                  <th>Times Used</th>
+                  <th>Created By</th>
+                  <th>Status</th>
+                  <th><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="formulas-tbody"></tbody>
+            </table>
+          </div>
+          <div id="empty-state" class="empty-state" hidden>
+            <div class="empty-state-icon" data-icon="droplets" data-icon-size="34"></div>
+            <p>No formulas yet. Record your first recipe!</p>
+          </div>
+          <div id="pagination" class="pagination"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Create / edit formula modal -->
+  <div class="modal-backdrop" id="formula-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="formula-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="formula-modal-title">New Formula</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <form id="formula-form" novalidate>
+          <input type="hidden" name="formulaId" />
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="f-name">Formula name</label>
+              <input class="form-input" type="text" id="f-name" name="name" maxlength="80" required />
+              <p class="form-error" data-error-for="name"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-color">Color</label>
+              <input class="form-input" type="color" id="f-color" name="colorHex" value="#4f46e5"
+                     style="height: 42px; padding: 0.25rem;" />
+              <p class="form-error" data-error-for="colorHex"></p>
+            </div>
+          </div>
+
+          <label class="form-label">Components</label>
+          <div id="f-components"></div>
+          <button type="button" class="btn btn-outline btn-sm" id="f-add-component" style="margin-bottom: 1.125rem;">
+            <span data-icon="plus" data-icon-size="14"></span> Add component
+          </button>
+          <p class="form-error" data-error-for="components"></p>
+
+          <div class="form-group">
+            <label class="form-label" for="f-notes">Notes <span class="text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="f-notes" name="notes" maxlength="300"
+                   placeholder="e.g. Stir base for 2 minutes before tinting" />
+            <p class="form-error" data-error-for="notes"></p>
+          </div>
+        </form>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" form="formula-form" class="btn btn-primary" id="formula-save-btn">Save Formula</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Archive / restore confirmation -->
+  <div class="modal-backdrop" id="confirm-modal" hidden>
+    <div class="modal modal--sm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="confirm-modal-title">Please confirm</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirm-btn">Confirm</button>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/formulas.js"></script>
+</body>
+</html>
