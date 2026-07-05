@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orders — Flavor &amp; Color</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/" class="brand" data-brand-link>
+        <span class="brand-mark">FC</span>
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Orders</h1>
+        <span class="badge" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <section class="card">
+          <div class="toolbar">
+            <input type="search" id="search-input" class="form-input toolbar-search"
+                   placeholder="Search order # or customer…" aria-label="Search orders" />
+            <select id="status-filter" class="form-input form-select" aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="ready">Ready</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <select id="type-filter" class="form-input form-select" aria-label="Filter by type">
+              <option value="">All types</option>
+              <option value="online">Online</option>
+              <option value="walk_in">Walk-in</option>
+            </select>
+            <span class="toolbar-spacer"></span>
+            <a href="/pos" class="btn btn-primary">🛒 New Sale</a>
+          </div>
+        </section>
+
+        <section class="card card--flush">
+          <div class="table-wrap">
+            <table class="table" aria-label="Orders">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Placed</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="orders-tbody"></tbody>
+            </table>
+          </div>
+          <div id="empty-state" class="empty-state" hidden>
+            <div class="empty-state-icon">📦</div>
+            <p>No orders match your filters.</p>
+          </div>
+          <div id="pagination" class="pagination"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Order detail modal -->
+  <div class="modal-backdrop" id="detail-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="detail-modal-title">Order Details</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body" id="detail-body"></div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Close</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Take payment / complete modal -->
+  <div class="modal-backdrop" id="payment-modal" hidden>
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="payment-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="payment-modal-title">Take Payment</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <p style="margin-bottom: 1.125rem;">
+          <strong id="payment-order-number"></strong><br />
+          <span class="text-muted">Amount due: <strong id="payment-total"></strong></span>
+        </p>
+        <form id="payment-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="pay-method">Payment method</label>
+            <select class="form-input form-select" id="pay-method" name="method">
+              <option value="cash">Cash</option>
+              <option value="gcash">GCash</option>
+              <option value="card">Card</option>
+            </select>
+            <p class="form-error" data-error-for="method"></p>
+          </div>
+          <div class="form-group" id="pay-tendered-group">
+            <label class="form-label" for="pay-tendered">Amount tendered (₱)</label>
+            <input class="form-input" type="number" id="pay-tendered" name="amountTendered" min="0" step="0.01" />
+            <p class="form-error" data-error-for="amountTendered"></p>
+            <p class="form-hint" id="pay-change-hint" hidden></p>
+          </div>
+        </form>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" form="payment-form" class="btn btn-primary" id="payment-submit-btn">Complete Order</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Cancel confirmation modal -->
+  <div class="modal-backdrop" id="confirm-modal" hidden>
+    <div class="modal modal--sm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="confirm-modal-title">Cancel order?</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Keep Order</button>
+        <button type="button" class="btn btn-danger" id="confirm-btn">Cancel Order</button>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/staff-orders.js"></script>
+</body>
+</html>

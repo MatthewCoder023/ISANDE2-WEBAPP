@@ -28,3 +28,23 @@ export function showToast(message, type = 'info') {
     toast.addEventListener('animationend', () => toast.remove(), { once: true });
   }, DISMISS_AFTER_MS);
 }
+
+const FLASH_KEY = 'fc_flash_toast';
+
+/** Queues a toast to display after a full-page navigation. */
+export function flashToast(message, type = 'info') {
+  sessionStorage.setItem(FLASH_KEY, JSON.stringify({ message, type }));
+}
+
+/** Shows and clears any queued flash toast. Call once on page load. */
+export function showFlashToast() {
+  try {
+    const raw = sessionStorage.getItem(FLASH_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(FLASH_KEY);
+    const { message, type } = JSON.parse(raw);
+    showToast(message, type);
+  } catch {
+    // Malformed flash payload — nothing to show.
+  }
+}

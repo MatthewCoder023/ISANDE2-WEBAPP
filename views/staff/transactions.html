@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transactions — Flavor &amp; Color</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/" class="brand" data-brand-link>
+        <span class="brand-mark">FC</span>
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Transactions</h1>
+        <span class="badge" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <section class="card">
+          <div class="toolbar">
+            <input type="search" id="search-input" class="form-input toolbar-search"
+                   placeholder="Search by order #…" aria-label="Search transactions" />
+            <select id="method-filter" class="form-input form-select" aria-label="Filter by payment method">
+              <option value="">All methods</option>
+              <option value="cash">Cash</option>
+              <option value="gcash">GCash</option>
+              <option value="card">Card</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="card card--flush">
+          <div class="table-wrap">
+            <table class="table" aria-label="Transactions">
+              <thead>
+                <tr>
+                  <th>Date &amp; Time</th>
+                  <th>Order #</th>
+                  <th>Method</th>
+                  <th>Amount</th>
+                  <th>Tendered</th>
+                  <th>Change</th>
+                  <th>Received By</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-tbody"></tbody>
+            </table>
+          </div>
+          <div id="empty-state" class="empty-state" hidden>
+            <div class="empty-state-icon">💳</div>
+            <p>No transactions yet.</p>
+          </div>
+          <div id="pagination" class="pagination"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/staff-transactions.js"></script>
+</body>
+</html>

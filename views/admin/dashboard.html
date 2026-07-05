@@ -11,20 +11,12 @@
 <body>
   <div class="dash-layout">
     <aside class="dash-sidebar">
-      <a href="/admin" class="brand">
+      <a href="/admin" class="brand" data-brand-link>
         <span class="brand-mark">FC</span>
         <span>Flavor &amp; Color</span>
       </a>
 
-      <nav class="dash-nav" aria-label="Main navigation">
-        <a href="/admin" class="is-active">🏠 Dashboard</a>
-        <a href="#" aria-disabled="true">🎨 Products <span class="nav-soon">Soon</span></a>
-        <a href="#" aria-disabled="true">🏷️ Inventory <span class="nav-soon">Soon</span></a>
-        <a href="#" aria-disabled="true">📦 Orders <span class="nav-soon">Soon</span></a>
-        <a href="#" aria-disabled="true">👥 Users &amp; Roles <span class="nav-soon">Soon</span></a>
-        <a href="#" aria-disabled="true">📊 Reports <span class="nav-soon">Soon</span></a>
-        <a href="#" aria-disabled="true">⚙️ Settings <span class="nav-soon">Soon</span></a>
-      </nav>
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
 
       <div class="dash-sidebar-footer">
         <div class="dash-user">
@@ -54,14 +46,14 @@
           <div class="card stat-card">
             <span class="stat-icon stat-icon-success" aria-hidden="true">💰</span>
             <div>
-              <div class="stat-value">—</div>
+              <div class="stat-value" data-stat="revenueThisMonth">—</div>
               <div class="stat-label">Revenue This Month</div>
             </div>
           </div>
           <div class="card stat-card">
             <span class="stat-icon stat-icon-primary" aria-hidden="true">📦</span>
             <div>
-              <div class="stat-value">—</div>
+              <div class="stat-value" data-stat="totalOrders">—</div>
               <div class="stat-label">Total Orders</div>
             </div>
           </div>
@@ -75,8 +67,8 @@
           <div class="card stat-card">
             <span class="stat-icon stat-icon-warning" aria-hidden="true">🏷️</span>
             <div>
-              <div class="stat-value">—</div>
-              <div class="stat-label">Low-Stock Items</div>
+              <div class="stat-value" data-stat="stockAlerts">—</div>
+              <div class="stat-label">Low / Out of Stock</div>
             </div>
           </div>
         </section>
@@ -93,5 +85,6 @@
   </div>
 
   <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js"></script>
 </body>
 </html>

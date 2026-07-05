@@ -14,6 +14,12 @@ function errorHandler(err, req, res, next) {
   let message = err.message || 'Something went wrong.';
   let errors = err.errors;
 
+  // Malformed MongoDB ObjectId in a route param -> 400, not a server error.
+  if (err.name === 'CastError') {
+    statusCode = 400;
+    message = 'Invalid identifier format.';
+  }
+
   // Mongoose schema validation errors -> 422 with field details.
   if (err.name === 'ValidationError' && err.errors) {
     statusCode = 422;

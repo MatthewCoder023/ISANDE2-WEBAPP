@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse Products — Flavor &amp; Color</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <link rel="stylesheet" href="/css/products.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/client" class="brand" data-brand-link>
+        <span class="brand-mark">FC</span>
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Browse Products</h1>
+        <button type="button" id="cart-btn" class="btn btn-outline">
+          🛒 Cart <span class="badge badge-primary" id="cart-count">0</span>
+        </button>
+      </header>
+
+      <main class="dash-content">
+        <section class="card">
+          <div class="toolbar">
+            <input type="search" id="search-input" class="form-input toolbar-search"
+                   placeholder="Search paints and supplies…" aria-label="Search products" />
+            <select id="category-filter" class="form-input form-select" aria-label="Filter by category">
+              <option value="">All categories</option>
+            </select>
+            <select id="sort-select" class="form-input form-select" aria-label="Sort products">
+              <option value="name">Name A–Z</option>
+              <option value="newest">Newest</option>
+              <option value="price_asc">Price: low to high</option>
+              <option value="price_desc">Price: high to low</option>
+            </select>
+          </div>
+        </section>
+
+        <section id="product-grid" class="product-grid" aria-label="Product catalog"></section>
+
+        <div id="empty-state" class="empty-state" hidden>
+          <div class="empty-state-icon">🎨</div>
+          <p>No products match your search.</p>
+        </div>
+
+        <div id="pagination" class="pagination"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Cart / checkout modal -->
+  <div class="modal-backdrop" id="cart-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cart-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="cart-modal-title">Your Cart</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <div id="cart-items"></div>
+        <div id="cart-empty" class="empty-state" hidden>
+          <div class="empty-state-icon">🛒</div>
+          <p>Your cart is empty. Add some paint!</p>
+        </div>
+        <div class="form-group" id="cart-notes-group" style="margin-top: 1.25rem;">
+          <label class="form-label" for="cart-notes">Notes for the store <span class="text-muted">(optional)</span></label>
+          <input class="form-input" type="text" id="cart-notes" maxlength="300"
+                 placeholder="e.g. Pickup on Saturday morning" />
+        </div>
+        <p class="form-hint">Orders are paid in store on pickup.</p>
+      </div>
+      <footer class="modal-footer" style="justify-content: space-between; align-items: center;">
+        <strong id="cart-total" style="font-size: 1.125rem;">₱0.00</strong>
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="button" class="btn btn-outline" data-modal-close>Keep Browsing</button>
+          <button type="button" class="btn btn-primary" id="place-order-btn">Place Order</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/client-products.js"></script>
+</body>
+</html>

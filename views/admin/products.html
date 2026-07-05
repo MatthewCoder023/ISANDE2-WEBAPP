@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products &amp; Inventory — Flavor &amp; Color</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/admin" class="brand" data-brand-link>
+        <span class="brand-mark">FC</span>
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Products &amp; Inventory</h1>
+        <span class="badge badge-danger" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <section class="card">
+          <div class="toolbar">
+            <input type="search" id="search-input" class="form-input toolbar-search"
+                   placeholder="Search by name, SKU, or color…" aria-label="Search products" />
+            <select id="category-filter" class="form-input form-select" aria-label="Filter by category">
+              <option value="">All categories</option>
+            </select>
+            <select id="status-filter" class="form-input form-select" aria-label="Filter by status">
+              <option value="active">Active</option>
+              <option value="archived">Archived</option>
+              <option value="all">All statuses</option>
+            </select>
+            <select id="stock-filter" class="form-input form-select" aria-label="Filter by stock level">
+              <option value="">All stock levels</option>
+              <option value="low">Low stock</option>
+              <option value="out">Out of stock</option>
+            </select>
+            <span class="toolbar-spacer"></span>
+            <button type="button" id="add-product-btn" class="btn btn-primary">＋ Add Product</button>
+          </div>
+        </section>
+
+        <section class="card card--flush">
+          <div class="table-wrap">
+            <table class="table" aria-label="Product list">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>SKU</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Status</th>
+                  <th><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="products-tbody"></tbody>
+            </table>
+          </div>
+          <div id="empty-state" class="empty-state" hidden>
+            <div class="empty-state-icon">🎨</div>
+            <p>No products match your filters.</p>
+          </div>
+          <div id="pagination" class="pagination"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Create / Edit product modal -->
+  <div class="modal-backdrop" id="product-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="product-modal-title">Add Product</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <form id="product-form" novalidate>
+          <input type="hidden" name="productId" />
+
+          <div class="form-group">
+            <label class="form-label" for="p-name">Product name</label>
+            <input class="form-input" type="text" id="p-name" name="name" required />
+            <p class="form-error" data-error-for="name"></p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="p-category">Category</label>
+              <select class="form-input form-select" id="p-category" name="category" required></select>
+              <p class="form-error" data-error-for="category"></p>
+            </div>
+            <div class="form-group" id="sku-group">
+              <label class="form-label" for="p-sku">SKU <span class="text-muted">(optional)</span></label>
+              <input class="form-input" type="text" id="p-sku" name="sku" placeholder="Auto-generated" />
+              <p class="form-error" data-error-for="sku"></p>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="p-finish">Finish</label>
+              <select class="form-input form-select" id="p-finish" name="finish">
+                <option value="">— None —</option>
+              </select>
+              <p class="form-error" data-error-for="finish"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="p-size">Size</label>
+              <select class="form-input form-select" id="p-size" name="size">
+                <option value="">— None —</option>
+              </select>
+              <p class="form-error" data-error-for="size"></p>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="p-color-name">Color name</label>
+              <input class="form-input" type="text" id="p-color-name" name="color.name"
+                     placeholder="e.g. Sunrise Coral" />
+              <p class="form-error" data-error-for="color.name"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="p-color-hex">Color</label>
+              <input class="form-input" type="color" id="p-color-hex" name="color.hex" value="#e2e8f0"
+                     style="height: 42px; padding: 0.25rem;" />
+              <p class="form-error" data-error-for="color.hex"></p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="p-price">Price (₱)</label>
+            <input class="form-input" type="number" id="p-price" name="price" min="0" step="0.01" required />
+            <p class="form-error" data-error-for="price"></p>
+          </div>
+
+          <div class="form-row" id="initial-stock-row">
+            <div class="form-group" id="quantity-group">
+              <label class="form-label" for="p-quantity">Initial stock</label>
+              <input class="form-input" type="number" id="p-quantity" name="stock.quantity" min="0" step="1" value="0" />
+              <p class="form-error" data-error-for="stock.quantity"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="p-threshold">Low-stock threshold</label>
+              <input class="form-input" type="number" id="p-threshold" name="stock.lowStockThreshold" min="0" step="1" value="5" />
+              <p class="form-error" data-error-for="stock.lowStockThreshold"></p>
+            </div>
+          </div>
+          <p class="form-hint" id="edit-stock-hint" hidden>
+            Stock quantity is adjusted from the table's <strong>Stock</strong> action, so every
+            change is recorded in the movement history.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="p-description">Description <span class="text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="p-description" name="description" maxlength="500" />
+            <p class="form-error" data-error-for="description"></p>
+          </div>
+        </form>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" form="product-form" class="btn btn-primary" id="product-save-btn">Save Product</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Stock adjustment modal -->
+  <div class="modal-backdrop" id="stock-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="stock-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="stock-modal-title">Adjust Stock</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <p style="margin-bottom: 1.125rem;">
+          <strong id="stock-product-name"></strong><br />
+          <span class="text-muted">Current stock: <strong id="stock-current-qty"></strong></span>
+        </p>
+
+        <form id="stock-form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="s-type">Type</label>
+              <select class="form-input form-select" id="s-type" name="type">
+                <option value="restock">Restock (add)</option>
+                <option value="adjustment">Adjustment (+/−)</option>
+              </select>
+              <p class="form-error" data-error-for="type"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="s-quantity">Quantity</label>
+              <input class="form-input" type="number" id="s-quantity" name="quantity" step="1" required />
+              <p class="form-error" data-error-for="quantity"></p>
+            </div>
+          </div>
+          <p class="form-hint" id="stock-type-hint">Restock adds to stock. Use a negative quantity in Adjustment to deduct.</p>
+
+          <div class="form-group">
+            <label class="form-label" for="s-reason">Reason</label>
+            <input class="form-input" type="text" id="s-reason" name="reason" maxlength="200"
+                   placeholder="e.g. Supplier delivery, damaged cans…" />
+            <p class="form-error" data-error-for="reason"></p>
+          </div>
+        </form>
+
+        <h3 style="font-size: 0.875rem; margin: 1.25rem 0 0.625rem;">Recent activity</h3>
+        <ul id="movements-list" class="text-muted" style="list-style: none; font-size: 0.8125rem; display: flex; flex-direction: column; gap: 0.5rem;"></ul>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" form="stock-form" class="btn btn-primary" id="stock-save-btn">Apply</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Confirm modal (archive / restore) -->
+  <div class="modal-backdrop" id="confirm-modal" hidden>
+    <div class="modal modal--sm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="confirm-modal-title">Please confirm</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirm-btn">Confirm</button>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/admin-products.js"></script>
+</body>
+</html>

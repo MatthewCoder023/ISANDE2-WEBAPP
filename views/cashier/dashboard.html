@@ -11,18 +11,12 @@
 <body>
   <div class="dash-layout">
     <aside class="dash-sidebar">
-      <a href="/cashier" class="brand">
+      <a href="/cashier" class="brand" data-brand-link>
         <span class="brand-mark">FC</span>
         <span>Flavor &amp; Color</span>
       </a>
 
-      <nav class="dash-nav" aria-label="Main navigation">
-        <a href="/cashier" class="is-active">🏠 Dashboard</a>
-        <a href="#" aria-disabled="true">🛒 Point of Sale <span class="nav-soon">Soon</span></a>
-        <a href="#" aria-disabled="true">📦 Orders <span class="nav-soon">Soon</span></a>
-        <a href="#" aria-disabled="true">👥 Customers <span class="nav-soon">Soon</span></a>
-        <a href="#" aria-disabled="true">💳 Transactions <span class="nav-soon">Soon</span></a>
-      </nav>
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
 
       <div class="dash-sidebar-footer">
         <div class="dash-user">
@@ -52,44 +46,49 @@
           <div class="card stat-card">
             <span class="stat-icon stat-icon-success" aria-hidden="true">💰</span>
             <div>
-              <div class="stat-value">—</div>
+              <div class="stat-value" data-stat="salesToday">—</div>
               <div class="stat-label">Sales Today</div>
             </div>
           </div>
           <div class="card stat-card">
             <span class="stat-icon stat-icon-primary" aria-hidden="true">📦</span>
             <div>
-              <div class="stat-value">—</div>
+              <div class="stat-value" data-stat="pendingOrders">—</div>
               <div class="stat-label">Pending Orders</div>
             </div>
           </div>
           <div class="card stat-card">
-            <span class="stat-icon stat-icon-info" aria-hidden="true">👥</span>
+            <span class="stat-icon stat-icon-info" aria-hidden="true">🛍️</span>
             <div>
-              <div class="stat-value">—</div>
-              <div class="stat-label">Customers Served</div>
+              <div class="stat-value" data-stat="readyOrders">—</div>
+              <div class="stat-label">Ready for Pickup</div>
             </div>
           </div>
           <div class="card stat-card">
             <span class="stat-icon stat-icon-warning" aria-hidden="true">💳</span>
             <div>
-              <div class="stat-value">—</div>
-              <div class="stat-label">Transactions</div>
+              <div class="stat-value" data-stat="transactionsToday">—</div>
+              <div class="stat-label">Transactions Today</div>
             </div>
           </div>
         </section>
 
         <section class="card">
-          <h3 class="card-title">Coming soon</h3>
-          <p class="card-subtitle">
-            Point of sale, order processing, customer records, and payment
-            management arrive in the sales module.
+          <h3 class="card-title">Quick actions</h3>
+          <p class="card-subtitle" style="margin-bottom: 1rem;">
+            Ring up a walk-in sale, process online orders, or review payments.
           </p>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="/pos" class="btn btn-primary">🛒 New Sale</a>
+            <a href="/orders" class="btn btn-outline">📦 Process Orders</a>
+            <a href="/transactions" class="btn btn-outline">💳 Transactions</a>
+          </div>
         </section>
       </main>
     </div>
   </div>
 
   <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/staff-dashboard.js"></script>
 </body>
 </html>

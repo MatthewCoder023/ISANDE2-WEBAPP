@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Orders — Flavor &amp; Color</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/client" class="brand" data-brand-link>
+        <span class="brand-mark">FC</span>
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>My Orders</h1>
+        <span class="badge badge-primary" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <section class="card">
+          <div class="toolbar">
+            <select id="status-filter" class="form-input form-select" aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="ready">Ready for pickup</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <span class="toolbar-spacer"></span>
+            <a href="/client/products" class="btn btn-primary">🎨 Browse Products</a>
+          </div>
+        </section>
+
+        <section class="card card--flush">
+          <div class="table-wrap">
+            <table class="table" aria-label="My orders">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Placed</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="orders-tbody"></tbody>
+            </table>
+          </div>
+          <div id="empty-state" class="empty-state" hidden>
+            <div class="empty-state-icon">📦</div>
+            <p>No orders yet. Time to pick some colors!</p>
+          </div>
+          <div id="pagination" class="pagination"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Order detail modal -->
+  <div class="modal-backdrop" id="detail-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="detail-modal-title">Order Details</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body" id="detail-body"></div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Close</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Cancel confirmation modal -->
+  <div class="modal-backdrop" id="confirm-modal" hidden>
+    <div class="modal modal--sm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="confirm-modal-title">Cancel order?</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Keep Order</button>
+        <button type="button" class="btn btn-danger" id="confirm-btn">Cancel Order</button>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/client-orders.js"></script>
+</body>
+</html>

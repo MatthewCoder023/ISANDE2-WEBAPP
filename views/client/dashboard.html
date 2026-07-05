@@ -11,17 +11,12 @@
 <body>
   <div class="dash-layout">
     <aside class="dash-sidebar">
-      <a href="/client" class="brand">
+      <a href="/client" class="brand" data-brand-link>
         <span class="brand-mark">FC</span>
         <span>Flavor &amp; Color</span>
       </a>
 
-      <nav class="dash-nav" aria-label="Main navigation">
-        <a href="/client" class="is-active">🏠 Dashboard</a>
-        <a href="#" aria-disabled="true">🎨 Browse Products <span class="nav-soon">Soon</span></a>
-        <a href="#" aria-disabled="true">📦 My Orders <span class="nav-soon">Soon</span></a>
-        <a href="#" aria-disabled="true">👤 My Profile <span class="nav-soon">Soon</span></a>
-      </nav>
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
 
       <div class="dash-sidebar-footer">
         <div class="dash-user">
@@ -51,14 +46,14 @@
           <div class="card stat-card">
             <span class="stat-icon stat-icon-primary" aria-hidden="true">📦</span>
             <div>
-              <div class="stat-value">—</div>
+              <div class="stat-value" data-stat="activeOrders">—</div>
               <div class="stat-label">Active Orders</div>
             </div>
           </div>
           <div class="card stat-card">
             <span class="stat-icon stat-icon-success" aria-hidden="true">✅</span>
             <div>
-              <div class="stat-value">—</div>
+              <div class="stat-value" data-stat="completedOrders">—</div>
               <div class="stat-label">Completed Orders</div>
             </div>
           </div>
@@ -72,10 +67,11 @@
         </section>
 
         <section class="card">
-          <h3 class="card-title">Coming soon</h3>
+          <h3 class="card-title">Shop with us</h3>
           <p class="card-subtitle">
-            Product browsing, order placement, and order tracking are on the way.
-            Your account is ready — these features arrive in the next update.
+            Browse the catalog, add paints to your cart, and place an order —
+            pay when you pick it up in store. Track everything under
+            <a href="/client/orders">My Orders</a>.
           </p>
         </section>
       </main>
@@ -83,5 +79,6 @@
   </div>
 
   <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/client-dashboard.js"></script>
 </body>
 </html>

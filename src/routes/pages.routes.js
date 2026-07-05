@@ -16,9 +16,17 @@ const sendView = (relativePath) => (req, res) => {
  * server verifies the session AND role before any dashboard HTML is sent.
  */
 router.get('/client', requirePageAuth(ROLES.CLIENT), sendView('client/dashboard.html'));
+router.get('/client/products', requirePageAuth(ROLES.CLIENT), sendView('client/products.html'));
+router.get('/client/orders', requirePageAuth(ROLES.CLIENT), sendView('client/orders.html'));
 router.get('/mixer', requirePageAuth(ROLES.PAINT_MIXER), sendView('mixer/dashboard.html'));
 router.get('/cashier', requirePageAuth(ROLES.CASHIER), sendView('cashier/dashboard.html'));
 router.get('/admin', requirePageAuth(ROLES.ADMIN), sendView('admin/dashboard.html'));
+router.get('/admin/products', requirePageAuth(ROLES.ADMIN), sendView('admin/products.html'));
+
+// Sales pages are shared by cashier and admin; the sidebar adapts per role.
+router.get('/pos', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('staff/pos.html'));
+router.get('/orders', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('staff/orders.html'));
+router.get('/transactions', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('staff/transactions.html'));
 
 /** Convenience: /dashboard forwards any logged-in user to their own dashboard. */
 router.get('/dashboard', requirePageAuth(), (req, res) => {
