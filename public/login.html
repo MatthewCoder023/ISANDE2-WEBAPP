@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Login — Flavor &amp; Color</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/auth.css" />
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <a href="/" aria-label="Back to home"><span class="brand-mark">FC</span></a>
+        <div>
+          <h1 class="auth-title">Welcome back</h1>
+          <p class="auth-subtitle">Sign in to your customer account</p>
+        </div>
+      </div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="email">Email address</label>
+          <input class="form-input" type="email" id="email" name="email"
+                 autocomplete="email" required />
+          <p class="form-error" data-error-for="email"></p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-input" type="password" id="password" name="password"
+                 autocomplete="current-password" required />
+          <p class="form-error" data-error-for="password"></p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+      </form>
+
+      <div class="auth-footer">
+        <p>New to Flavor &amp; Color? <a href="/register">Create an account</a></p>
+        <p class="auth-portal-tag"><a href="/employee-login">Employee? Sign in here</a></p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/js/pages/login.js"></script>
+</body>
+</html>

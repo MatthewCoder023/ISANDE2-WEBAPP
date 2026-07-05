@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Console — Flavor &amp; Color</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/admin" class="brand">
+        <span class="brand-mark">FC</span>
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation">
+        <a href="/admin" class="is-active">🏠 Dashboard</a>
+        <a href="#" aria-disabled="true">🎨 Products <span class="nav-soon">Soon</span></a>
+        <a href="#" aria-disabled="true">🏷️ Inventory <span class="nav-soon">Soon</span></a>
+        <a href="#" aria-disabled="true">📦 Orders <span class="nav-soon">Soon</span></a>
+        <a href="#" aria-disabled="true">👥 Users &amp; Roles <span class="nav-soon">Soon</span></a>
+        <a href="#" aria-disabled="true">📊 Reports <span class="nav-soon">Soon</span></a>
+        <a href="#" aria-disabled="true">⚙️ Settings <span class="nav-soon">Soon</span></a>
+      </nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Admin Console</h1>
+        <span class="badge badge-danger" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <section class="dash-welcome">
+          <h2>Welcome, <span data-user-first-name></span>! 🛡️</h2>
+          <p>Full overview of Flavor &amp; Color operations.</p>
+        </section>
+
+        <section class="stat-grid" aria-label="Business overview">
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-success" aria-hidden="true">💰</span>
+            <div>
+              <div class="stat-value">—</div>
+              <div class="stat-label">Revenue This Month</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-primary" aria-hidden="true">📦</span>
+            <div>
+              <div class="stat-value">—</div>
+              <div class="stat-label">Total Orders</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-info" aria-hidden="true">👥</span>
+            <div>
+              <div class="stat-value">—</div>
+              <div class="stat-label">Registered Users</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-warning" aria-hidden="true">🏷️</span>
+            <div>
+              <div class="stat-value">—</div>
+              <div class="stat-label">Low-Stock Items</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3 class="card-title">Coming soon</h3>
+          <p class="card-subtitle">
+            User management, product and inventory management, reports, and
+            system settings arrive in the administration module.
+          </p>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+</body>
+</html>

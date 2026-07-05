@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mixing Station — Flavor &amp; Color</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/mixer" class="brand">
+        <span class="brand-mark">FC</span>
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation">
+        <a href="/mixer" class="is-active">🏠 Dashboard</a>
+        <a href="#" aria-disabled="true">🧪 Mixing Queue <span class="nav-soon">Soon</span></a>
+        <a href="#" aria-disabled="true">🎨 Color Formulas <span class="nav-soon">Soon</span></a>
+        <a href="#" aria-disabled="true">📋 Production Log <span class="nav-soon">Soon</span></a>
+      </nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Mixing Station</h1>
+        <span class="badge badge-warning" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <section class="dash-welcome">
+          <h2>Hello, <span data-user-first-name></span>! 🧪</h2>
+          <p>Your paint production workspace at a glance.</p>
+        </section>
+
+        <section class="stat-grid" aria-label="Production overview">
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-warning" aria-hidden="true">🧪</span>
+            <div>
+              <div class="stat-value">—</div>
+              <div class="stat-label">Pending Mix Jobs</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-success" aria-hidden="true">✅</span>
+            <div>
+              <div class="stat-value">—</div>
+              <div class="stat-label">Completed Today</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-primary" aria-hidden="true">🎨</span>
+            <div>
+              <div class="stat-value">—</div>
+              <div class="stat-label">Saved Formulas</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3 class="card-title">Coming soon</h3>
+          <p class="card-subtitle">
+            The mixing queue, color formula library, and production logging
+            arrive in the paint production module.
+          </p>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+</body>
+</html>

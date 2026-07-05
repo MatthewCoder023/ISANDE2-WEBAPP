@@ -1,0 +1,73 @@
+/* Authentication pages: login, register, employee login */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background:
+    radial-gradient(60rem 30rem at 110% -10%, var(--primary-100), transparent),
+    radial-gradient(50rem 25rem at -10% 110%, var(--warning-50), transparent),
+    var(--bg);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 2.25rem 2rem;
+}
+
+.auth-card--wide {
+  max-width: 520px;
+}
+
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+.auth-brand .brand-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-400));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.auth-title {
+  font-size: 1.375rem;
+}
+
+.auth-subtitle {
+  font-size: 0.9075rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.auth-footer {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.auth-portal-tag {
+  display: inline-block;
+  margin-top: 0.5rem;
+}
