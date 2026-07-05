@@ -1,9 +1,12 @@
+const path = require('path');
+
 const Order = require('../models/Order');
 const Transaction = require('../models/Transaction');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
 const orderService = require('../services/order.service');
+const { PROOFS_DIR } = require('../middleware/upload');
 const { ROLES } = require('../constants/roles');
 const { ORDER_STATUS, ORDER_TYPES } = require('../constants/orders');
 
@@ -15,7 +18,7 @@ function parsePagination(query, defaultLimit = 10) {
   return { page, limit, skip: (page - 1) * limit };
 }
 
-/** POST /api/orders — customer places an online order. */
+/** POST /api/orders — customer places an online order (checkout step 1). */
 const placeOrder = asyncHandler(async (req, res) => {
   const order = await orderService.createOrder({
     requestedItems: req.body.items,
@@ -28,7 +31,7 @@ const placeOrder = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: `Order ${order.orderNumber} placed! Pay when you pick it up in store.`,
+    message: `Order ${order.orderNumber} placed! Next step: payment.`,
     data: { order: order.toJSON() },
   });
 });
@@ -54,8 +57,9 @@ const list = asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
   const filter = {};
 
+  if (Object.values(ORDER_STATUS).includes(req.query.status)) filter.status = req.query.status;
+
   if (isStaff(req.user.role)) {
-    if (Object.values(ORDER_STATUS).includes(req.query.status)) filter.status = req.query.status;
     if (Object.values(ORDER_TYPES).includes(req.query.type)) filter.type = req.query.type;
     if (req.query.search) {
       const pattern = new RegExp(escapeRegExp(req.query.search.trim()), 'i');
@@ -63,7 +67,6 @@ const list = asyncHandler(async (req, res) => {
     }
   } else {
     filter.customer = req.user._id;
-    if (Object.values(ORDER_STATUS).includes(req.query.status)) filter.status = req.query.status;
   }
 
   const [orders, total] = await Promise.all([
@@ -86,7 +89,7 @@ const stats = asyncHandler(async (req, res) => {
     const [activeOrders, completedOrders] = await Promise.all([
       Order.countDocuments({
         customer: req.user._id,
-        status: { $in: [ORDER_STATUS.PENDING, ORDER_STATUS.READY] },
+        status: { $nin: [ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELLED] },
       }),
       Order.countDocuments({ customer: req.user._id, status: ORDER_STATUS.COMPLETED }),
     ]);
@@ -97,21 +100,31 @@ const stats = asyncHandler(async (req, res) => {
   todayStart.setHours(0, 0, 0, 0);
   const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
 
-  const [salesTodayAgg, transactionsToday, pendingOrders, readyOrders, revenueMonthAgg, totalOrders] =
-    await Promise.all([
-      Transaction.aggregate([
-        { $match: { createdAt: { $gte: todayStart } } },
-        { $group: { _id: null, total: { $sum: '$amount' } } },
-      ]),
-      Transaction.countDocuments({ createdAt: { $gte: todayStart } }),
-      Order.countDocuments({ status: ORDER_STATUS.PENDING }),
-      Order.countDocuments({ status: ORDER_STATUS.READY }),
-      Transaction.aggregate([
-        { $match: { createdAt: { $gte: monthStart } } },
-        { $group: { _id: null, total: { $sum: '$amount' } } },
-      ]),
-      Order.countDocuments({}),
-    ]);
+  const [
+    salesTodayAgg,
+    transactionsToday,
+    awaitingVerification,
+    preparingOrders,
+    readyOrders,
+    revenueMonthAgg,
+    totalOrders,
+  ] = await Promise.all([
+    Transaction.aggregate([
+      { $match: { createdAt: { $gte: todayStart } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]),
+    Transaction.countDocuments({ createdAt: { $gte: todayStart } }),
+    Order.countDocuments({ status: ORDER_STATUS.PENDING_VERIFICATION }),
+    Order.countDocuments({
+      status: { $in: [ORDER_STATUS.PAYMENT_VERIFIED, ORDER_STATUS.PREPARING] },
+    }),
+    Order.countDocuments({ status: ORDER_STATUS.READY }),
+    Transaction.aggregate([
+      { $match: { createdAt: { $gte: monthStart } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]),
+    Order.countDocuments({}),
+  ]);
 
   res.json({
     success: true,
@@ -119,7 +132,8 @@ const stats = asyncHandler(async (req, res) => {
       stats: {
         salesToday: salesTodayAgg[0]?.total || 0,
         transactionsToday,
-        pendingOrders,
+        awaitingVerification,
+        preparingOrders,
         readyOrders,
         revenueThisMonth: revenueMonthAgg[0]?.total || 0,
         totalOrders,
@@ -138,7 +152,7 @@ async function loadOrderForUser(orderId, user) {
   return order;
 }
 
-/** GET /api/orders/:id — detail incl. payment record when completed. */
+/** GET /api/orders/:id — detail incl. payment record when paid. */
 const getById = asyncHandler(async (req, res) => {
   const order = await loadOrderForUser(req.params.id, req.user);
   const transaction = await Transaction.findOne({ order: order._id }).populate(
@@ -152,26 +166,92 @@ const getById = asyncHandler(async (req, res) => {
   });
 });
 
-/** POST /api/orders/:id/ready — staff marks a pending order prepared. */
-const markReady = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  if (!order) throw new ApiError(404, 'Order not found.');
-  if (order.status !== ORDER_STATUS.PENDING) {
-    throw new ApiError(409, `A ${order.status} order cannot be marked ready.`);
-  }
-
-  order.status = ORDER_STATUS.READY;
-  order.readyAt = new Date();
-  await order.save();
+/** POST /api/orders/:id/payment-method — customer chooses cash on pickup. */
+const chooseCashOnPickup = asyncHandler(async (req, res) => {
+  const order = await loadOrderForUser(req.params.id, req.user);
+  await orderService.chooseCashOnPickup(order, req.user._id);
 
   res.json({
     success: true,
-    message: `Order ${order.orderNumber} marked as ready for pickup.`,
+    message: `Got it — pay for ${order.orderNumber} at the counter when you pick it up. We're preparing it now.`,
     data: { order: order.toJSON() },
   });
 });
 
-/** POST /api/orders/:id/complete — staff takes payment. */
+/** POST /api/orders/:id/proof — customer uploads GCash proof (multipart). */
+const uploadProof = asyncHandler(async (req, res) => {
+  const order = await loadOrderForUser(req.params.id, req.user);
+  if (!req.file) {
+    throw new ApiError(422, 'Attach a JPG, PNG, or WebP image of your payment.');
+  }
+
+  await orderService.attachProof(order, req.file, req.user._id);
+
+  res.json({
+    success: true,
+    message: `Proof received for ${order.orderNumber}. We'll verify it shortly!`,
+    data: { order: order.toJSON() },
+  });
+});
+
+/** GET /api/orders/:id/proof — the proof image (owner or staff only). */
+const getProof = asyncHandler(async (req, res) => {
+  const order = await loadOrderForUser(req.params.id, req.user);
+  if (!order.payment.proof.filename) {
+    throw new ApiError(404, 'No proof of payment on this order.');
+  }
+  res.sendFile(path.join(PROOFS_DIR, order.payment.proof.filename));
+});
+
+/** POST /api/orders/:id/verify-payment — staff approves the proof. */
+const verifyPayment = asyncHandler(async (req, res) => {
+  const order = await loadOrderForUser(req.params.id, req.user);
+  const { transaction } = await orderService.verifyPayment(order, req.user._id);
+
+  res.json({
+    success: true,
+    message: `Payment for ${order.orderNumber} verified and recorded.`,
+    data: { order: order.toJSON(), transaction: transaction.toJSON() },
+  });
+});
+
+/** POST /api/orders/:id/reject-payment — staff rejects the proof. */
+const rejectPayment = asyncHandler(async (req, res) => {
+  const order = await loadOrderForUser(req.params.id, req.user);
+  await orderService.rejectPayment(order, req.user._id, req.body.reason);
+
+  res.json({
+    success: true,
+    message: `Proof for ${order.orderNumber} rejected — the customer can upload a new one.`,
+    data: { order: order.toJSON() },
+  });
+});
+
+/** POST /api/orders/:id/prepare — staff starts preparing (verified orders). */
+const prepare = asyncHandler(async (req, res) => {
+  const order = await loadOrderForUser(req.params.id, req.user);
+  await orderService.startPreparing(order, req.user._id);
+
+  res.json({
+    success: true,
+    message: `${order.orderNumber} is being prepared.`,
+    data: { order: order.toJSON() },
+  });
+});
+
+/** POST /api/orders/:id/ready — staff marks a prepared order ready. */
+const markReady = asyncHandler(async (req, res) => {
+  const order = await loadOrderForUser(req.params.id, req.user);
+  await orderService.markReady(order, req.user._id);
+
+  res.json({
+    success: true,
+    message: `Order ${order.orderNumber} is ready for pickup.`,
+    data: { order: order.toJSON() },
+  });
+});
+
+/** POST /api/orders/:id/complete — staff hands over (takes payment if unpaid). */
 const complete = asyncHandler(async (req, res) => {
   const existing = await Order.findById(req.params.id);
   if (!existing) throw new ApiError(404, 'Order not found.');
@@ -184,22 +264,22 @@ const complete = asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    message: `Order ${order.orderNumber} completed and paid.`,
-    data: { order: order.toJSON(), transaction: transaction.toJSON() },
+    message: `Order ${order.orderNumber} completed.`,
+    data: { order: order.toJSON(), transaction: transaction ? transaction.toJSON() : null },
   });
 });
 
 /**
- * POST /api/orders/:id/cancel — customers may cancel their own order
- * while it is still pending; staff may cancel pending or ready orders.
+ * POST /api/orders/:id/cancel — customers may cancel while awaiting
+ * payment; staff may cancel any not-yet-completed order.
  */
 const cancel = asyncHandler(async (req, res) => {
   const order = await loadOrderForUser(req.params.id, req.user);
 
-  if (!isStaff(req.user.role) && order.status !== ORDER_STATUS.PENDING) {
+  if (!isStaff(req.user.role) && order.status !== ORDER_STATUS.PENDING_PAYMENT) {
     throw new ApiError(
       409,
-      'This order is already being prepared. Please contact the store to cancel it.'
+      'This order is already moving through the shop. Please contact the store to cancel it.'
     );
   }
 
@@ -212,4 +292,19 @@ const cancel = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { placeOrder, walkInSale, list, stats, getById, markReady, complete, cancel };
+module.exports = {
+  placeOrder,
+  walkInSale,
+  list,
+  stats,
+  getById,
+  chooseCashOnPickup,
+  uploadProof,
+  getProof,
+  verifyPayment,
+  rejectPayment,
+  prepare,
+  markReady,
+  complete,
+  cancel,
+};

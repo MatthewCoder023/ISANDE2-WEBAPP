@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { ORDER_STATUS, ORDER_TYPES } = require('../constants/orders');
+const { ORDER_STATUS, ORDER_TYPES, ONLINE_PAYMENT_METHODS } = require('../constants/orders');
 
 /**
  * Line items snapshot name/sku/price at order time. Catalog edits must
@@ -22,6 +22,17 @@ const orderItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
+/** One entry per status change — the source of truth for the tracker. */
+const statusEventSchema = new mongoose.Schema(
+  {
+    status: { type: String, required: true },
+    at: { type: Date, default: Date.now },
+    by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    note: { type: String, trim: true, maxlength: 300, default: '' },
+  },
+  { _id: false }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     orderNumber: {
@@ -37,8 +48,12 @@ const orderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: Object.values(ORDER_STATUS),
-      default: ORDER_STATUS.PENDING,
+      default: ORDER_STATUS.PENDING_PAYMENT,
       index: true,
+    },
+    statusHistory: {
+      type: [statusEventSchema],
+      default: [],
     },
     // Set for online orders; walk-in sales identify via customerName.
     customer: {
@@ -63,6 +78,28 @@ const orderSchema = new mongoose.Schema(
     subtotal: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 0 },
     notes: { type: String, trim: true, maxlength: 300, default: '' },
+    /**
+     * Online checkout payment state. The money itself is recorded as a
+     * Transaction (at proof verification for GCash, at handover for
+     * cash-on-pickup); this tracks the method choice and the proof.
+     */
+    payment: {
+      method: {
+        type: String,
+        enum: [...ONLINE_PAYMENT_METHODS, ''],
+        default: '',
+      },
+      proof: {
+        filename: { type: String, default: '' }, // stored name under uploads/proofs
+        originalName: { type: String, default: '' },
+        mimeType: { type: String, default: '' },
+        size: { type: Number, default: 0 },
+        uploadedAt: { type: Date, default: null },
+      },
+      verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      verifiedAt: { type: Date, default: null },
+      rejectedReason: { type: String, trim: true, maxlength: 200, default: '' },
+    },
     placedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -103,6 +140,14 @@ orderSchema.set('toJSON', {
   versionKey: false,
   transform: (_doc, ret) => {
     delete ret._id;
+    // Storage details of the proof are server-side concerns.
+    if (ret.payment?.proof) {
+      ret.payment.proof = {
+        uploaded: Boolean(ret.payment.proof.filename),
+        originalName: ret.payment.proof.originalName,
+        uploadedAt: ret.payment.proof.uploadedAt,
+      };
+    }
     return ret;
   },
 });

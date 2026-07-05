@@ -5,7 +5,7 @@ import { formatPrice } from '/js/format.js';
 async function loadStats() {
   try {
     const { data } = await api('/api/orders/stats');
-    const { salesToday, pendingOrders, readyOrders, transactionsToday } = data.stats;
+    const { salesToday, awaitingVerification, readyOrders, transactionsToday } = data.stats;
 
     const set = (key, value) => {
       const el = document.querySelector(`[data-stat="${key}"]`);
@@ -13,7 +13,7 @@ async function loadStats() {
     };
 
     set('salesToday', formatPrice(salesToday));
-    set('pendingOrders', pendingOrders);
+    set('awaitingVerification', awaitingVerification);
     set('readyOrders', readyOrders);
     set('transactionsToday', transactionsToday);
   } catch {

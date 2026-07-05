@@ -4,13 +4,12 @@
  * The cart sends only { productId, quantity } — pricing is server-side.
  */
 import { api } from '/js/api.js';
-import { showToast, flashToast } from '/js/toast.js';
+import { showToast } from '/js/toast.js';
 import { formatPrice, escapeHtml, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
 import { initModal } from '/js/modal.js';
-import { setBusy } from '/js/form-utils.js';
 import { getCurrentUser } from '/js/session.js';
-import { getCart, addItem, setQuantity, clearCart, cartCount, cartTotal } from '/js/cart.js';
+import { getCart, addItem, setQuantity, cartCount, cartTotal } from '/js/cart.js';
 import { icon } from '/js/icons.js';
 
 const CATEGORY_LABELS = {
@@ -152,8 +151,7 @@ function renderCart() {
   const hasItems = items.length > 0;
 
   document.querySelector('#cart-empty').hidden = hasItems;
-  document.querySelector('#cart-notes-group').hidden = !hasItems;
-  document.querySelector('#place-order-btn').disabled = !hasItems;
+  document.querySelector('#checkout-btn').disabled = !hasItems;
   document.querySelector('#cart-total').textContent = formatPrice(cartTotal(cart));
 
   itemsEl.innerHTML = items
@@ -204,28 +202,8 @@ document.querySelector('#cart-items').addEventListener('click', (event) => {
   }
 });
 
-document.querySelector('#place-order-btn').addEventListener('click', async () => {
-  const cart = getCart(userId);
-  const items = Object.values(cart).map(({ id, quantity }) => ({ productId: id, quantity }));
-  if (items.length === 0) return;
-
-  const button = document.querySelector('#place-order-btn');
-  setBusy(button, true, 'Placing order…');
-
-  try {
-    const { message } = await api('/api/orders', {
-      method: 'POST',
-      body: { items, notes: document.querySelector('#cart-notes').value },
-    });
-    clearCart(userId);
-    flashToast(message, 'success');
-    window.location.assign('/client/orders');
-  } catch (error) {
-    showToast(error.message, 'error');
-    setBusy(button, false);
-    // Stock may have changed under us — refresh the availability badges.
-    loadProducts();
-  }
+document.querySelector('#checkout-btn').addEventListener('click', () => {
+  window.location.assign('/client/checkout');
 });
 
 /* ---------- Init ---------- */

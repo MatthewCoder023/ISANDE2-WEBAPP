@@ -44,7 +44,10 @@
                    placeholder="Search order # or customer…" aria-label="Search orders" />
             <select id="status-filter" class="form-input form-select" aria-label="Filter by status">
               <option value="">All statuses</option>
-              <option value="pending">Pending</option>
+              <option value="pending_payment">Pending payment</option>
+              <option value="pending_verification">Pending verification</option>
+              <option value="payment_verified">Payment verified</option>
+              <option value="preparing">Preparing</option>
               <option value="ready">Ready</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
@@ -134,6 +137,36 @@
       <footer class="modal-footer">
         <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
         <button type="submit" form="payment-form" class="btn btn-primary" id="payment-submit-btn">Complete Order</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Review payment proof modal -->
+  <div class="modal-backdrop" id="review-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="review-modal-title">Review Payment</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <p style="margin-bottom: 1rem;">
+          <strong id="review-order-number"></strong> ·
+          Amount due: <strong id="review-total"></strong><br />
+          <span class="text-muted" style="font-size: 0.875rem;" id="review-customer"></span>
+        </p>
+        <img id="review-proof-img" alt="Submitted proof of payment"
+             style="width: 100%; max-height: 380px; object-fit: contain; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg);" />
+        <div class="form-group" style="margin-top: 1.125rem;">
+          <label class="form-label" for="review-reason">Rejection reason <span class="text-muted">(only if rejecting)</span></label>
+          <input class="form-input" type="text" id="review-reason" maxlength="200"
+                 placeholder="e.g. Amount doesn't match the order total" />
+          <p class="form-error" data-error-for="reason"></p>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Close</button>
+        <button type="button" class="btn btn-danger" id="reject-payment-btn">Reject</button>
+        <button type="button" class="btn btn-primary" id="verify-payment-btn">Verify Payment</button>
       </footer>
     </div>
   </div>

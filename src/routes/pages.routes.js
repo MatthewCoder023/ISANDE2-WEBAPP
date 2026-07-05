@@ -19,6 +19,13 @@ router.get('/client', requirePageAuth(ROLES.CLIENT), sendView('client/dashboard.
 router.get('/client/products', requirePageAuth(ROLES.CLIENT), sendView('client/products.html'));
 router.get('/client/orders', requirePageAuth(ROLES.CLIENT), sendView('client/orders.html'));
 router.get('/client/colors', requirePageAuth(ROLES.CLIENT), sendView('client/colors.html'));
+
+// Checkout flow: cart review -> payment -> tracker; invoice is shared
+// (staff can print for customers — the API enforces ownership).
+router.get('/client/checkout', requirePageAuth(ROLES.CLIENT), sendView('client/checkout.html'));
+router.get('/client/payment', requirePageAuth(ROLES.CLIENT), sendView('client/payment.html'));
+router.get('/client/track', requirePageAuth(ROLES.CLIENT), sendView('client/track.html'));
+router.get('/invoice', requirePageAuth(), sendView('shared/invoice.html'));
 router.get('/mixer', requirePageAuth(ROLES.PAINT_MIXER), sendView('mixer/dashboard.html'));
 
 // Production pages are shared by paint mixer and admin; tabs within the

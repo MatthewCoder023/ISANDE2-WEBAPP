@@ -476,6 +476,120 @@
   color: var(--danger-500);
 }
 
+/* ---------- Upload zone (photos, payment proofs) ---------- */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.upload-zone:hover,
+.upload-zone.is-dragover {
+  border-color: var(--primary-500);
+  background-color: var(--primary-50);
+}
+
+.upload-zone [data-icon] {
+  color: var(--text-faint);
+  margin-bottom: 0.5rem;
+}
+
+/* ---------- Order tracker timeline ---------- */
+.timeline {
+  list-style: none;
+  position: relative;
+  padding-left: 2.25rem;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 0.6875rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background-color: var(--border);
+}
+
+.timeline-step {
+  position: relative;
+  padding-bottom: 1.5rem;
+}
+
+.timeline-step:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -2.25rem;
+  top: 0.125rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background-color: var(--surface);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+}
+
+.timeline-step.is-done .timeline-dot {
+  background-color: var(--success-500);
+  border-color: var(--success-500);
+  color: #fff;
+}
+
+.timeline-step.is-current .timeline-dot {
+  border-color: var(--primary-600);
+  box-shadow: 0 0 0 4px var(--primary-100);
+}
+
+.timeline-step.is-current .timeline-dot::after {
+  content: "";
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background-color: var(--primary-600);
+}
+
+.timeline-step.is-cancelled .timeline-dot {
+  background-color: var(--danger-500);
+  border-color: var(--danger-500);
+  color: #fff;
+}
+
+.timeline-label {
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+.timeline-step.is-upcoming .timeline-label {
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.timeline-desc {
+  font-size: 0.8425rem;
+  color: var(--text-muted);
+  margin-top: 0.125rem;
+}
+
+.timeline-step.is-upcoming .timeline-desc {
+  color: var(--text-faint);
+}
+
+.timeline-time {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  margin-top: 0.125rem;
+}
+
 /* ---------- Inline SVG icons ---------- */
 [data-icon] {
   display: inline-flex;

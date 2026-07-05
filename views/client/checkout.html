@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/client" class="brand" data-brand-link>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Checkout</h1>
+        <span class="badge badge-primary" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <div class="studio-grid" style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.5rem; align-items: start;">
+          <section class="card">
+            <h2 class="card-title">Review your order</h2>
+            <p class="card-subtitle" style="margin-bottom: 1rem;">
+              Adjust quantities or remove items before placing your order.
+            </p>
+            <div id="checkout-items"></div>
+            <div id="checkout-empty" class="empty-state" hidden>
+              <div class="empty-state-icon" data-icon="shopping-cart" data-icon-size="34"></div>
+              <p>Your cart is empty.</p>
+              <a href="/client/products" class="btn btn-primary" style="margin-top: 1rem;">Browse Products</a>
+            </div>
+          </section>
+
+          <section class="card" id="summary-card">
+            <h2 class="card-title">Order summary</h2>
+            <div style="display: grid; gap: 0.5rem; margin: 1rem 0; font-size: 0.9375rem;">
+              <div style="display: flex; justify-content: space-between;">
+                <span class="text-muted">Subtotal</span><span id="summary-subtotal">₱0.00</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.125rem; border-top: 2px solid var(--border); padding-top: 0.625rem;">
+                <span>Total</span><span id="summary-total">₱0.00</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="order-notes">Notes for the store <span class="text-muted">(optional)</span></label>
+              <input class="form-input" type="text" id="order-notes" maxlength="300"
+                     placeholder="e.g. Pickup on Saturday morning" />
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" id="place-order-btn">
+              Place Order &amp; Continue to Payment
+            </button>
+            <p class="form-hint" style="text-align: center;">
+              You'll choose GCash or cash-on-pickup on the next step.
+            </p>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/checkout.js"></script>
+</body>
+</html>

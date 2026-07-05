@@ -110,28 +110,7 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* ---------- Photo palette ---------- */
-.upload-zone {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1.75rem 1rem;
-  text-align: center;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.upload-zone:hover,
-.upload-zone.is-dragover {
-  border-color: var(--primary-500);
-  background-color: var(--primary-50);
-}
-
-.upload-zone [data-icon] {
-  color: var(--text-faint);
-  margin-bottom: 0.5rem;
-}
-
+/* ---------- Photo palette (upload zone lives in components.css) ---------- */
 .photo-preview {
   margin-top: 1rem;
   display: none;

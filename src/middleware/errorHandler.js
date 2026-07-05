@@ -20,6 +20,15 @@ function errorHandler(err, req, res, next) {
     message = 'Invalid identifier format.';
   }
 
+  // Multer upload errors -> 422 with a friendly message.
+  if (err.name === 'MulterError') {
+    statusCode = 422;
+    message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'File is too large — the maximum is 5 MB.'
+        : 'Could not process the uploaded file.';
+  }
+
   // Mongoose schema validation errors -> 422 with field details.
   if (err.name === 'ValidationError' && err.errors) {
     statusCode = 422;

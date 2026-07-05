@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/invoice.css" />
+</head>
+<body>
+  <main class="invoice-page">
+    <div class="invoice-actions">
+      <button type="button" class="btn btn-outline" onclick="history.back()">Back</button>
+      <button type="button" class="btn btn-primary" id="print-btn">Print / Save as PDF</button>
+    </div>
+
+    <div class="invoice-sheet" id="invoice-sheet" hidden>
+      <header class="invoice-header">
+        <div class="invoice-brand">
+          <img src="/images/logo.png" alt="Flavor &amp; Color logo" />
+          <div>
+            <h1>Flavor &amp; Color</h1>
+            <p>Vernici Artisan Corp.<br />Mindanao Ave. cor. Arty 2, Quezon City</p>
+          </div>
+        </div>
+        <div class="invoice-title">
+          <h2>INVOICE</h2>
+          <p id="inv-number"></p>
+          <p id="inv-date"></p>
+        </div>
+      </header>
+
+      <section class="invoice-meta">
+        <div>
+          <h3>Billed To</h3>
+          <p id="inv-customer"></p>
+        </div>
+        <div>
+          <h3>Order Details</h3>
+          <p>
+            Status: <span id="inv-status"></span><br />
+            Payment: <span id="inv-payment"></span>
+          </p>
+        </div>
+      </section>
+
+      <table class="invoice-table" aria-label="Invoice items">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th class="num">Unit Price</th>
+            <th class="num">Qty</th>
+            <th class="num">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="inv-items"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="num" style="color: var(--text-muted);">Subtotal</td>
+            <td class="num" id="inv-subtotal"></td>
+          </tr>
+          <tr class="invoice-total-row">
+            <td colspan="3" class="num">Total Due</td>
+            <td class="num" id="inv-total"></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <p id="inv-notes" class="text-muted" style="font-size: 0.875rem;" hidden></p>
+      <p id="inv-instructions" style="font-size: 0.875rem; margin-top: 0.75rem;" hidden></p>
+
+      <footer class="invoice-footer">
+        <p>Thank you for choosing Flavor &amp; Color! Keep this invoice for pickup and warranty purposes.</p>
+        <p id="inv-generated"></p>
+      </footer>
+    </div>
+
+    <div id="invoice-error" class="empty-state" hidden>
+      <p>Could not load this invoice.</p>
+    </div>
+  </main>
+
+  <script type="module" src="/js/pages/invoice.js"></script>
+</body>
+</html>

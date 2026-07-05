@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Track Order — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/client" class="brand" data-brand-link>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Track Order</h1>
+        <span class="badge badge-primary" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; max-width: 960px;" id="track-grid">
+          <section class="card">
+            <h2 class="card-title">Order progress</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.5rem;" id="track-subtitle">Loading…</p>
+            <ol class="timeline" id="timeline"></ol>
+          </section>
+
+          <section class="card">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+              <h2 class="card-title" style="margin: 0;">Order <span id="track-number"></span></h2>
+              <span id="track-status"></span>
+            </div>
+            <div id="track-summary"></div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem;">
+              <a href="#" class="btn btn-outline" id="track-invoice-link">View Invoice</a>
+              <a href="#" class="btn btn-primary" id="track-pay-link" hidden>Pay Now</a>
+              <a href="/client/orders" class="btn btn-outline">My Orders</a>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/track.js"></script>
+</body>
+</html>

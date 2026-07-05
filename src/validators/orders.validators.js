@@ -37,6 +37,25 @@ const walkInSaleRules = [
   ...paymentRules('payment.'),
 ];
 
-const completeOrderRules = [...paymentRules('')];
+/**
+ * Completion only carries payment fields when the order is still unpaid
+ * (cash on pickup / walk-in); verified-GCash orders send an empty body.
+ */
+const completeOrderRules = [
+  body('method')
+    .optional({ values: 'falsy' })
+    .isIn(PAYMENT_METHODS).withMessage('Please choose a valid payment method.'),
+  body('amountTendered')
+    .optional({ values: 'null' })
+    .isFloat({ min: 0 }).withMessage('Amount tendered must be 0 or more.')
+    .toFloat(),
+];
 
-module.exports = { placeOrderRules, walkInSaleRules, completeOrderRules };
+const rejectPaymentRules = [
+  body('reason')
+    .trim()
+    .notEmpty().withMessage('Tell the customer why the proof was rejected.')
+    .isLength({ max: 200 }).withMessage('Reason must be 200 characters or fewer.'),
+];
+
+module.exports = { placeOrderRules, walkInSaleRules, completeOrderRules, rejectPaymentRules };

@@ -1,13 +1,13 @@
 /**
- * Customer order history: list own orders, view details,
- * cancel while still pending.
+ * Customer order history: track each order's progress, open its
+ * invoice, pay pending ones, cancel while still awaiting payment.
  */
 import { api } from '/js/api.js';
 import { showToast, showFlashToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, formatDateTime } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
 import { initModal } from '/js/modal.js';
-import { STATUS_BADGES, renderOrderDetail } from '/js/orders-ui.js';
+import { STATUS_BADGES } from '/js/orders-ui.js';
 
 const state = { page: 1, status: '' };
 const ordersCache = new Map();
@@ -16,7 +16,6 @@ const tbody = document.querySelector('#orders-tbody');
 const emptyState = document.querySelector('#empty-state');
 const paginationEl = document.querySelector('#pagination');
 
-const detailModal = initModal(document.querySelector('#detail-modal'));
 const confirmModal = initModal(document.querySelector('#confirm-modal'));
 let cancelOrderId = null;
 
@@ -44,10 +43,13 @@ function renderTable(orders) {
 
   tbody.innerHTML = orders
     .map((o) => {
-      const cancelButton =
-        o.status === 'pending'
-          ? `<button class="btn btn-outline btn-sm" data-action="cancel" data-id="${o.id}">Cancel</button>`
-          : '';
+      const awaitingPayment = o.status === 'pending_payment';
+      const payButton = awaitingPayment
+        ? `<a class="btn btn-primary btn-sm" href="/client/payment?order=${o.id}">Pay Now</a>`
+        : '';
+      const cancelButton = awaitingPayment
+        ? `<button class="btn btn-outline btn-sm" data-action="cancel" data-id="${o.id}">Cancel</button>`
+        : '';
       return `
         <tr>
           <td><strong>${escapeHtml(o.orderNumber)}</strong></td>
@@ -57,7 +59,9 @@ function renderTable(orders) {
           <td>${STATUS_BADGES[o.status] || escapeHtml(o.status)}</td>
           <td>
             <div class="cell-actions">
-              <button class="btn btn-outline btn-sm" data-action="view" data-id="${o.id}">View</button>
+              <a class="btn btn-outline btn-sm" href="/client/track?order=${o.id}">Track</a>
+              <a class="btn btn-outline btn-sm" href="/invoice?order=${o.id}">Invoice</a>
+              ${payButton}
               ${cancelButton}
             </div>
           </td>
@@ -72,28 +76,16 @@ document.querySelector('#status-filter').addEventListener('change', (event) => {
   loadOrders();
 });
 
-tbody.addEventListener('click', async (event) => {
-  const button = event.target.closest('button[data-action]');
+tbody.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-action="cancel"]');
   if (!button) return;
   const order = ordersCache.get(button.dataset.id);
   if (!order) return;
 
-  if (button.dataset.action === 'view') {
-    try {
-      const { data } = await api(`/api/orders/${order.id}`);
-      renderOrderDetail(document.querySelector('#detail-body'), data.order, data.transaction);
-      detailModal.open();
-    } catch (error) {
-      showToast(error.message, 'error');
-    }
-  }
-
-  if (button.dataset.action === 'cancel') {
-    cancelOrderId = order.id;
-    document.querySelector('#confirm-message').textContent =
-      `Cancel order ${order.orderNumber}? The items will go back on the shelf and this cannot be undone.`;
-    confirmModal.open();
-  }
+  cancelOrderId = order.id;
+  document.querySelector('#confirm-message').textContent =
+    `Cancel order ${order.orderNumber}? The items will go back on the shelf and this cannot be undone.`;
+  confirmModal.open();
 });
 
 document.querySelector('#confirm-btn').addEventListener('click', async () => {

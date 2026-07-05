@@ -53,6 +53,12 @@
   padding: 0;
 }
 
+/* The hidden attribute must always win, even over display-styled
+   components (.btn, .modal-backdrop, flex layouts, …). */
+[hidden] {
+  display: none !important;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }

@@ -42,7 +42,10 @@
           <div class="toolbar">
             <select id="status-filter" class="form-input form-select" aria-label="Filter by status">
               <option value="">All statuses</option>
-              <option value="pending">Pending</option>
+              <option value="pending_payment">Pending payment</option>
+              <option value="pending_verification">Pending verification</option>
+              <option value="payment_verified">Payment verified</option>
+              <option value="preparing">Preparing</option>
               <option value="ready">Ready for pickup</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
@@ -75,20 +78,6 @@
           <div id="pagination" class="pagination"></div>
         </section>
       </main>
-    </div>
-  </div>
-
-  <!-- Order detail modal -->
-  <div class="modal-backdrop" id="detail-modal" hidden>
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
-      <header class="modal-header">
-        <h2 class="modal-title" id="detail-modal-title">Order Details</h2>
-        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
-      </header>
-      <div class="modal-body" id="detail-body"></div>
-      <footer class="modal-footer">
-        <button type="button" class="btn btn-outline" data-modal-close>Close</button>
-      </footer>
     </div>
   </div>
 

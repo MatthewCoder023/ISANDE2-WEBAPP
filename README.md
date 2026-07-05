@@ -117,8 +117,27 @@ later one fails, and cancellation restores stock as `return` movements.
 Completion is payment: it creates a `Transaction` (method, tendered,
 change, cashier) and stamps `paidAt`/`completedAt`.
 
-**Order lifecycle**: `pending → ready → completed`, `cancelled` allowed
-before completion. Walk-in POS sales are created directly as completed.
+**Order lifecycle**:
+`pending_payment → [pending_verification → payment_verified] → preparing → ready → completed`,
+with `cancelled` possible before completion. GCash orders go through proof
+verification; cash-on-pickup orders skip straight to preparing and are paid
+at handover. Walk-in POS sales are created directly as completed. Every
+transition is appended to the order's `statusHistory`, which drives the
+customer-facing tracker timeline.
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | /api/orders/:id/payment-method | Client (owner) | Choose cash on pickup → preparing |
+| POST | /api/orders/:id/proof | Client (owner) | Upload GCash proof (JPG/PNG/WebP ≤ 5 MB) → pending_verification |
+| GET | /api/orders/:id/proof | Owner or staff | The proof image (private — served with auth, never static) |
+| POST | /api/orders/:id/verify-payment | Cashier/Admin | Approve proof → payment_verified, records the Transaction |
+| POST | /api/orders/:id/reject-payment | Cashier/Admin | Reject proof with a reason → back to pending_payment |
+| POST | /api/orders/:id/prepare | Cashier/Admin | payment_verified → preparing |
+
+**Checkout flow**: Cart → `/client/checkout` (review) → place order →
+`/client/payment` (method, GCash instructions, proof upload) →
+`/invoice?order=` (printable / save-as-PDF via the browser print dialog) →
+`/client/track?order=` (timeline tracker).
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
@@ -176,6 +195,9 @@ server-side.
 - [x] **Phase 4 — Paint Production & Color Tools**: mixing queue, color
       formulas, production log; Color Studio with interactive color wheel,
       photo color extraction, and perceptual paint matching
-- [ ] **Phase 5 — Administration**: user/employee management, reports,
+- [x] **Phase 5 — Checkout & Order Tracking**: checkout page, payment page
+      (GCash proof upload / cash on pickup), printable invoice, payment
+      verification workflow, order tracker timeline
+- [ ] **Phase 6 — Administration**: user/employee management, reports,
       system configuration
 # ISANDE2-WEBAPP

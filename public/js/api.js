@@ -6,7 +6,9 @@
 export async function api(path, { method = 'GET', body } = {}) {
   const options = { method, headers: {} };
 
-  if (body !== undefined) {
+  if (body instanceof FormData) {
+    options.body = body; // the browser sets the multipart boundary itself
+  } else if (body !== undefined) {
     options.headers['Content-Type'] = 'application/json';
     options.body = JSON.stringify(body);
   }

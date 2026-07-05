@@ -1,7 +1,8 @@
 /**
- * Staff order processing (cashier/admin): filter and search all orders,
- * advance pending → ready → completed (with payment), cancel with
- * stock restoration.
+ * Staff order processing (cashier/admin): review payment proofs,
+ * advance orders through verification → preparing → ready → completed,
+ * take payment at handover for unpaid orders, cancel with stock
+ * restoration.
  */
 import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
@@ -20,10 +21,12 @@ const paginationEl = document.querySelector('#pagination');
 
 const detailModal = initModal(document.querySelector('#detail-modal'));
 const paymentModal = initModal(document.querySelector('#payment-modal'));
+const reviewModal = initModal(document.querySelector('#review-modal'));
 const confirmModal = initModal(document.querySelector('#confirm-modal'));
 
 const paymentForm = document.querySelector('#payment-form');
 let paymentOrder = null;
+let reviewOrder = null;
 let cancelOrderId = null;
 
 /* ---------- List ---------- */
@@ -47,19 +50,26 @@ async function loadOrders() {
 }
 
 function actionButtons(order) {
-  const buttons = [
-    `<button class="btn btn-outline btn-sm" data-action="view" data-id="${order.id}">View</button>`,
-  ];
-  if (order.status === 'pending') {
-    buttons.push(
-      `<button class="btn btn-outline btn-sm" data-action="ready" data-id="${order.id}">Mark Ready</button>`
-    );
-  }
-  if (order.status === 'pending' || order.status === 'ready') {
-    buttons.push(
-      `<button class="btn btn-primary btn-sm" data-action="complete" data-id="${order.id}">Complete</button>`,
-      `<button class="btn btn-outline btn-sm" data-action="cancel" data-id="${order.id}">Cancel</button>`
-    );
+  const button = (action, label, primary = false) =>
+    `<button class="btn ${primary ? 'btn-primary' : 'btn-outline'} btn-sm" data-action="${action}" data-id="${order.id}">${label}</button>`;
+
+  const buttons = [button('view', 'View')];
+  switch (order.status) {
+    case 'pending_payment':
+      buttons.push(button('complete', 'Take Payment', true), button('cancel', 'Cancel'));
+      break;
+    case 'pending_verification':
+      buttons.push(button('review', 'Review Payment', true), button('cancel', 'Cancel'));
+      break;
+    case 'payment_verified':
+      buttons.push(button('prepare', 'Start Preparing', true), button('cancel', 'Cancel'));
+      break;
+    case 'preparing':
+      buttons.push(button('ready', 'Mark Ready', true), button('cancel', 'Cancel'));
+      break;
+    case 'ready':
+      buttons.push(button('complete', 'Complete', true), button('cancel', 'Cancel'));
+      break;
   }
   return buttons.join('');
 }
@@ -140,6 +150,62 @@ function updatePaymentHint() {
 paymentForm.method.addEventListener('change', updatePaymentHint);
 paymentForm.amountTendered.addEventListener('input', updatePaymentHint);
 
+/* ---------- Review payment proof ---------- */
+
+function openReviewModal(order) {
+  reviewOrder = order;
+  document.querySelector('#review-order-number').textContent = order.orderNumber;
+  document.querySelector('#review-total').textContent = formatPrice(order.total);
+  document.querySelector('#review-customer').textContent =
+    `${order.customerName || 'Customer'} · GCash proof submitted`;
+  document.querySelector('#review-reason').value = '';
+  // Cache-bust so a re-uploaded proof always shows fresh.
+  document.querySelector('#review-proof-img').src = `/api/orders/${order.id}/proof?t=${Date.now()}`;
+  reviewModal.open();
+}
+
+document.querySelector('#verify-payment-btn').addEventListener('click', async () => {
+  if (!reviewOrder) return;
+  const button = document.querySelector('#verify-payment-btn');
+  setBusy(button, true, 'Verifying…');
+  try {
+    const { message } = await api(`/api/orders/${reviewOrder.id}/verify-payment`, { method: 'POST' });
+    showToast(message, 'success');
+    reviewModal.close();
+    reviewOrder = null;
+    loadOrders();
+  } catch (error) {
+    showToast(error.message, 'error');
+  } finally {
+    setBusy(button, false);
+  }
+});
+
+document.querySelector('#reject-payment-btn').addEventListener('click', async () => {
+  if (!reviewOrder) return;
+  const reason = document.querySelector('#review-reason').value.trim();
+  if (!reason) {
+    showToast('Add a short reason so the customer knows what to fix.', 'warning');
+    return;
+  }
+  const button = document.querySelector('#reject-payment-btn');
+  setBusy(button, true, 'Rejecting…');
+  try {
+    const { message } = await api(`/api/orders/${reviewOrder.id}/reject-payment`, {
+      method: 'POST',
+      body: { reason },
+    });
+    showToast(message, 'success');
+    reviewModal.close();
+    reviewOrder = null;
+    loadOrders();
+  } catch (error) {
+    showToast(error.message, 'error');
+  } finally {
+    setBusy(button, false);
+  }
+});
+
 paymentForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!paymentOrder) return;
@@ -196,9 +262,14 @@ tbody.addEventListener('click', async (event) => {
       }
       break;
     }
+    case 'review':
+      openReviewModal(order);
+      break;
+    case 'prepare':
     case 'ready': {
+      const endpoint = button.dataset.action === 'prepare' ? 'prepare' : 'ready';
       try {
-        const { message } = await api(`/api/orders/${order.id}/ready`, { method: 'POST' });
+        const { message } = await api(`/api/orders/${order.id}/${endpoint}`, { method: 'POST' });
         showToast(message, 'success');
         loadOrders();
       } catch (error) {
@@ -206,9 +277,24 @@ tbody.addEventListener('click', async (event) => {
       }
       break;
     }
-    case 'complete':
-      openPaymentModal(order);
+    case 'complete': {
+      // Verified-GCash orders are already paid — hand over directly.
+      if (order.paidAt) {
+        try {
+          const { message } = await api(`/api/orders/${order.id}/complete`, {
+            method: 'POST',
+            body: {},
+          });
+          showToast(message, 'success');
+          loadOrders();
+        } catch (error) {
+          showToast(error.message, 'error');
+        }
+      } else {
+        openPaymentModal(order);
+      }
       break;
+    }
     case 'cancel':
       cancelOrderId = order.id;
       document.querySelector('#confirm-message').textContent =
