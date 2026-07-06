@@ -61,7 +61,7 @@
           <div class="card stat-card">
             <span class="stat-icon stat-icon-info" aria-hidden="true" data-icon="users" data-icon-size="22"></span>
             <div>
-              <div class="stat-value">—</div>
+              <div class="stat-value" data-stat="registeredUsers">—</div>
               <div class="stat-label">Registered Users</div>
             </div>
           </div>
@@ -75,11 +75,15 @@
         </section>
 
         <section class="card">
-          <h3 class="card-title">Coming soon</h3>
-          <p class="card-subtitle">
-            User and employee management, reports, and system settings arrive
-            in the administration module.
+          <h3 class="card-title">Administration</h3>
+          <p class="card-subtitle" style="margin-bottom: 1rem;">
+            Manage accounts, dig into the numbers, or adjust how the shop runs.
           </p>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="/admin/users" class="btn btn-primary"><span data-icon="users"></span> Users &amp; Roles</a>
+            <a href="/admin/reports" class="btn btn-outline"><span data-icon="bar-chart"></span> Reports</a>
+            <a href="/admin/settings" class="btn btn-outline"><span data-icon="settings"></span> Settings</a>
+          </div>
         </section>
       </main>
     </div>

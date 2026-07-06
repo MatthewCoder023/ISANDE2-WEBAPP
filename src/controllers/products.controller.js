@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const StockMovement = require('../models/StockMovement');
+const Setting = require('../models/Setting');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
@@ -152,6 +153,7 @@ const getById = asyncHandler(async (req, res) => {
 const create = asyncHandler(async (req, res) => {
   const { name, sku, description, category, finish, size, color, price, stock } = req.body;
   const initialQuantity = stock?.quantity ?? 0;
+  const settings = await Setting.get();
 
   const product = await Product.create({
     name,
@@ -164,7 +166,7 @@ const create = asyncHandler(async (req, res) => {
     price,
     stock: {
       quantity: initialQuantity,
-      lowStockThreshold: stock?.lowStockThreshold ?? 5,
+      lowStockThreshold: stock?.lowStockThreshold ?? settings.defaultLowStockThreshold,
     },
   });
 

@@ -141,6 +141,29 @@ customer-facing tracker timeline.
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
+| GET | /api/users | Admin | User directory (role/status filters, search, pagination) |
+| GET | /api/users/stats | Admin | Totals, clients vs staff, new this month |
+| POST | /api/users | Admin | Create an account (typically staff) |
+| PATCH | /api/users/:id | Admin | Edit / role change / deactivate-restore (email immutable) |
+| POST | /api/users/:id/reset-password | Admin | Set a new password |
+| GET | /api/settings | Authenticated | System settings (GCash details power the payment page) |
+| PATCH | /api/settings | Admin | Update store info, payments, operations |
+| GET | /api/reports/sales?days= | Admin | Revenue by day, KPIs, methods, top products, categories |
+| GET | /api/reports/inventory | Admin | Stock value by category, restock list |
+
+**Admin safety rails**: admins cannot change their own role or deactivate
+themselves, and the last active administrator can never be demoted or
+deactivated. Deactivation locks a user out on their very next request,
+because `requireAuth` re-reads the account from the database each time.
+
+**System settings** are a singleton document (`Setting.get()` upserts
+defaults on first use). They drive real behavior: GCash payment
+instructions on the payment page and invoices, an accept-online-orders
+switch enforced at order placement, and the default low-stock threshold
+applied to new products.
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
 | GET | /api/products/match?hex= | Authenticated | Closest catalog paints to a color, ranked by CIELAB ΔE with match % |
 | POST | /api/mixing/requests | Authenticated | Request a custom mix (target color, optional base paint, quantity) |
 | GET | /api/mixing/requests | Authenticated | Clients see own; mixer/cashier/admin see all (`status` accepts a value, `active`, or `history`) |
@@ -174,6 +197,9 @@ before completion. Completed/cancelled requests form the production log.
 | `/cashier` | Cashier only |
 | `/admin` | Admin only |
 | `/admin/products` | Admin only — product & inventory management |
+| `/admin/users` | Admin only — user & employee management |
+| `/admin/reports` | Admin only — sales & inventory reports |
+| `/admin/settings` | Admin only — system configuration |
 | `/pos` | Cashier + Admin — point of sale |
 | `/orders` | Cashier + Admin — process all orders |
 | `/transactions` | Cashier + Admin — payment log |
@@ -198,6 +224,6 @@ server-side.
 - [x] **Phase 5 — Checkout & Order Tracking**: checkout page, payment page
       (GCash proof upload / cash on pickup), printable invoice, payment
       verification workflow, order tracker timeline
-- [ ] **Phase 6 — Administration**: user/employee management, reports,
-      system configuration
+- [x] **Phase 6 — Administration**: user/employee management with admin
+      safety rails, sales & inventory reports, system settings
 # ISANDE2-WEBAPP

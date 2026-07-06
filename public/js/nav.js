@@ -47,9 +47,9 @@ const NAV_CONFIG = {
     { href: '/orders', icon: 'package', label: 'Orders' },
     { href: '/transactions', icon: 'credit-card', label: 'Transactions' },
     { href: '/mixing', icon: 'flask-conical', label: 'Paint Mixing' },
-    { icon: 'users', label: 'Users & Roles', soon: true },
-    { icon: 'bar-chart', label: 'Reports', soon: true },
-    { icon: 'settings', label: 'Settings', soon: true },
+    { href: '/admin/users', icon: 'users', label: 'Users & Roles' },
+    { href: '/admin/reports', icon: 'bar-chart', label: 'Reports' },
+    { href: '/admin/settings', icon: 'settings', label: 'Settings' },
   ],
 };
 

@@ -29,5 +29,15 @@ async function loadOrderStats() {
   }
 }
 
+async function loadUserStats() {
+  try {
+    const { data } = await api('/api/users/stats');
+    set('registeredUsers', data.stats.total);
+  } catch {
+    // Cards keep their placeholder.
+  }
+}
+
 loadProductStats();
 loadOrderStats();
+loadUserStats();

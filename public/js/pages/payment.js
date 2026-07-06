@@ -47,6 +47,16 @@ function showPaymentPanel(order) {
   }
 }
 
+async function loadGcashDetails() {
+  try {
+    const { data } = await api('/api/settings');
+    document.querySelector('#gcash-number').textContent = data.settings.gcashNumber;
+    document.querySelector('#gcash-name').textContent = data.settings.gcashName;
+  } catch {
+    // The hard-coded defaults in the markup remain.
+  }
+}
+
 async function loadOrder() {
   if (!orderId) {
     window.location.assign('/client/orders');
@@ -182,4 +192,5 @@ confirmCashButton.addEventListener('click', async () => {
   }
 });
 
+loadGcashDetails();
 loadOrder();

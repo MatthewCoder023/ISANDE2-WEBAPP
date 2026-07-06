@@ -36,6 +36,9 @@ router.get('/mixing/log', requirePageAuth(ROLES.PAINT_MIXER, ROLES.ADMIN), sendV
 router.get('/cashier', requirePageAuth(ROLES.CASHIER), sendView('cashier/dashboard.html'));
 router.get('/admin', requirePageAuth(ROLES.ADMIN), sendView('admin/dashboard.html'));
 router.get('/admin/products', requirePageAuth(ROLES.ADMIN), sendView('admin/products.html'));
+router.get('/admin/users', requirePageAuth(ROLES.ADMIN), sendView('admin/users.html'));
+router.get('/admin/reports', requirePageAuth(ROLES.ADMIN), sendView('admin/reports.html'));
+router.get('/admin/settings', requirePageAuth(ROLES.ADMIN), sendView('admin/settings.html'));
 
 // Sales pages are shared by cashier and admin; the sidebar adapts per role.
 router.get('/pos', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('staff/pos.html'));

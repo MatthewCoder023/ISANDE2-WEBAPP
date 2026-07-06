@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <style>
+    .report-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .report-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-wrap { overflow-x: auto; }
+
+    .chart-wrap svg { display: block; width: 100%; height: 220px; }
+
+    .chart-bar { fill: var(--primary-500); }
+    .chart-bar:hover { fill: var(--primary-700); }
+    .chart-axis { stroke: var(--border); stroke-width: 1; }
+    .chart-label { font-size: 10px; fill: var(--text-faint); font-family: var(--font-sans); }
+  </style>
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/admin" class="brand" data-brand-link>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Reports</h1>
+        <select id="period-select" class="form-input form-select" aria-label="Report period" style="width: auto;">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </header>
+
+      <main class="dash-content">
+        <section class="stat-grid" aria-label="Key numbers">
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-success" aria-hidden="true" data-icon="peso" data-icon-size="22"></span>
+            <div>
+              <div class="stat-value" data-kpi="revenue">—</div>
+              <div class="stat-label">Revenue</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-primary" aria-hidden="true" data-icon="credit-card" data-icon-size="22"></span>
+            <div>
+              <div class="stat-value" data-kpi="transactions">—</div>
+              <div class="stat-label">Transactions</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-info" aria-hidden="true" data-icon="bar-chart" data-icon-size="22"></span>
+            <div>
+              <div class="stat-value" data-kpi="averageSale">—</div>
+              <div class="stat-label">Average Sale</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-icon stat-icon-warning" aria-hidden="true" data-icon="users" data-icon-size="22"></span>
+            <div>
+              <div class="stat-value" data-kpi="newCustomers">—</div>
+              <div class="stat-label">New Customers</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Revenue by day</h2>
+          <p class="card-subtitle" style="margin-bottom: 1rem;" id="chart-subtitle"></p>
+          <div class="chart-wrap" id="revenue-chart"></div>
+        </section>
+
+        <div class="report-grid">
+          <section class="card card--flush">
+            <div style="padding: 1.5rem 1.25rem 0.5rem;"><h2 class="card-title">Top products</h2></div>
+            <div class="table-wrap">
+              <table class="table" aria-label="Top products">
+                <thead><tr><th>Product</th><th>Units</th><th style="text-align: right;">Revenue</th></tr></thead>
+                <tbody id="top-products-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="card card--flush">
+            <div style="padding: 1.5rem 1.25rem 0.5rem;"><h2 class="card-title">Payment methods</h2></div>
+            <div class="table-wrap">
+              <table class="table" aria-label="Payment methods">
+                <thead><tr><th>Method</th><th>Transactions</th><th style="text-align: right;">Amount</th></tr></thead>
+                <tbody id="methods-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="card card--flush">
+            <div style="padding: 1.5rem 1.25rem 0.5rem;"><h2 class="card-title">Sales by category</h2></div>
+            <div class="table-wrap">
+              <table class="table" aria-label="Sales by category">
+                <thead><tr><th>Category</th><th>Units</th><th style="text-align: right;">Revenue</th></tr></thead>
+                <tbody id="categories-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="card card--flush">
+            <div style="padding: 1.5rem 1.25rem 0.5rem;">
+              <h2 class="card-title">Inventory position</h2>
+              <p class="card-subtitle" id="inventory-totals"></p>
+            </div>
+            <div class="table-wrap">
+              <table class="table" aria-label="Inventory by category">
+                <thead><tr><th>Category</th><th>SKUs</th><th>Units</th><th style="text-align: right;">Value</th></tr></thead>
+                <tbody id="inventory-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <section class="card card--flush">
+          <div style="padding: 1.5rem 1.25rem 0.5rem;">
+            <h2 class="card-title">Needs restocking</h2>
+            <p class="card-subtitle">Active products at or below their low-stock threshold.</p>
+          </div>
+          <div class="table-wrap">
+            <table class="table" aria-label="Low stock products">
+              <thead><tr><th>Product</th><th>SKU</th><th>On Hand</th><th>Threshold</th></tr></thead>
+              <tbody id="low-stock-tbody"></tbody>
+            </table>
+          </div>
+          <div id="low-stock-empty" class="empty-state" hidden>
+            <p>Everything is comfortably stocked.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/admin-reports.js"></script>
+</body>
+</html>

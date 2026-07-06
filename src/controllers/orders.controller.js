@@ -2,6 +2,7 @@ const path = require('path');
 
 const Order = require('../models/Order');
 const Transaction = require('../models/Transaction');
+const Setting = require('../models/Setting');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
@@ -20,6 +21,14 @@ function parsePagination(query, defaultLimit = 10) {
 
 /** POST /api/orders — customer places an online order (checkout step 1). */
 const placeOrder = asyncHandler(async (req, res) => {
+  const settings = await Setting.get();
+  if (!settings.acceptOnlineOrders) {
+    throw new ApiError(
+      503,
+      'Online ordering is temporarily paused — please visit us in store or try again later.'
+    );
+  }
+
   const order = await orderService.createOrder({
     requestedItems: req.body.items,
     notes: req.body.notes,

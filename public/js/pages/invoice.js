@@ -23,14 +23,17 @@ document.querySelector('#print-btn').addEventListener('click', () => window.prin
 
 async function loadInvoice() {
   try {
-    const { data } = await api(`/api/orders/${orderId}`);
-    render(data.order, data.transaction);
+    const [orderRes, settingsRes] = await Promise.all([
+      api(`/api/orders/${orderId}`),
+      api('/api/settings').catch(() => null),
+    ]);
+    render(orderRes.data.order, orderRes.data.transaction, settingsRes?.data.settings || null);
   } catch {
     document.querySelector('#invoice-error').hidden = false;
   }
 }
 
-function render(order, transaction) {
+function render(order, transaction, settings) {
   document.querySelector('#inv-number').textContent = order.orderNumber;
   document.querySelector('#inv-date').textContent = formatDateTime(order.createdAt);
   document.querySelector('#inv-customer').textContent = order.customerName || 'Walk-in Customer';
@@ -71,10 +74,12 @@ function render(order, transaction) {
   }
 
   if (order.status === 'pending_payment') {
+    const gcashNumber = settings?.gcashNumber || '0917 555 0123';
+    const gcashName = settings?.gcashName || 'Vernici Artisan Corp.';
     const instructions = document.querySelector('#inv-instructions');
     instructions.innerHTML =
-      '<strong>Payment instructions:</strong> pay via GCash to 0917 555 0123 ' +
-      `(Vernici Artisan Corp.) with reference <strong>${escapeHtml(order.orderNumber)}</strong> ` +
+      `<strong>Payment instructions:</strong> pay via GCash to ${escapeHtml(gcashNumber)} ` +
+      `(${escapeHtml(gcashName)}) with reference <strong>${escapeHtml(order.orderNumber)}</strong> ` +
       'and upload your proof on the payment page, or choose cash on pickup.';
     instructions.hidden = false;
   }

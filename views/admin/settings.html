@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/admin" class="brand" data-brand-link>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>System Settings</h1>
+        <span class="badge badge-danger" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <form id="settings-form" novalidate style="display: grid; gap: 1.5rem; max-width: 640px;">
+          <section class="card">
+            <h2 class="card-title">Store information</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.25rem;">Shown on invoices and around the site.</p>
+
+            <div class="form-group">
+              <label class="form-label" for="s-shop-name">Shop name</label>
+              <input class="form-input" type="text" id="s-shop-name" name="shopName" maxlength="80" />
+              <p class="form-error" data-error-for="shopName"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="s-address">Address</label>
+              <input class="form-input" type="text" id="s-address" name="addressLine" maxlength="160" />
+              <p class="form-error" data-error-for="addressLine"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="s-phone">Phone <span class="text-muted">(optional)</span></label>
+              <input class="form-input" type="tel" id="s-phone" name="phone" maxlength="30" />
+              <p class="form-error" data-error-for="phone"></p>
+            </div>
+          </section>
+
+          <section class="card">
+            <h2 class="card-title">Payments</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.25rem;">
+              These GCash details appear in the checkout payment instructions and on unpaid invoices.
+            </p>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="s-gcash-number">GCash number</label>
+                <input class="form-input" type="text" id="s-gcash-number" name="gcashNumber" maxlength="30" />
+                <p class="form-error" data-error-for="gcashNumber"></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="s-gcash-name">GCash account name</label>
+                <input class="form-input" type="text" id="s-gcash-name" name="gcashName" maxlength="80" />
+                <p class="form-error" data-error-for="gcashName"></p>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <h2 class="card-title">Operations</h2>
+
+            <label style="display: flex; gap: 0.625rem; align-items: flex-start; padding: 0.875rem; border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; margin-bottom: 1.125rem;">
+              <input type="checkbox" id="s-accept-orders" name="acceptOnlineOrders" style="margin-top: 0.25rem;" />
+              <span>
+                <strong>Accept online orders</strong><br />
+                <span class="text-muted" style="font-size: 0.875rem;">
+                  When off, customers see a friendly notice at checkout and can only buy in store.
+                </span>
+              </span>
+            </label>
+
+            <div class="form-group">
+              <label class="form-label" for="s-threshold">Default low-stock threshold</label>
+              <input class="form-input" type="number" id="s-threshold" name="defaultLowStockThreshold"
+                     min="0" max="999" step="1" style="max-width: 140px;" />
+              <p class="form-error" data-error-for="defaultLowStockThreshold"></p>
+              <p class="form-hint">Used for new products unless a specific threshold is set.</p>
+            </div>
+          </section>
+
+          <div>
+            <button type="submit" class="btn btn-primary" id="settings-save-btn">Save Settings</button>
+          </div>
+        </form>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/admin-settings.js"></script>
+</body>
+</html>
