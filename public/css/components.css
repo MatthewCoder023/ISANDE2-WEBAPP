@@ -13,9 +13,11 @@
   border-radius: var(--radius-md);
   font-size: 0.9375rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease,
-    color 0.15s ease, transform 0.1s ease;
+  transition: background-color var(--speed-fast) ease, border-color var(--speed-fast) ease,
+    color var(--speed-fast) ease, transform var(--speed-fast) var(--ease),
+    box-shadow var(--speed) var(--ease), filter var(--speed-fast) ease;
   text-decoration: none;
 }
 
@@ -24,7 +26,7 @@
 }
 
 .btn:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.97);
 }
 
 .btn:disabled {
@@ -33,28 +35,40 @@
 }
 
 .btn-primary {
-  background-color: var(--primary-600);
+  background-image: var(--gradient-primary);
   color: #fff;
+  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.25);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-700);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-primary);
+  filter: brightness(1.06);
 }
 
 .btn-outline {
-  background-color: transparent;
+  background-color: var(--surface);
   border-color: var(--border);
   color: var(--text);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-outline:hover:not(:disabled) {
-  border-color: var(--primary-600);
+  border-color: var(--primary-500);
   color: var(--primary-600);
+  background-color: var(--primary-50);
+  transform: translateY(-1px);
 }
 
 .btn-danger {
-  background-color: var(--danger-500);
+  background-image: linear-gradient(135deg, #dc2626, #b91c1c);
   color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.3);
+  filter: brightness(1.06);
 }
 
 .btn-block {
@@ -95,13 +109,18 @@
   font-family: inherit;
   color: var(--text);
   background-color: var(--surface);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: border-color var(--speed-fast) ease, box-shadow var(--speed) var(--ease);
+}
+
+.form-input:hover:not(:focus) {
+  border-color: #cbd2e0;
 }
 
 .form-input:focus {
   outline: none;
   border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px var(--primary-100);
+  box-shadow: 0 0 0 4px var(--primary-100);
 }
 
 .form-input.is-invalid {
@@ -132,6 +151,7 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 1.5rem;
+  transition: box-shadow var(--speed) var(--ease), transform var(--speed) var(--ease);
 }
 
 .card-title {
@@ -178,13 +198,16 @@
   align-items: flex-start;
   gap: 0.625rem;
   padding: 0.875rem 1rem;
-  background-color: var(--surface);
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   border-left: 4px solid var(--info-500);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   font-size: 0.875rem;
-  animation: toast-in 0.25s ease;
+  font-weight: 500;
+  animation: toast-in 0.4s var(--ease);
 }
 
 .toast.is-leaving {
@@ -196,8 +219,8 @@
 .toast-warning { border-left-color: var(--warning-500); }
 
 @keyframes toast-in {
-  from { opacity: 0; transform: translateX(1rem); }
-  to   { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(1.5rem) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 @keyframes toast-out {
@@ -279,12 +302,17 @@
   vertical-align: middle;
 }
 
+.table tbody tr {
+  transition: background-color var(--speed-fast) ease, box-shadow var(--speed-fast) ease;
+}
+
 .table tbody tr:last-child td {
   border-bottom: none;
 }
 
 .table tbody tr:hover {
-  background-color: var(--bg);
+  background-color: var(--primary-50);
+  box-shadow: inset 3px 0 0 var(--primary-500);
 }
 
 .table .cell-actions {
@@ -306,6 +334,13 @@
   justify-content: center;
   font-size: 1rem;
   background-color: var(--bg);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4), var(--shadow-sm);
+  transition: transform var(--speed-fast) var(--ease);
+}
+
+tr:hover .swatch,
+.cart-line:hover .swatch {
+  transform: scale(1.08);
 }
 
 /* ---------- Product cell (swatch + name/meta, used in tables) ---------- */
@@ -397,11 +432,19 @@
   cursor: pointer;
   font-weight: 700;
   line-height: 1;
+  transition: background-color var(--speed-fast) ease, border-color var(--speed-fast) ease,
+    color var(--speed-fast) ease, transform var(--speed-fast) ease;
 }
 
 .qty-stepper button:hover {
   border-color: var(--primary-600);
-  color: var(--primary-600);
+  color: #fff;
+  background-image: var(--gradient-primary);
+  transform: scale(1.08);
+}
+
+.qty-stepper button:active {
+  transform: scale(0.95);
 }
 
 .qty-stepper .qty {
@@ -437,6 +480,12 @@
   justify-content: center;
   margin-bottom: 0.75rem;
   color: var(--text-faint);
+  animation: gentle-float 3.5s ease-in-out infinite;
+}
+
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 /* ---------- Repeatable form rows (e.g. formula components) ---------- */
@@ -547,7 +596,13 @@
 
 .timeline-step.is-current .timeline-dot {
   border-color: var(--primary-600);
-  box-shadow: 0 0 0 4px var(--primary-100);
+  animation: timeline-pulse 2.2s ease-out infinite;
+}
+
+@keyframes timeline-pulse {
+  0% { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.35); }
+  70% { box-shadow: 0 0 0 11px rgba(99, 102, 241, 0); }
+  100% { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0); }
 }
 
 .timeline-step.is-current .timeline-dot::after {
@@ -615,8 +670,10 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background-color: rgba(15, 23, 42, 0.55);
-  animation: modal-fade-in 0.15s ease;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: modal-fade-in 0.2s ease;
 }
 
 .modal {
@@ -628,7 +685,7 @@
   background-color: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  animation: modal-pop-in 0.18s ease;
+  animation: modal-pop-in 0.35s var(--ease);
 }
 
 .modal--sm {
@@ -681,6 +738,25 @@
 }
 
 @keyframes modal-pop-in {
-  from { opacity: 0; transform: translateY(0.5rem) scale(0.98); }
+  from { opacity: 0; transform: translateY(1rem) scale(0.96); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------- Scroll reveal (landing page) ---------- */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
 }

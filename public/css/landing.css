@@ -1,7 +1,9 @@
 /* Landing page (index.html) */
 
 .site-header {
-  background-color: var(--surface);
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -44,6 +46,7 @@
 
 /* ---------- Hero ---------- */
 .hero {
+  position: relative;
   max-width: 1080px;
   margin: 0 auto;
   padding: 4rem 1.5rem 3rem;
@@ -51,6 +54,14 @@
   grid-template-columns: 1.1fr 1fr;
   gap: 3rem;
   align-items: center;
+}
+
+/* Soft ambient gradient wash behind the hero. */
+body {
+  background-image:
+    radial-gradient(52rem 30rem at 115% -5%, rgba(124, 58, 237, 0.09), transparent 60%),
+    radial-gradient(44rem 26rem at -15% 20%, rgba(251, 191, 36, 0.1), transparent 60%);
+  background-repeat: no-repeat;
 }
 
 .hero-eyebrow {
@@ -70,7 +81,10 @@
 }
 
 .hero h1 span {
-  color: var(--primary-600);
+  background-image: linear-gradient(120deg, var(--primary-600), var(--violet-600), var(--accent-500));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .hero p {
@@ -96,6 +110,17 @@
   object-fit: cover;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+  animation: hero-drift 7s ease-in-out infinite;
+  transition: transform var(--speed) var(--ease);
+}
+
+.hero-photo:hover img {
+  transform: scale(1.015);
+}
+
+@keyframes hero-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
 .hero-photo-caption {
@@ -134,16 +159,30 @@
   align-items: flex-start;
 }
 
+.feature-card {
+  transition: transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease);
+}
+
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.1) rotate(-4deg);
+}
+
 .feature-icon {
   width: 44px;
   height: 44px;
   border-radius: var(--radius-md);
-  background-color: var(--primary-50);
+  background-image: linear-gradient(135deg, var(--primary-50), #ddd8fd);
   color: var(--primary-600);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform var(--speed) var(--ease);
 }
 
 .feature-card h3 {

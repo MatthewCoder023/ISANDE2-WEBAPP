@@ -1,25 +1,68 @@
 /* Authentication pages: login, register, employee login */
 
 .auth-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background:
-    radial-gradient(60rem 30rem at 110% -10%, var(--primary-100), transparent),
-    radial-gradient(50rem 25rem at -10% 110%, var(--warning-50), transparent),
-    var(--bg);
+  overflow: hidden;
+  background-color: var(--bg);
+}
+
+/* Slow-drifting ambient color blobs behind the card. */
+.auth-page::before,
+.auth-page::after {
+  content: "";
+  position: absolute;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: blob-drift 16s ease-in-out infinite alternate;
+}
+
+.auth-page::before {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.5), transparent 65%);
+  top: -12rem;
+  right: -8rem;
+}
+
+.auth-page::after {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.45), transparent 65%);
+  bottom: -14rem;
+  left: -10rem;
+  animation-delay: -8s;
+}
+
+@keyframes blob-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(3rem, 2.5rem) scale(1.12); }
 }
 
 .auth-card {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 420px;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: 2.25rem 2rem;
+  animation: auth-card-in 0.55s var(--ease) backwards;
+}
+
+@keyframes auth-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
 }
 
 .auth-card--wide {
@@ -45,11 +88,16 @@
   padding: 4px;
 }
 
-/* Photo backdrop variant (employee portal) */
+/* Photo backdrop variant (employee portal) — no blobs over the photo. */
 .auth-page--photo {
   background:
     linear-gradient(rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.82)),
     url('/images/storefront.jpg') center / cover no-repeat;
+}
+
+.auth-page--photo::before,
+.auth-page--photo::after {
+  display: none;
 }
 
 .auth-title {
