@@ -83,4 +83,35 @@ const me = asyncHandler(async (req, res) => {
   res.json({ success: true, data: { user: req.user.toJSON() } });
 });
 
-module.exports = { register, login, logout, me };
+/** PATCH /api/auth/profile — self-service details (email is immutable). */
+const updateProfile = asyncHandler(async (req, res) => {
+  const user = req.user; // fresh document loaded by requireAuth
+  const { firstName, lastName, phone } = req.body;
+
+  if (firstName !== undefined) user.firstName = firstName;
+  if (lastName !== undefined) user.lastName = lastName;
+  if (phone !== undefined) user.phone = phone;
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Profile updated.',
+    data: { user: user.toJSON() },
+  });
+});
+
+/** POST /api/auth/change-password — verifies the current password first. */
+const changePassword = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select('+password');
+
+  if (!(await user.comparePassword(req.body.currentPassword))) {
+    throw new ApiError(400, 'Your current password is incorrect.');
+  }
+
+  user.password = req.body.newPassword; // hashed by the model's pre-save hook
+  await user.save();
+
+  res.json({ success: true, message: 'Password changed successfully.' });
+});
+
+module.exports = { register, login, logout, me, updateProfile, changePassword };

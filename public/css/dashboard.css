@@ -103,6 +103,21 @@
   align-items: center;
   gap: 0.625rem;
   padding: 0.375rem 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--speed-fast) ease;
+}
+
+.dash-user:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Two-column detail grids collapse on narrow screens (profile, tracker). */
+@media (max-width: 900px) {
+  #profile-grid,
+  #track-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 .dash-user-avatar {

@@ -33,4 +33,36 @@ const loginRules = [
     .notEmpty().withMessage('Password is required.'),
 ];
 
-module.exports = { registerRules, loginRules };
+const updateProfileRules = [
+  body('firstName')
+    .optional()
+    .trim()
+    .notEmpty().withMessage('First name cannot be empty.')
+    .isLength({ max: 50 }).withMessage('First name must be 50 characters or fewer.'),
+  body('lastName')
+    .optional()
+    .trim()
+    .notEmpty().withMessage('Last name cannot be empty.')
+    .isLength({ max: 50 }).withMessage('Last name must be 50 characters or fewer.'),
+  body('phone')
+    .optional({ values: 'null' })
+    .trim()
+    .isLength({ max: 20 }).withMessage('Please provide a valid phone number.'),
+];
+
+const changePasswordRules = [
+  body('currentPassword')
+    .notEmpty().withMessage('Enter your current password.'),
+  body('newPassword')
+    .isLength({ min: 8 }).withMessage('New password must be at least 8 characters.')
+    .matches(/[a-zA-Z]/).withMessage('New password must contain at least one letter.')
+    .matches(/\d/).withMessage('New password must contain at least one number.')
+    .custom((value, { req }) => {
+      if (value === req.body.currentPassword) {
+        throw new Error('New password must be different from the current one.');
+      }
+      return true;
+    }),
+];
+
+module.exports = { registerRules, loginRules, updateProfileRules, changePasswordRules };

@@ -25,7 +25,7 @@ const NAV_CONFIG = {
     { href: '/client/products', icon: 'palette', label: 'Browse Products' },
     { href: '/client/colors', icon: 'droplets', label: 'Color Studio' },
     { href: '/client/orders', icon: 'package', label: 'My Orders' },
-    { icon: 'user', label: 'My Profile', soon: true },
+    { href: '/profile', icon: 'user', label: 'My Profile' },
   ],
   paint_mixer: [
     { href: '/mixer', icon: 'home', label: 'Dashboard' },
@@ -38,7 +38,7 @@ const NAV_CONFIG = {
     { href: '/pos', icon: 'shopping-cart', label: 'Point of Sale' },
     { href: '/orders', icon: 'package', label: 'Orders' },
     { href: '/transactions', icon: 'credit-card', label: 'Transactions' },
-    { icon: 'users', label: 'Customers', soon: true },
+    { href: '/customers', icon: 'users', label: 'Customers' },
   ],
   admin: [
     { href: '/admin', icon: 'home', label: 'Dashboard' },

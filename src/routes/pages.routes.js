@@ -26,6 +26,7 @@ router.get('/client/checkout', requirePageAuth(ROLES.CLIENT), sendView('client/c
 router.get('/client/payment', requirePageAuth(ROLES.CLIENT), sendView('client/payment.html'));
 router.get('/client/track', requirePageAuth(ROLES.CLIENT), sendView('client/track.html'));
 router.get('/invoice', requirePageAuth(), sendView('shared/invoice.html'));
+router.get('/profile', requirePageAuth(), sendView('shared/profile.html'));
 router.get('/mixer', requirePageAuth(ROLES.PAINT_MIXER), sendView('mixer/dashboard.html'));
 
 // Production pages are shared by paint mixer and admin; tabs within the
@@ -44,6 +45,7 @@ router.get('/admin/settings', requirePageAuth(ROLES.ADMIN), sendView('admin/sett
 router.get('/pos', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('staff/pos.html'));
 router.get('/orders', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('staff/orders.html'));
 router.get('/transactions', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('staff/transactions.html'));
+router.get('/customers', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('staff/customers.html'));
 
 /** Convenience: /dashboard forwards any logged-in user to their own dashboard. */
 router.get('/dashboard', requirePageAuth(), (req, res) => {

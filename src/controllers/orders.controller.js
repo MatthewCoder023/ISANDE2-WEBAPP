@@ -70,6 +70,8 @@ const list = asyncHandler(async (req, res) => {
 
   if (isStaff(req.user.role)) {
     if (Object.values(ORDER_TYPES).includes(req.query.type)) filter.type = req.query.type;
+    // Customer-records view: a specific customer's order history.
+    if (req.query.customer) filter.customer = req.query.customer;
     if (req.query.search) {
       const pattern = new RegExp(escapeRegExp(req.query.search.trim()), 'i');
       filter.$or = [{ orderNumber: pattern }, { customerName: pattern }];

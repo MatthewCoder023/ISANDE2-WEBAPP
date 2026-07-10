@@ -57,6 +57,22 @@ async function init() {
     }
   });
 
+  // The sidebar user card links to the profile page for every role.
+  const userCard = document.querySelector('.dash-user');
+  if (userCard) {
+    userCard.setAttribute('role', 'link');
+    userCard.setAttribute('tabindex', '0');
+    userCard.setAttribute('title', 'My Profile');
+    const goToProfile = () => window.location.assign('/profile');
+    userCard.addEventListener('click', goToProfile);
+    userCard.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        goToProfile();
+      }
+    });
+  }
+
   const logoutButton = document.querySelector('#logout-btn');
   if (logoutButton) {
     logoutButton.addEventListener('click', async () => {

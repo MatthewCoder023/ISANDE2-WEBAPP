@@ -20,7 +20,28 @@ npm install
 cp .env.example .env   # then set a strong SESSION_SECRET
 npm run seed           # creates one demo account per role
 npm run dev            # http://localhost:3000
+npm test               # runs the automated suite (in-memory MongoDB)
 ```
+
+## Testing
+
+`npm test` runs 53 Jest + Supertest tests against an in-memory MongoDB
+(`mongodb-memory-server`) — no local database or running server needed.
+The suites in `tests/` guard the system's core invariants:
+
+- **auth** — registration (role injection blocked), sessions, account
+  deactivation, self-service profile and password change
+- **rbac** — an access matrix across every module, plus page-guard redirects
+- **inventory** — SKU/quantity immutability, audit-trail movements,
+  negative-stock guard, customer response shaping, color matching
+- **orders** — server-side pricing, stock reservation with rollback,
+  cancellation restores, the online-ordering kill switch, walk-in POS
+- **payments** — the full GCash proof flow (upload → reject → re-upload →
+  verify → complete without double payment), proof privacy
+- **users** — employee lifecycle, instant lockout on deactivation,
+  password reset, admin self-lockout guards
+- **mixing** — request lifecycle, formula reuse counting, archived-formula
+  rejection, client scoping
 
 ### Seeded demo accounts
 
@@ -150,6 +171,9 @@ customer-facing tracker timeline.
 | PATCH | /api/settings | Admin | Update store info, payments, operations |
 | GET | /api/reports/sales?days= | Admin | Revenue by day, KPIs, methods, top products, categories |
 | GET | /api/reports/inventory | Admin | Stock value by category, restock list |
+| PATCH | /api/auth/profile | Authenticated | Self-service name/phone (email immutable) |
+| POST | /api/auth/change-password | Authenticated | Change own password (current password required) |
+| GET | /api/customers | Cashier/Admin | Customer records with order counts, spend, last order |
 
 **Admin safety rails**: admins cannot change their own role or deactivate
 themselves, and the last active administrator can never be demoted or
@@ -200,6 +224,8 @@ before completion. Completed/cancelled requests form the production log.
 | `/admin/users` | Admin only — user & employee management |
 | `/admin/reports` | Admin only — sales & inventory reports |
 | `/admin/settings` | Admin only — system configuration |
+| `/customers` | Cashier + Admin — customer records & order history |
+| `/profile` | Any authenticated user — account details & password |
 | `/pos` | Cashier + Admin — point of sale |
 | `/orders` | Cashier + Admin — process all orders |
 | `/transactions` | Cashier + Admin — payment log |

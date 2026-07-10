@@ -18,6 +18,7 @@ router.use('/transactions', transactionsRoutes);
 router.use('/mixing', mixingRoutes);
 router.use('/formulas', formulasRoutes);
 router.use('/users', usersRoutes);
+router.use('/customers', require('./customers.routes'));
 router.use('/settings', settingsRoutes);
 router.use('/reports', reportsRoutes);
 

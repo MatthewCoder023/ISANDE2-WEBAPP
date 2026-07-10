@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/" class="brand" data-brand-link>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>My Profile</h1>
+        <span class="badge" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; max-width: 960px;" id="profile-grid">
+          <section class="card">
+            <h2 class="card-title">Account details</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.25rem;">
+              Member since <span id="profile-joined">—</span>
+            </p>
+
+            <form id="profile-form" novalidate>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="pr-first">First name</label>
+                  <input class="form-input" type="text" id="pr-first" name="firstName" maxlength="50" required />
+                  <p class="form-error" data-error-for="firstName"></p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="pr-last">Last name</label>
+                  <input class="form-input" type="text" id="pr-last" name="lastName" maxlength="50" required />
+                  <p class="form-error" data-error-for="lastName"></p>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="pr-email">Email</label>
+                <input class="form-input" type="email" id="pr-email" disabled />
+                <p class="form-hint">Email is your login identity and cannot be changed.</p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="pr-phone">Phone <span class="text-muted">(optional)</span></label>
+                <input class="form-input" type="tel" id="pr-phone" name="phone" maxlength="20" />
+                <p class="form-error" data-error-for="phone"></p>
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="profile-save-btn">Save Changes</button>
+            </form>
+          </section>
+
+          <section class="card">
+            <h2 class="card-title">Change password</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.25rem;">
+              You'll stay signed in after changing it.
+            </p>
+
+            <form id="password-form" novalidate>
+              <div class="form-group">
+                <label class="form-label" for="pw-current">Current password</label>
+                <input class="form-input" type="password" id="pw-current" name="currentPassword"
+                       autocomplete="current-password" required />
+                <p class="form-error" data-error-for="currentPassword"></p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="pw-new">New password</label>
+                <input class="form-input" type="password" id="pw-new" name="newPassword"
+                       autocomplete="new-password" required />
+                <p class="form-error" data-error-for="newPassword"></p>
+                <p class="form-hint">At least 8 characters, with a letter and a number.</p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="pw-confirm">Confirm new password</label>
+                <input class="form-input" type="password" id="pw-confirm" name="confirmPassword"
+                       autocomplete="new-password" required />
+                <p class="form-error" data-error-for="confirmPassword"></p>
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="password-save-btn">Change Password</button>
+            </form>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/profile.js"></script>
+</body>
+</html>

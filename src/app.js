@@ -24,7 +24,7 @@ function createApp() {
   // because upgrade-insecure-requests interferes with http://localhost.
   app.use(helmet({ contentSecurityPolicy: isProduction ? undefined : false }));
 
-  if (!isProduction) {
+  if (!isProduction && process.env.NODE_ENV !== 'test') {
     app.use(morgan('dev'));
   }
 
