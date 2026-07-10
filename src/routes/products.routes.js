@@ -19,6 +19,7 @@ router.use(requireAuth);
 router.get('/', productsController.list);
 router.get('/stats', requireRole(ROLES.ADMIN), productsController.stats);
 router.get('/match', productsController.matchByColor);
+router.get('/export', requireRole(ROLES.ADMIN), productsController.exportCsv);
 router.get('/:id', productsController.getById);
 
 // Catalog management — admin only.

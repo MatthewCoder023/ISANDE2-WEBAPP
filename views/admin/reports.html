@@ -132,9 +132,14 @@
           </section>
 
           <section class="card card--flush">
-            <div style="padding: 1.5rem 1.25rem 0.5rem;">
-              <h2 class="card-title">Inventory position</h2>
-              <p class="card-subtitle" id="inventory-totals"></p>
+            <div style="padding: 1.5rem 1.25rem 0.5rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+              <div>
+                <h2 class="card-title">Inventory position</h2>
+                <p class="card-subtitle" id="inventory-totals"></p>
+              </div>
+              <a href="/api/products/export" class="btn btn-outline btn-sm">
+                <span data-icon="download" data-icon-size="14"></span> Export CSV
+              </a>
             </div>
             <div class="table-wrap">
               <table class="table" aria-label="Inventory by category">

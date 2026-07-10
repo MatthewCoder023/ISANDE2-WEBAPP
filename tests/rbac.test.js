@@ -74,6 +74,18 @@ describe('role-based access control', () => {
     ).toBe(FORBIDDEN);
   });
 
+  it('locks CSV exports to their roles', async () => {
+    expect((await agents.client.get('/api/transactions/export')).status).toBe(FORBIDDEN);
+    expect((await agents.paint_mixer.get('/api/transactions/export')).status).toBe(FORBIDDEN);
+    expect((await agents.cashier.get('/api/transactions/export')).status).toBe(200);
+
+    expect((await agents.cashier.get('/api/products/export')).status).toBe(FORBIDDEN);
+    const inventory = await agents.admin.get('/api/products/export');
+    expect(inventory.status).toBe(200);
+    expect(inventory.headers['content-type']).toContain('text/csv');
+    expect(inventory.headers['content-disposition']).toContain('inventory-');
+  });
+
   it('requires authentication everywhere', async () => {
     for (const path of ['/api/products', '/api/orders', '/api/settings', '/api/mixing/requests']) {
       expect((await supertest(app).get(path)).status).toBe(401);

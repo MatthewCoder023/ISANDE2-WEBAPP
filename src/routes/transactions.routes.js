@@ -9,5 +9,6 @@ const router = express.Router();
 router.use(requireAuth, requireRole(ROLES.CASHIER, ROLES.ADMIN));
 
 router.get('/', transactionsController.list);
+router.get('/export', transactionsController.exportCsv);
 
 module.exports = router;

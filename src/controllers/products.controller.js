@@ -4,6 +4,7 @@ const Setting = require('../models/Setting');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
+const { toCsv, sendCsv } = require('../utils/csv');
 const { HEX_COLOR_REGEX, hexToLab, deltaE } = require('../utils/color');
 const { ROLES } = require('../constants/roles');
 const { CATEGORY_VALUES, MOVEMENT_TYPES } = require('../constants/products');
@@ -136,6 +137,33 @@ const matchByColor = asyncHandler(async (req, res) => {
   res.json({ success: true, data: { matches } });
 });
 
+/** GET /api/products/export — the full inventory as a CSV download. */
+const exportCsv = asyncHandler(async (req, res) => {
+  const products = await Product.find({}).sort('sku');
+
+  const rows = products.map((p) => [
+    p.sku,
+    p.name,
+    p.category,
+    p.color.name,
+    p.color.hex,
+    p.finish,
+    p.size,
+    p.price,
+    p.stock.quantity,
+    p.stock.lowStockThreshold,
+    Math.round(p.price * p.stock.quantity * 100) / 100,
+    p.isActive ? 'active' : 'archived',
+  ]);
+
+  const csv = toCsv(
+    ['SKU', 'Name', 'Category', 'Color', 'Hex', 'Finish', 'Size', 'Price', 'Stock',
+      'Low Stock Threshold', 'Stock Value', 'Status'],
+    rows
+  );
+  sendCsv(res, 'inventory', csv);
+});
+
 /** GET /api/products/:id */
 const getById = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
@@ -238,4 +266,4 @@ const archive = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { list, stats, matchByColor, getById, create, update, archive };
+module.exports = { list, stats, matchByColor, exportCsv, getById, create, update, archive };

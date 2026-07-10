@@ -686,6 +686,7 @@ tr:hover .swatch,
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   animation: modal-pop-in 0.35s var(--ease);
+  outline: none; /* the dialog receives programmatic focus on open */
 }
 
 .modal--sm {

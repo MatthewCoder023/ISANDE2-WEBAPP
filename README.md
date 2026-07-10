@@ -21,11 +21,12 @@ cp .env.example .env   # then set a strong SESSION_SECRET
 npm run seed           # creates one demo account per role
 npm run dev            # http://localhost:3000
 npm test               # runs the automated suite (in-memory MongoDB)
+npm run reset-demo     # wipe everything & reseed (never runs in production)
 ```
 
 ## Testing
 
-`npm test` runs 53 Jest + Supertest tests against an in-memory MongoDB
+`npm test` runs 55 Jest + Supertest tests against an in-memory MongoDB
 (`mongodb-memory-server`) — no local database or running server needed.
 The suites in `tests/` guard the system's core invariants:
 
@@ -174,6 +175,8 @@ customer-facing tracker timeline.
 | PATCH | /api/auth/profile | Authenticated | Self-service name/phone (email immutable) |
 | POST | /api/auth/change-password | Authenticated | Change own password (current password required) |
 | GET | /api/customers | Cashier/Admin | Customer records with order counts, spend, last order |
+| GET | /api/transactions/export | Cashier/Admin | Payment log as CSV (honors method/search filters) |
+| GET | /api/products/export | Admin | Full inventory as CSV |
 
 **Admin safety rails**: admins cannot change their own role or deactivate
 themselves, and the last active administrator can never be demoted or

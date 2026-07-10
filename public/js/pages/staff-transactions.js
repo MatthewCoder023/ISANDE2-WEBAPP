@@ -62,4 +62,12 @@ document.querySelector('#method-filter').addEventListener('change', (event) => {
   loadTransactions();
 });
 
+// CSV download honors the current filters; navigation keeps the session cookie.
+document.querySelector('#export-btn').addEventListener('click', () => {
+  const params = new URLSearchParams();
+  if (state.search) params.set('search', state.search);
+  if (state.method) params.set('method', state.method);
+  window.location.assign(`/api/transactions/export?${params}`);
+});
+
 loadTransactions();

@@ -112,6 +112,21 @@ describe('walk-in POS sales', () => {
     expect(res.body.data.transaction.change).toBe(100);
   });
 
+  it('appears in the transactions CSV export', async () => {
+    const product = await createProduct({ price: 123 });
+    const sale = await agents.cashier.post('/api/orders/walk-in').send({
+      items: [{ productId: product.id, quantity: 1 }],
+      payment: { method: 'gcash' },
+    });
+    const orderNumber = sale.body.data.order.orderNumber;
+
+    const res = await agents.cashier.get('/api/transactions/export');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('text/csv');
+    expect(res.text).toContain('Date,Order Number,Method,Amount');
+    expect(res.text).toContain(orderNumber);
+  });
+
   it('rejects short cash before touching stock', async () => {
     const product = await createProduct({ price: 300, stock: { quantity: 8, lowStockThreshold: 2 } });
 
