@@ -65,6 +65,16 @@
   }
 }
 
+:root[data-theme='dark'] .auth-card {
+  background-color: rgba(22, 27, 45, 0.88);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme='dark'] .auth-page::before,
+:root[data-theme='dark'] .auth-page::after {
+  opacity: 0.3;
+}
+
 .auth-card--wide {
   max-width: 520px;
 }

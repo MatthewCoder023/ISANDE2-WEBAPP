@@ -1,5 +1,6 @@
 /** Payment log for cashier/admin: searchable, filterable, paginated. */
 import { api } from '/js/api.js';
+import { tableSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, formatDateTime, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
@@ -12,6 +13,7 @@ const emptyState = document.querySelector('#empty-state');
 const paginationEl = document.querySelector('#pagination');
 
 async function loadTransactions() {
+  tableSkeleton(tbody, 7);
   const params = new URLSearchParams({ page: state.page, limit: 10 });
   if (state.search) params.set('search', state.search);
   if (state.method) params.set('method', state.method);
@@ -38,9 +40,9 @@ function renderTable(transactions) {
         <td>${formatDateTime(t.createdAt)}</td>
         <td><strong>${escapeHtml(t.orderNumber)}</strong></td>
         <td>${PAYMENT_LABELS[t.method] || escapeHtml(t.method)}</td>
-        <td><strong>${formatPrice(t.amount)}</strong></td>
-        <td>${formatPrice(t.amountTendered)}</td>
-        <td>${formatPrice(t.change)}</td>
+        <td class="num"><strong>${formatPrice(t.amount)}</strong></td>
+        <td class="num">${formatPrice(t.amountTendered)}</td>
+        <td class="num">${formatPrice(t.change)}</td>
         <td>${t.receivedBy ? escapeHtml(t.receivedBy.fullName) : '—'}</td>
       </tr>`
     )

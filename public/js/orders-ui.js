@@ -2,13 +2,13 @@
 import { escapeHtml, formatPrice, formatDateTime } from '/js/format.js';
 
 export const STATUS_BADGES = {
-  pending_payment: '<span class="badge badge-warning">Pending Payment</span>',
-  pending_verification: '<span class="badge badge-info">Pending Verification</span>',
-  payment_verified: '<span class="badge badge-success">Payment Verified</span>',
-  preparing: '<span class="badge badge-info">Preparing</span>',
-  ready: '<span class="badge badge-primary">Ready for Pickup</span>',
-  completed: '<span class="badge badge-success">Completed</span>',
-  cancelled: '<span class="badge badge-danger">Cancelled</span>',
+  pending_payment: '<span class="badge badge-dot badge-warning">Pending Payment</span>',
+  pending_verification: '<span class="badge badge-dot badge-info">Pending Verification</span>',
+  payment_verified: '<span class="badge badge-dot badge-success">Payment Verified</span>',
+  preparing: '<span class="badge badge-dot badge-info">Preparing</span>',
+  ready: '<span class="badge badge-dot badge-primary">Ready for Pickup</span>',
+  completed: '<span class="badge badge-dot badge-success">Completed</span>',
+  cancelled: '<span class="badge badge-dot badge-danger">Cancelled</span>',
 };
 
 export const PAYMENT_LABELS = {

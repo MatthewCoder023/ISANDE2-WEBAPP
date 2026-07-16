@@ -4,6 +4,7 @@
  */
 import { api } from '/js/api.js';
 import { formatPrice } from '/js/format.js';
+import { statSkeleton } from '/js/skeleton.js';
 
 const set = (key, value) => {
   const el = document.querySelector(`[data-stat="${key}"]`);
@@ -38,6 +39,10 @@ async function loadUserStats() {
   }
 }
 
-loadProductStats();
-loadOrderStats();
-loadUserStats();
+async function init() {
+  const clearSkeleton = statSkeleton();
+  await Promise.allSettled([loadProductStats(), loadOrderStats(), loadUserStats()]);
+  clearSkeleton();
+}
+
+init();

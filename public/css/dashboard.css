@@ -148,6 +148,31 @@
   color: #9ca3af;
 }
 
+.theme-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: none;
+  border: 1px solid #374151;
+  color: #d1d5db;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  transition: background-color var(--speed-fast) ease, border-color var(--speed-fast) ease,
+    color var(--speed-fast) ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--primary-500);
+  color: #fff;
+  background-color: rgba(99, 102, 241, 0.15);
+}
+
 .btn-logout {
   width: 100%;
   background: none;
@@ -265,6 +290,16 @@
 .stat-icon-success { background-image: linear-gradient(135deg, #f0fdf4, #d5f5e0); color: var(--success-500); }
 .stat-icon-warning { background-image: linear-gradient(135deg, #fffbeb, #fdeec8); color: var(--warning-500); }
 .stat-icon-info    { background-image: linear-gradient(135deg, #f0f9ff, #d9effd); color: var(--info-500); }
+
+/* ---------- Dark theme overrides (hardcoded surfaces) ---------- */
+:root[data-theme='dark'] .dash-topbar {
+  background-color: rgba(13, 17, 32, 0.85);
+}
+
+:root[data-theme='dark'] .stat-icon-primary { background-image: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(124, 58, 237, 0.24)); }
+:root[data-theme='dark'] .stat-icon-success { background-image: linear-gradient(135deg, rgba(74, 222, 128, 0.14), rgba(22, 163, 74, 0.22)); }
+:root[data-theme='dark'] .stat-icon-warning { background-image: linear-gradient(135deg, rgba(251, 191, 36, 0.14), rgba(217, 119, 6, 0.22)); }
+:root[data-theme='dark'] .stat-icon-info    { background-image: linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(2, 132, 199, 0.22)); }
 
 /* Tab strip for page groups (e.g. mixing queue / formulas / log) */
 .page-tabs {

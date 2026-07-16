@@ -1,5 +1,6 @@
 /** Customer records for cashier/admin: directory with order history. */
 import { api } from '/js/api.js';
+import { tableSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, formatDate, formatDateTime, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
@@ -20,6 +21,7 @@ let historyPage = 1;
 /* ---------- Directory ---------- */
 
 async function loadCustomers() {
+  tableSkeleton(tbody, 7);
   const params = new URLSearchParams({ page: state.page, limit: 10 });
   if (state.search) params.set('search', state.search);
 
@@ -59,7 +61,7 @@ function renderTable(customers) {
         </td>
         <td>${formatDate(c.createdAt)}</td>
         <td>${c.orders}</td>
-        <td><strong>${formatPrice(c.spent)}</strong></td>
+        <td class="num"><strong>${formatPrice(c.spent)}</strong></td>
         <td>${c.lastOrderAt ? formatDate(c.lastOrderAt) : '—'}</td>
         <td>
           <div class="cell-actions">

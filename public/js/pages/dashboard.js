@@ -10,7 +10,38 @@ import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
 import { getCurrentUser } from '/js/session.js';
 import { renderNav, DASHBOARD_PATHS, ROLE_BADGE_CLASS } from '/js/nav.js';
-import { hydrateIcons } from '/js/icons.js';
+import { hydrateIcons, icon } from '/js/icons.js';
+
+/** Light/dark switch, injected above Sign Out on every authed page. */
+function setupThemeToggle() {
+  const footer = document.querySelector('.dash-sidebar-footer');
+  const logoutButton = document.querySelector('#logout-btn');
+  if (!footer || !logoutButton) return;
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'theme-toggle';
+
+  const render = () => {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    button.innerHTML = `${icon(dark ? 'sun' : 'moon', 15)} ${dark ? 'Light Mode' : 'Dark Mode'}`;
+    button.setAttribute('aria-pressed', String(dark));
+  };
+  render();
+
+  button.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem('fc_theme', next);
+    } catch {
+      /* private mode — the choice just won't persist */
+    }
+    render();
+  });
+
+  footer.insertBefore(button, logoutButton);
+}
 
 const ROLE_LABELS = {
   client: 'Customer',
@@ -23,6 +54,7 @@ async function init() {
   // Fill static [data-icon] placeholders immediately — no need to wait
   // for the session lookup.
   hydrateIcons();
+  setupThemeToggle();
 
   let user;
   try {

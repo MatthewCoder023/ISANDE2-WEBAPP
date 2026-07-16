@@ -5,6 +5,7 @@
  * restoration.
  */
 import { api } from '/js/api.js';
+import { tableSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, formatDateTime, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
@@ -32,6 +33,7 @@ let cancelOrderId = null;
 /* ---------- List ---------- */
 
 async function loadOrders() {
+  tableSkeleton(tbody, 8);
   const params = new URLSearchParams({ page: state.page, limit: 10 });
   if (state.search) params.set('search', state.search);
   if (state.status) params.set('status', state.status);
@@ -88,7 +90,7 @@ function renderTable(orders) {
         <td>${formatDateTime(o.createdAt)}</td>
         <td>${escapeHtml(o.customerName || '—')}</td>
         <td>${o.itemCount}</td>
-        <td>${formatPrice(o.total)}</td>
+        <td class="num">${formatPrice(o.total)}</td>
         <td>${TYPE_LABELS[o.type] || escapeHtml(o.type)}</td>
         <td>${STATUS_BADGES[o.status] || escapeHtml(o.status)}</td>
         <td><div class="cell-actions">${actionButtons(o)}</div></td>

@@ -10,6 +10,14 @@
   z-index: 10;
 }
 
+:root[data-theme='dark'] .site-header {
+  background-color: rgba(13, 17, 32, 0.8);
+}
+
+:root[data-theme='dark'] .feature-icon {
+  background-image: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(124, 58, 237, 0.24));
+}
+
 .site-header-inner {
   max-width: 1080px;
   margin: 0 auto;
@@ -17,6 +25,33 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.site-header-inner nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.theme-toggle-round {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background-color: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--speed-fast) ease, border-color var(--speed-fast) ease,
+    transform var(--speed-fast) var(--ease);
+}
+
+.theme-toggle-round:hover {
+  color: var(--primary-600);
+  border-color: var(--primary-500);
+  transform: rotate(15deg);
 }
 
 .brand {
@@ -100,22 +135,37 @@ body {
   flex-wrap: wrap;
 }
 
+/* Art direction: the wrapper is the frame (radius/shadow/drift); the
+   image inside is cropped onto the signage, gently zoomed, and washed
+   with a brand-tinted gradient so it sits inside the design. */
 .hero-photo {
   position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  animation: hero-drift 7s ease-in-out infinite;
 }
 
 .hero-photo img {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  animation: hero-drift 7s ease-in-out infinite;
+  object-position: 72% 30%;
+  transform: scale(1.14);
+  filter: saturate(1.08) contrast(1.03);
   transition: transform var(--speed) var(--ease);
 }
 
 .hero-photo:hover img {
-  transform: scale(1.015);
+  transform: scale(1.18);
+}
+
+.hero-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(155deg, rgba(79, 70, 229, 0.18), transparent 45%, rgba(251, 191, 36, 0.14));
+  pointer-events: none;
 }
 
 @keyframes hero-drift {
@@ -127,7 +177,10 @@ body {
   position: absolute;
   left: 1rem;
   bottom: 1rem;
+  z-index: 1;
   background-color: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   color: #fff;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -212,13 +265,27 @@ body {
   align-items: center;
 }
 
+.story-photo {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
 .story-photo img {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
   object-position: center 25%;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  filter: saturate(1.05);
+}
+
+.story-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(200deg, rgba(79, 70, 229, 0.12), transparent 55%);
+  pointer-events: none;
 }
 
 .story-copy h2 {

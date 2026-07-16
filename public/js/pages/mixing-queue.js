@@ -3,6 +3,7 @@
  * queued -> mixing -> completed, recording the formula used.
  */
 import { api } from '/js/api.js';
+import { tableSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatDateTime, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
@@ -11,10 +12,10 @@ import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
 import { icon, hydrateIcons } from '/js/icons.js';
 
 const STATUS_BADGES = {
-  queued: '<span class="badge badge-warning">Queued</span>',
-  mixing: '<span class="badge badge-info">Mixing</span>',
-  completed: '<span class="badge badge-success">Completed</span>',
-  cancelled: '<span class="badge badge-danger">Cancelled</span>',
+  queued: '<span class="badge badge-dot badge-warning">Queued</span>',
+  mixing: '<span class="badge badge-dot badge-info">Mixing</span>',
+  completed: '<span class="badge badge-dot badge-success">Completed</span>',
+  cancelled: '<span class="badge badge-dot badge-danger">Cancelled</span>',
 };
 
 const UNITS = ['mL', 'g', 'parts', 'drops'];
@@ -37,6 +38,7 @@ let cancelRequestId = null;
 /* ---------- List ---------- */
 
 async function loadQueue() {
+  tableSkeleton(tbody, 7);
   const params = new URLSearchParams({ page: state.page, limit: 10 });
   if (state.search) params.set('search', state.search);
   if (state.status) params.set('status', state.status);

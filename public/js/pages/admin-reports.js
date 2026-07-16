@@ -7,6 +7,7 @@ import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, formatDate } from '/js/format.js';
 import { PAYMENT_LABELS } from '/js/orders-ui.js';
+import { statSkeleton, tableSkeleton } from '/js/skeleton.js';
 
 const CATEGORY_LABELS = {
   interior: 'Interior Paint',
@@ -19,6 +20,17 @@ const CATEGORY_LABELS = {
 };
 
 /* ---------- Revenue chart ---------- */
+
+/** Rounds up to a 1/2/5 × 10ⁿ ceiling so axis labels look intentional. */
+function niceCeil(value) {
+  const exponent = 10 ** Math.floor(Math.log10(value));
+  const fraction = value / exponent;
+  const nice = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10;
+  return nice * exponent;
+}
+
+const compactPeso = (value) =>
+  value >= 1000 ? `₱${(value / 1000).toFixed(value >= 9950 ? 0 : 1)}k` : `₱${value}`;
 
 function renderChart(revenueByDay, days, since) {
   // Fill in zero-revenue days so the x-axis is continuous.
@@ -36,40 +48,120 @@ function renderChart(revenueByDay, days, since) {
     series.push({ key, revenue: byDate.get(key) || 0 });
   }
 
-  const width = Math.max(560, series.length * 14);
-  const height = 220;
-  const paddingBottom = 22;
-  const chartHeight = height - paddingBottom - 8;
-  const max = Math.max(...series.map((d) => d.revenue), 1);
-  const barWidth = width / series.length;
+  const padLeft = 46;
+  const width = padLeft + Math.max(520, series.length * 14);
+  const height = 240;
+  const padTop = 10;
+  const padBottom = 24;
+  const chartHeight = height - padTop - padBottom;
+  const max = niceCeil(Math.max(...series.map((d) => d.revenue), 1));
+  const barWidth = (width - padLeft) / series.length;
+
+  // Horizontal gridlines with peso labels at 0 / ¼ / ½ / ¾ / max.
+  const gridSteps = 4;
+  const grid = Array.from({ length: gridSteps + 1 }, (_, i) => {
+    const value = (max * i) / gridSteps;
+    const y = padTop + chartHeight * (1 - i / gridSteps);
+    const line = i === 0
+      ? `<line class="chart-axis" x1="${padLeft}" y1="${y}" x2="${width}" y2="${y}"/>`
+      : `<line class="chart-grid" x1="${padLeft}" y1="${y}" x2="${width}" y2="${y}"/>`;
+    return `${line}<text class="chart-label" x="${padLeft - 6}" y="${y + 3}" text-anchor="end">${compactPeso(value)}</text>`;
+  }).join('');
 
   const bars = series
     .map((d, i) => {
       const barHeight = Math.round((d.revenue / max) * chartHeight);
-      const x = (i * barWidth + 1).toFixed(1);
-      const y = 8 + chartHeight - barHeight;
+      const x = (padLeft + i * barWidth + 1).toFixed(1);
+      const y = padTop + chartHeight - barHeight;
       return (
-        `<rect class="chart-bar" x="${x}" y="${y}" width="${Math.max(barWidth - 2, 2).toFixed(1)}" height="${Math.max(barHeight, d.revenue > 0 ? 2 : 0)}" rx="1.5">` +
-        `<title>${d.key}: ${formatPrice(d.revenue)}</title></rect>`
+        `<rect class="chart-bar" x="${x}" y="${y}" width="${Math.max(barWidth - 2, 2).toFixed(1)}"` +
+        ` height="${Math.max(barHeight, d.revenue > 0 ? 2 : 0)}" rx="1.5"` +
+        ` data-label="${d.key}" data-value="${d.revenue}"></rect>`
       );
     })
     .join('');
 
-  // A few sparse x-axis labels.
   const labelEvery = Math.ceil(series.length / 6);
   const labels = series
     .map((d, i) =>
       i % labelEvery === 0
-        ? `<text class="chart-label" x="${(i * barWidth + 2).toFixed(1)}" y="${height - 6}">${d.key.slice(5)}</text>`
+        ? `<text class="chart-label" x="${(padLeft + i * barWidth + 2).toFixed(1)}" y="${height - 8}">${d.key.slice(5)}</text>`
         : ''
     )
     .join('');
 
-  document.querySelector('#revenue-chart').innerHTML =
-    `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Revenue by day">` +
-    `<line class="chart-axis" x1="0" y1="${8 + chartHeight}" x2="${width}" y2="${8 + chartHeight}"/>` +
+  const chartWrap = document.querySelector('#revenue-chart');
+  chartWrap.innerHTML =
+    `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Revenue by day">` +
+    '<defs><linearGradient id="revenue-gradient" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="var(--primary-500)"/>' +
+    '<stop offset="100%" stop-color="var(--violet-600)"/>' +
+    '</linearGradient></defs>' +
+    grid +
     bars +
     labels +
+    '</svg>' +
+    '<div class="chart-tooltip" id="chart-tooltip" hidden></div>';
+
+  // Hover tooltip that follows the bars.
+  const tooltip = chartWrap.querySelector('#chart-tooltip');
+  const svg = chartWrap.querySelector('svg');
+  svg.addEventListener('pointermove', (event) => {
+    const bar = event.target.closest('.chart-bar');
+    if (!bar) {
+      tooltip.hidden = true;
+      return;
+    }
+    tooltip.textContent = `${bar.dataset.label} · ${formatPrice(Number(bar.dataset.value))}`;
+    const wrapRect = chartWrap.getBoundingClientRect();
+    const barRect = bar.getBoundingClientRect();
+    tooltip.style.left = `${barRect.left - wrapRect.left + barRect.width / 2 + chartWrap.scrollLeft}px`;
+    tooltip.style.top = `${barRect.top - wrapRect.top}px`;
+    tooltip.hidden = false;
+  });
+  svg.addEventListener('pointerleave', () => {
+    tooltip.hidden = true;
+  });
+}
+
+/* ---------- Payment-method donut ---------- */
+
+const METHOD_COLORS = {
+  cash: 'var(--success-500)',
+  gcash: 'var(--info-500)',
+  card: 'var(--violet-600)',
+};
+
+function renderDonut(byMethod) {
+  const wrap = document.querySelector('#methods-donut');
+  const total = byMethod.reduce((sum, m) => sum + m.amount, 0);
+  if (total === 0) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  const radius = 52;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  const segments = byMethod
+    .map((m) => {
+      const length = (m.amount / total) * circumference;
+      const circle =
+        `<circle r="${radius}" cx="70" cy="70" fill="none" stroke="${METHOD_COLORS[m._id] || 'var(--text-faint)'}"` +
+        ` stroke-width="18" stroke-dasharray="${length.toFixed(2)} ${(circumference - length).toFixed(2)}"` +
+        ` stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 70 70)"><title>${m._id}: ${formatPrice(m.amount)}</title></circle>`;
+      offset += length;
+      return circle;
+    })
+    .join('');
+
+  wrap.innerHTML =
+    '<svg width="140" height="140" viewBox="0 0 140 140" role="img" aria-label="Revenue share by payment method">' +
+    `<circle class="donut-track" r="${radius}" cx="70" cy="70" fill="none" stroke-width="18"/>` +
+    segments +
+    `<text x="70" y="67" text-anchor="middle" class="donut-center-value">${compactPeso(total)}</text>` +
+    '<text x="70" y="84" text-anchor="middle" class="donut-center-label">total received</text>' +
     '</svg>';
 }
 
@@ -106,12 +198,13 @@ function renderSales(data) {
       )
       .join('') || '<tr><td colspan="3" class="text-muted">No completed sales in this period.</td></tr>';
 
+  renderDonut(byMethod);
   document.querySelector('#methods-tbody').innerHTML =
     byMethod
       .map(
         (m) => `
         <tr>
-          <td>${PAYMENT_LABELS[m._id] || escapeHtml(m._id)}</td>
+          <td><span class="method-dot" style="background-color: ${METHOD_COLORS[m._id] || 'var(--text-faint)'}"></span>${PAYMENT_LABELS[m._id] || escapeHtml(m._id)}</td>
           <td>${m.count}</td>
           ${numCell(m.amount)}
         </tr>`
@@ -156,7 +249,7 @@ function renderInventory(data) {
       <tr>
         <td><strong>${escapeHtml(p.name)}</strong></td>
         <td>${escapeHtml(p.sku)}</td>
-        <td>${p.stock.quantity} ${p.stock.quantity === 0 ? '<span class="badge badge-danger">Out</span>' : '<span class="badge badge-warning">Low</span>'}</td>
+        <td>${p.stock.quantity} ${p.stock.quantity === 0 ? '<span class="badge badge-dot badge-danger">Out</span>' : '<span class="badge badge-dot badge-warning">Low</span>'}</td>
         <td>${p.stock.lowStockThreshold}</td>
       </tr>`
     )
@@ -166,6 +259,13 @@ function renderInventory(data) {
 /* ---------- Load ---------- */
 
 async function loadReports(days) {
+  const clearSkeleton = statSkeleton('[data-kpi]');
+  tableSkeleton(document.querySelector('#top-products-tbody'), 3, 4);
+  tableSkeleton(document.querySelector('#methods-tbody'), 3, 3);
+  tableSkeleton(document.querySelector('#categories-tbody'), 3, 4);
+  tableSkeleton(document.querySelector('#inventory-tbody'), 4, 4);
+  tableSkeleton(document.querySelector('#low-stock-tbody'), 4, 3);
+
   try {
     const [salesRes, inventoryRes] = await Promise.all([
       api(`/api/reports/sales?days=${days}`),
@@ -175,6 +275,8 @@ async function loadReports(days) {
     renderInventory(inventoryRes.data);
   } catch (error) {
     showToast(error.message, 'error');
+  } finally {
+    clearSkeleton();
   }
 }
 

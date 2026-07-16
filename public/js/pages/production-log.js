@@ -1,12 +1,13 @@
 /** Production history: completed and cancelled mix requests, read-only. */
 import { api } from '/js/api.js';
+import { tableSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatDateTime, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
 
 const OUTCOME_BADGES = {
-  completed: '<span class="badge badge-success">Completed</span>',
-  cancelled: '<span class="badge badge-danger">Cancelled</span>',
+  completed: '<span class="badge badge-dot badge-success">Completed</span>',
+  cancelled: '<span class="badge badge-dot badge-danger">Cancelled</span>',
 };
 
 const state = { page: 1, search: '' };
@@ -16,6 +17,7 @@ const emptyState = document.querySelector('#empty-state');
 const paginationEl = document.querySelector('#pagination');
 
 async function loadLog() {
+  tableSkeleton(tbody, 7);
   const params = new URLSearchParams({ page: state.page, limit: 10, status: 'history' });
   if (state.search) params.set('search', state.search);
 

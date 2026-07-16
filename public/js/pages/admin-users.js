@@ -4,6 +4,7 @@
  * enforces the safety rails (no self-demotion, last admin protected).
  */
 import { api } from '/js/api.js';
+import { tableSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatDate, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
@@ -40,6 +41,7 @@ let confirmAction = null;
 /* ---------- List ---------- */
 
 async function loadUsers() {
+  tableSkeleton(tbody, 6);
   const params = new URLSearchParams({ page: state.page, limit: 10 });
   if (state.search) params.set('search', state.search);
   if (state.role) params.set('role', state.role);
@@ -68,8 +70,8 @@ function renderTable(users) {
       const isSelf = u.id === currentAdminId;
       const roleBadge = `<span class="badge ${ROLE_BADGE_CLASS[u.role] || 'badge-info'}">${ROLE_LABELS[u.role] || escapeHtml(u.role)}</span>`;
       const statusBadge = u.isActive
-        ? '<span class="badge badge-success">Active</span>'
-        : '<span class="badge badge-danger">Deactivated</span>';
+        ? '<span class="badge badge-dot badge-success">Active</span>'
+        : '<span class="badge badge-dot badge-danger">Deactivated</span>';
       const toggleButton = isSelf
         ? ''
         : u.isActive

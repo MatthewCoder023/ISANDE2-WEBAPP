@@ -6,6 +6,7 @@
  * src/constants/products.js (the server is the enforcing side).
  */
 import { api } from '/js/api.js';
+import { tableSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
 import { initModal } from '/js/modal.js';
@@ -25,8 +26,8 @@ const FINISHES = ['flat', 'matte', 'eggshell', 'satin', 'semi-gloss', 'gloss'];
 const SIZES = ['250mL', '500mL', '1L', '4L', '16L'];
 
 const AVAILABILITY_BADGES = {
-  low_stock: '<span class="badge badge-warning">Low</span>',
-  out_of_stock: '<span class="badge badge-danger">Out</span>',
+  low_stock: '<span class="badge badge-dot badge-warning">Low</span>',
+  out_of_stock: '<span class="badge badge-dot badge-danger">Out</span>',
 };
 
 const state = { page: 1, search: '', category: '', status: 'active', stock: '' };
@@ -67,6 +68,7 @@ fillSelect(document.querySelector('#p-size'), SIZES.map((s) => [s, s]));
 /* ---------- Product list ---------- */
 
 async function loadProducts() {
+  tableSkeleton(tbody, 7);
   const params = new URLSearchParams({ page: state.page, limit: 10 });
   if (state.search) params.set('search', state.search);
   if (state.category) params.set('category', state.category);
@@ -103,8 +105,8 @@ function renderTable(products) {
       const meta = [p.color?.name, p.finish, p.size].filter(Boolean).map(escapeHtml).join(' · ');
       const availabilityBadge = AVAILABILITY_BADGES[p.availability] || '';
       const statusBadge = p.isActive
-        ? '<span class="badge badge-success">Active</span>'
-        : '<span class="badge badge-info">Archived</span>';
+        ? '<span class="badge badge-dot badge-success">Active</span>'
+        : '<span class="badge badge-dot badge-info">Archived</span>';
       const archiveButton = p.isActive
         ? `<button class="btn btn-outline btn-sm" data-action="archive" data-id="${p.id}">Archive</button>`
         : `<button class="btn btn-primary btn-sm" data-action="restore" data-id="${p.id}">Restore</button>`;
@@ -122,7 +124,7 @@ function renderTable(products) {
           </td>
           <td>${escapeHtml(p.sku)}</td>
           <td>${CATEGORY_LABELS[p.category] || escapeHtml(p.category)}</td>
-          <td>${formatPrice(p.price)}</td>
+          <td class="num">${formatPrice(p.price)}</td>
           <td>${p.stock.quantity} ${availabilityBadge}</td>
           <td>${statusBadge}</td>
           <td>

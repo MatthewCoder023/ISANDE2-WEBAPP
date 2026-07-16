@@ -3,6 +3,7 @@
  * invoice, pay pending ones, cancel while still awaiting payment.
  */
 import { api } from '/js/api.js';
+import { tableSkeleton } from '/js/skeleton.js';
 import { showToast, showFlashToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, formatDateTime } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
@@ -20,6 +21,7 @@ const confirmModal = initModal(document.querySelector('#confirm-modal'));
 let cancelOrderId = null;
 
 async function loadOrders() {
+  tableSkeleton(tbody, 6);
   const params = new URLSearchParams({ page: state.page, limit: 10 });
   if (state.status) params.set('status', state.status);
 
@@ -55,7 +57,7 @@ function renderTable(orders) {
           <td><strong>${escapeHtml(o.orderNumber)}</strong></td>
           <td>${formatDateTime(o.createdAt)}</td>
           <td>${o.itemCount} item${o.itemCount === 1 ? '' : 's'}</td>
-          <td>${formatPrice(o.total)}</td>
+          <td class="num">${formatPrice(o.total)}</td>
           <td>${STATUS_BADGES[o.status] || escapeHtml(o.status)}</td>
           <td>
             <div class="cell-actions">

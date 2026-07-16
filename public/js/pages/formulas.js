@@ -1,5 +1,6 @@
 /** Formula library for the paint mixer (and admin). */
 import { api } from '/js/api.js';
+import { tableSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
@@ -25,6 +26,7 @@ let confirmAction = null;
 /* ---------- List ---------- */
 
 async function loadFormulas() {
+  tableSkeleton(tbody, 6);
   const params = new URLSearchParams({ page: state.page, limit: 10, status: state.status });
   if (state.search) params.set('search', state.search);
 
@@ -52,8 +54,8 @@ function renderTable(formulas) {
   tbody.innerHTML = formulas
     .map((f) => {
       const statusBadge = f.isActive
-        ? '<span class="badge badge-success">Active</span>'
-        : '<span class="badge badge-info">Archived</span>';
+        ? '<span class="badge badge-dot badge-success">Active</span>'
+        : '<span class="badge badge-dot badge-info">Archived</span>';
       const archiveButton = f.isActive
         ? `<button class="btn btn-outline btn-sm" data-action="archive" data-id="${f.id}">Archive</button>`
         : `<button class="btn btn-primary btn-sm" data-action="restore" data-id="${f.id}">Restore</button>`;

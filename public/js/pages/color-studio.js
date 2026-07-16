@@ -3,6 +3,7 @@
  * (fully client-side), closest-paint matching, and custom mix requests.
  */
 import { api } from '/js/api.js';
+import { tableSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, formatDate, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
@@ -16,16 +17,16 @@ import { hexToRgb, rgbToHex, rgbToHsl, hslToRgb, extractPalette } from '/js/colo
 const HEX_RE = /^#?[0-9a-fA-F]{6}$/;
 
 const AVAILABILITY_BADGES = {
-  in_stock: '<span class="badge badge-success">In stock</span>',
-  low_stock: '<span class="badge badge-warning">Low stock</span>',
-  out_of_stock: '<span class="badge badge-danger">Out of stock</span>',
+  in_stock: '<span class="badge badge-dot badge-success">In stock</span>',
+  low_stock: '<span class="badge badge-dot badge-warning">Low stock</span>',
+  out_of_stock: '<span class="badge badge-dot badge-danger">Out of stock</span>',
 };
 
 const MIX_STATUS_BADGES = {
-  queued: '<span class="badge badge-warning">Queued</span>',
-  mixing: '<span class="badge badge-info">Mixing</span>',
-  completed: '<span class="badge badge-success">Completed</span>',
-  cancelled: '<span class="badge badge-danger">Cancelled</span>',
+  queued: '<span class="badge badge-dot badge-warning">Queued</span>',
+  mixing: '<span class="badge badge-dot badge-info">Mixing</span>',
+  completed: '<span class="badge badge-dot badge-success">Completed</span>',
+  cancelled: '<span class="badge badge-dot badge-danger">Cancelled</span>',
 };
 
 // Current color as HSL — the single source of truth for the page.
@@ -354,6 +355,7 @@ let mixesPage = 1;
 let cancelRequestId = null;
 
 async function loadMixes() {
+  tableSkeleton(mixesTbody, 6, 3);
   try {
     const { data } = await api(`/api/mixing/requests?page=${mixesPage}&limit=5`);
     renderMixes(data.requests);

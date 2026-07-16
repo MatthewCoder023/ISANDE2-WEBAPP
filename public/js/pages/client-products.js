@@ -4,6 +4,7 @@
  * The cart sends only { productId, quantity } — pricing is server-side.
  */
 import { api } from '/js/api.js';
+import { gridSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { formatPrice, escapeHtml, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
@@ -22,9 +23,9 @@ const CATEGORY_LABELS = {
 };
 
 const AVAILABILITY_BADGES = {
-  in_stock: '<span class="badge badge-success">In stock</span>',
-  low_stock: '<span class="badge badge-warning">Low stock</span>',
-  out_of_stock: '<span class="badge badge-danger">Out of stock</span>',
+  in_stock: '<span class="badge badge-dot badge-success">In stock</span>',
+  low_stock: '<span class="badge badge-dot badge-warning">Low stock</span>',
+  out_of_stock: '<span class="badge badge-dot badge-danger">Out of stock</span>',
 };
 
 const state = { page: 1, search: '', category: '', sort: 'name' };
@@ -48,6 +49,7 @@ for (const [value, label] of Object.entries(CATEGORY_LABELS)) {
 /* ---------- Catalog grid ---------- */
 
 async function loadProducts() {
+  gridSkeleton(grid, 8);
   const params = new URLSearchParams({ page: state.page, limit: 12, sort: state.sort });
   if (state.search) params.set('search', state.search);
   if (state.category) params.set('category', state.category);

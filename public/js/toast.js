@@ -2,7 +2,16 @@
  * Toast notifications. Usage: showToast('Saved!', 'success')
  * Types: 'info' (default), 'success', 'error', 'warning'
  */
+import { icon } from '/js/icons.js';
+
 const DISMISS_AFTER_MS = 4000;
+
+const TOAST_ICONS = {
+  info: 'info',
+  success: 'check-circle',
+  error: 'alert-triangle',
+  warning: 'alert-triangle',
+};
 
 function getContainer() {
   let container = document.querySelector('.toast-container');
@@ -19,8 +28,15 @@ export function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
   toast.setAttribute('role', 'status');
-  toast.textContent = message;
 
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'toast-icon';
+  iconSpan.innerHTML = icon(TOAST_ICONS[type] || TOAST_ICONS.info, 16);
+
+  const text = document.createElement('span');
+  text.textContent = message; // textContent keeps messages XSS-safe
+
+  toast.append(iconSpan, text);
   getContainer().appendChild(toast);
 
   setTimeout(() => {

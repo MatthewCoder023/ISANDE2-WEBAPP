@@ -4,6 +4,7 @@
  * a POS terminal doesn't need cross-session persistence.
  */
 import { api } from '/js/api.js';
+import { listSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, debounce } from '/js/format.js';
 import { setBusy } from '/js/form-utils.js';
@@ -26,6 +27,7 @@ const completeButton = document.querySelector('#complete-sale-btn');
 /* ---------- Product picker ---------- */
 
 async function loadProducts(search = '') {
+  listSkeleton(productsEl, 7);
   const params = new URLSearchParams({ limit: 50, status: 'active' });
   if (search) params.set('search', search);
 
