@@ -175,6 +175,22 @@
   height: 44px;
 }
 
+/* Split comparison swatch: your color on the left, the paint's on the
+   right — the seam makes the perceptual distance visible at a glance. */
+.swatch-split {
+  position: relative;
+}
+
+.swatch-split::after {
+  content: "";
+  position: absolute;
+  top: 15%;
+  bottom: 15%;
+  left: 50%;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.55);
+}
+
 .match-info {
   flex: 1;
   min-width: 0;

@@ -242,6 +242,8 @@ function renderMatches(matches) {
     return;
   }
 
+  const yourHex = currentHex();
+
   matchList.innerHTML = matches
     .map(({ product, matchPercent }) => {
       const meta = [product.color?.name, product.finish, product.size]
@@ -251,7 +253,8 @@ function renderMatches(matches) {
       const out = product.availability === 'out_of_stock';
       return `
         <div class="match-row">
-          <span class="swatch" style="background-color: ${escapeHtml(product.color.hex)}"></span>
+          <span class="swatch swatch-split" title="Your color (left) vs. this paint (right)"
+                style="background: linear-gradient(90deg, ${escapeHtml(yourHex)} 50%, ${escapeHtml(product.color.hex)} 50%)"></span>
           <div class="match-info">
             <div class="match-name">${escapeHtml(product.name)}</div>
             <div class="match-meta">${meta} · ${formatPrice(product.price)}</div>

@@ -15,11 +15,39 @@
 }
 
 .invoice-sheet {
+  position: relative;
+  overflow: hidden;
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: 2.25rem;
+}
+
+/* Brand accent: a thin gradient rule across the top of the sheet. */
+.invoice-sheet::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed, #f59e0b);
+}
+
+/* Faint logo watermark — an <img> so browsers include it when printing. */
+.invoice-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 330px;
+  transform: translate(-50%, -50%);
+  opacity: 0.045;
+  pointer-events: none;
+}
+
+.invoice-sheet > :not(.invoice-watermark) {
+  position: relative;
 }
 
 .invoice-header {

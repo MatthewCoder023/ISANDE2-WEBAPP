@@ -197,6 +197,32 @@ button {
   white-space: nowrap;
 }
 
+/* Slim, theme-aware scrollbars (Firefox + WebKit). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-faint);
+}
+
 /* Respect users who opt out of motion (a11y). */
 @media (prefers-reduced-motion: reduce) {
   html {
