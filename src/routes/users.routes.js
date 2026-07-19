@@ -17,6 +17,7 @@ router.use(requireAuth, requireRole(ROLES.ADMIN));
 
 router.get('/', usersController.list);
 router.get('/stats', usersController.stats);
+router.get('/events', usersController.events);
 router.post('/', createUserRules, validate, usersController.create);
 router.patch('/:id', updateUserRules, validate, usersController.update);
 router.post('/:id/reset-password', resetPasswordRules, validate, usersController.resetPassword);

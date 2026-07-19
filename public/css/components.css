@@ -144,6 +144,71 @@
   color: var(--text-faint);
 }
 
+/* ---------- Password fields (see /js/password-ui.js) ---------- */
+.password-field {
+  position: relative;
+}
+
+.password-field .form-input {
+  padding-right: 2.75rem;
+}
+
+.pw-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.375rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-faint);
+  border-radius: var(--radius-sm);
+  transition: color var(--speed-fast) ease;
+}
+
+.pw-toggle:hover {
+  color: var(--text-muted);
+}
+
+.pw-checklist {
+  list-style: none;
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-faint);
+}
+
+.pw-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: color var(--speed-fast) ease;
+}
+
+.pw-checklist li::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--border-strong);
+  flex-shrink: 0;
+  transition: background-color var(--speed-fast) ease;
+}
+
+.pw-checklist li.is-met {
+  color: var(--success-500);
+}
+
+.pw-checklist li.is-met::before {
+  background-color: var(--success-500);
+}
+
 /* ---------- Cards ---------- */
 .card {
   background-color: var(--surface);

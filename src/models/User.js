@@ -46,6 +46,24 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Bumped whenever the password changes: sessions carry the version they
+    // were created with, so every *other* session dies instantly.
+    sessionVersion: {
+      type: Number,
+      default: 0,
+    },
+    // Self-service reset: only the sha256 HASH of the emailed token is
+    // stored, so a database leak cannot be turned into working reset links.
+    resetPasswordToken: {
+      type: String,
+      default: '',
+      select: false,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
+      select: false,
+    },
   },
   { timestamps: true }
 );
@@ -70,6 +88,7 @@ userSchema.set('toJSON', {
   transform: (_doc, ret) => {
     delete ret._id;
     delete ret.password;
+    delete ret.sessionVersion; // internal bookkeeping, never part of the API
     return ret;
   },
 });

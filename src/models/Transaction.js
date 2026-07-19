@@ -36,6 +36,11 @@ const transactionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// The cashier log sorts newest-first (optionally filtered by method), and
+// sales reports aggregate over createdAt ranges — both index-served.
+transactionSchema.index({ createdAt: -1 });
+transactionSchema.index({ method: 1, createdAt: -1 });
+
 transactionSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,

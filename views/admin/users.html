@@ -84,6 +84,45 @@
           </div>
           <div id="pagination" class="pagination"></div>
         </section>
+
+        <section class="card card--flush">
+          <div style="padding: 1.5rem 1.25rem 0.5rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <h2 class="card-title">Security log</h2>
+            <span class="toolbar-spacer"></span>
+            <select id="event-filter" class="form-input form-select" aria-label="Filter security events" style="max-width: 220px;">
+              <option value="">All events</option>
+              <option value="login_failed">Failed logins</option>
+              <option value="login_locked">Lockouts</option>
+              <option value="login_success">Successful logins</option>
+              <option value="password_changed">Password changes</option>
+              <option value="password_reset">Password resets</option>
+              <option value="reset_requested">Reset link requests</option>
+              <option value="role_changed">Role changes</option>
+              <option value="account_deactivated">Deactivations</option>
+              <option value="account_reactivated">Reactivations</option>
+              <option value="account_created">Accounts created</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table class="table" aria-label="Security events">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Event</th>
+                  <th>Account</th>
+                  <th>By</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="events-tbody"></tbody>
+            </table>
+          </div>
+          <div id="events-empty" class="empty-state" hidden>
+            <div class="empty-state-icon" data-icon="shield" data-icon-size="34"></div>
+            <p>No security events recorded yet.</p>
+          </div>
+          <div id="events-pagination" class="pagination"></div>
+        </section>
       </main>
     </div>
   </div>

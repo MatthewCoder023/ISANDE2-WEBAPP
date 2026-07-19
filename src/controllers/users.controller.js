@@ -1,7 +1,10 @@
 const User = require('../models/User');
+const AuthEvent = require('../models/AuthEvent');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
+const audit = require('../services/audit.service');
+const { AUTH_EVENT_TYPES } = AuthEvent;
 const { ROLES, ALL_ROLES } = require('../constants/roles');
 
 /**
@@ -83,6 +86,12 @@ const create = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({ firstName, lastName, email, phone, password, role });
+  audit.record('account_created', {
+    email: user.email,
+    actorName: req.user.fullName,
+    ip: req.ip,
+    note: `Created by an administrator with the ${role} role`,
+  });
 
   res.status(201).json({
     success: true,
@@ -99,12 +108,25 @@ const update = asyncHandler(async (req, res) => {
   const { firstName, lastName, phone, role, isActive } = req.body;
   await assertAdminSafety(user, { role, isActive }, req.user);
 
+  const previousRole = user.role;
+  const wasActive = user.isActive;
+
   if (firstName !== undefined) user.firstName = firstName;
   if (lastName !== undefined) user.lastName = lastName;
   if (phone !== undefined) user.phone = phone;
   if (role !== undefined) user.role = role;
   if (isActive !== undefined) user.isActive = isActive;
   await user.save();
+
+  const auditContext = { email: user.email, actorName: req.user.fullName, ip: req.ip };
+  if (role !== undefined && role !== previousRole) {
+    audit.record('role_changed', { ...auditContext, note: `${previousRole} to ${role}` });
+  }
+  if (isActive === false && wasActive) {
+    audit.record('account_deactivated', auditContext);
+  } else if (isActive === true && !wasActive) {
+    audit.record('account_reactivated', auditContext);
+  }
 
   const note = isActive === false ? ' Their session is no longer valid.' : '';
   res.json({
@@ -120,12 +142,47 @@ const resetPassword = asyncHandler(async (req, res) => {
   if (!user) throw new ApiError(404, 'User not found.');
 
   user.password = req.body.password; // hashed by the model's pre-save hook
+  // Kill any sessions the account still has — whoever knew the old
+  // password must log in again with the new one.
+  user.sessionVersion = (user.sessionVersion || 0) + 1;
   await user.save();
+
+  audit.record('password_reset', {
+    email: user.email,
+    actorName: req.user.fullName,
+    ip: req.ip,
+    note: 'Reset by an administrator',
+  });
 
   res.json({
     success: true,
-    message: `Password for ${user.fullName} has been reset.`,
+    message: `Password for ${user.fullName} has been reset. Their existing sessions are signed out.`,
   });
 });
 
-module.exports = { list, stats, create, update, resetPassword };
+/** GET /api/users/events — the security audit log (admin only). */
+const events = asyncHandler(async (req, res) => {
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 15, 1), 50);
+
+  const filter = {};
+  if (AUTH_EVENT_TYPES.includes(req.query.type)) filter.type = req.query.type;
+
+  const [items, total] = await Promise.all([
+    AuthEvent.find(filter)
+      .sort('-createdAt')
+      .skip((page - 1) * limit)
+      .limit(limit),
+    AuthEvent.countDocuments(filter),
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      events: items,
+      pagination: { page, limit, total, totalPages: Math.max(Math.ceil(total / limit), 1) },
+    },
+  });
+});
+
+module.exports = { list, stats, create, update, resetPassword, events };

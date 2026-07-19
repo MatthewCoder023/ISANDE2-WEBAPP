@@ -1,8 +1,11 @@
 const express = require('express');
+const { isValidObjectId } = require('mongoose');
+const rateLimit = require('express-rate-limit');
 
 const ordersController = require('../controllers/orders.controller');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const { uploadProof } = require('../middleware/upload');
+const { uploadProof, verifyProofImage } = require('../middleware/upload');
+const ApiError = require('../utils/ApiError');
 const validate = require('../middleware/validate');
 const { ROLES } = require('../constants/roles');
 const {
@@ -17,6 +20,28 @@ const router = express.Router();
 const ORDER_ROLES = [ROLES.CLIENT, ROLES.CASHIER, ROLES.ADMIN];
 const STAFF = [ROLES.CASHIER, ROLES.ADMIN];
 
+// Runs before multer on the proof route: a malformed :id must be rejected
+// before any file ever touches the disk.
+function checkOrderId(req, res, next) {
+  if (!isValidObjectId(req.params.id)) {
+    return next(new ApiError(400, 'Invalid identifier format.'));
+  }
+  next();
+}
+
+// Uploads write to disk before any order check — cap the rate so the
+// endpoint cannot be used to fill storage.
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many uploads. Please try again in a few minutes.',
+  },
+});
+
 router.use(requireAuth);
 
 // Reads are role-shaped in the controller (clients only ever see their own).
@@ -28,7 +53,7 @@ router.get('/:id/proof', requireRole(...ORDER_ROLES), ordersController.getProof)
 // Checkout: place, then settle payment (customer actions).
 router.post('/', requireRole(ROLES.CLIENT), placeOrderRules, validate, ordersController.placeOrder);
 router.post('/:id/payment-method', requireRole(ROLES.CLIENT), ordersController.chooseCashOnPickup);
-router.post('/:id/proof', requireRole(ROLES.CLIENT), uploadProof, ordersController.uploadProof);
+router.post('/:id/proof', requireRole(ROLES.CLIENT), uploadLimiter, checkOrderId, uploadProof, verifyProofImage, ordersController.uploadProof);
 
 // POS.
 router.post('/walk-in', requireRole(...STAFF), walkInSaleRules, validate, ordersController.walkInSale);

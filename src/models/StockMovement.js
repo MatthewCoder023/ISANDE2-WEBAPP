@@ -40,10 +40,12 @@ const stockMovementSchema = new mongoose.Schema(
       maxlength: 200,
       default: '',
     },
+    // null means an automated action (e.g. the stale-order sweep
+    // returning reserved stock) — shown as "System" in the UI.
     performedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      default: null,
     },
   },
   { timestamps: true }

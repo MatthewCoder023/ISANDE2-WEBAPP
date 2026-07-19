@@ -1,4 +1,6 @@
+const fs = require('fs');
 const { setup, teardown, seedRoleAgents, createProduct, createUser, loginAgent } = require('./helpers');
+const { PROOFS_DIR } = require('../src/middleware/upload');
 
 let app;
 let agents;
@@ -126,6 +128,59 @@ describe('GCash proof verification', () => {
     expect((await agents.cashier.get(`/api/orders/${order.id}/proof`)).status).toBe(200);
   });
 
+  it('stores proofs under server-generated names, never client input', async () => {
+    const before = new Set(fs.readdirSync(PROOFS_DIR));
+    const order = await placeOrder();
+    await agents.client
+      .post(`/api/orders/${order.id}/proof`)
+      .attach('proof', PNG_BUFFER, { filename: '../../../evil.png', contentType: 'image/png' });
+
+    // The stored file is a UUID + whitelisted extension — nothing from
+    // the request (order id, original filename) reaches the filesystem.
+    const added = fs.readdirSync(PROOFS_DIR).filter((f) => !before.has(f));
+    expect(added).toHaveLength(1);
+    expect(added[0]).toMatch(/^[0-9a-f-]{36}\.(jpg|png|webp)$/);
+  });
+
+  it('rejects a malformed order id before writing any file', async () => {
+    const before = fs.readdirSync(PROOFS_DIR).length;
+    const res = await agents.client
+      .post('/api/orders/..%2F..%2Fetc/proof')
+      .attach('proof', PNG_BUFFER, { filename: 'receipt.png', contentType: 'image/png' });
+
+    expect(res.status).toBe(400);
+    expect(fs.readdirSync(PROOFS_DIR).length).toBe(before);
+  });
+
+  it('rejects files that only claim to be images', async () => {
+    const before = fs.readdirSync(PROOFS_DIR).length;
+    const order = await placeOrder();
+
+    // Declared MIME says PNG, but the bytes are HTML — the magic-byte
+    // check must reject it and leave nothing on disk.
+    const res = await agents.client
+      .post(`/api/orders/${order.id}/proof`)
+      .attach('proof', Buffer.from('<html>not an image</html>'), {
+        filename: 'fake.png',
+        contentType: 'image/png',
+      });
+
+    expect(res.status).toBe(422);
+    expect(fs.readdirSync(PROOFS_DIR).length).toBe(before);
+  });
+
+  it('cleans up the uploaded file when the order rejects it', async () => {
+    const before = fs.readdirSync(PROOFS_DIR).length;
+    // Well-formed but nonexistent order id: multer writes the file first,
+    // then the 404 must remove it again.
+    const res = await agents.client
+      .post('/api/orders/64b000000000000000000000/proof')
+      .attach('proof', PNG_BUFFER, { filename: 'receipt.png', contentType: 'image/png' });
+
+    expect(res.status).toBe(404);
+    expect(fs.readdirSync(PROOFS_DIR).length).toBe(before);
+  });
+
   it('blocks client cancellation once payment is in motion', async () => {
     const order = await placeOrder();
     await agents.client
@@ -134,5 +189,35 @@ describe('GCash proof verification', () => {
 
     const res = await agents.client.post(`/api/orders/${order.id}/cancel`);
     expect(res.status).toBe(409);
+  });
+});
+
+describe('order notifications', () => {
+  const { outbox } = require('../src/services/mail.service');
+
+  it('emails the customer at verification, rejection, and pickup-ready', async () => {
+    const order = await placeOrder();
+    await agents.client
+      .post(`/api/orders/${order.id}/proof`)
+      .attach('proof', PNG_BUFFER, { filename: 'receipt.png', contentType: 'image/png' });
+
+    outbox.length = 0;
+    await agents.cashier
+      .post(`/api/orders/${order.id}/reject-payment`)
+      .send({ reason: 'Blurry screenshot' });
+    expect(outbox.at(-1).subject).toContain('Action needed');
+    expect(outbox.at(-1).text).toContain('Blurry screenshot');
+
+    await agents.client
+      .post(`/api/orders/${order.id}/proof`)
+      .attach('proof', PNG_BUFFER, { filename: 'receipt2.png', contentType: 'image/png' });
+    await agents.cashier.post(`/api/orders/${order.id}/verify-payment`);
+    expect(outbox.at(-1).subject).toContain('Payment confirmed');
+    expect(outbox.at(-1).to).toBe('client@test.com');
+
+    await agents.cashier.post(`/api/orders/${order.id}/prepare`);
+    await agents.cashier.post(`/api/orders/${order.id}/ready`);
+    expect(outbox.at(-1).subject).toContain('Ready for pickup');
+    expect(outbox.at(-1).text).toContain(`/client/track?order=${order.id}`);
   });
 });

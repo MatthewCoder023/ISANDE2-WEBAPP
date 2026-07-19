@@ -9,6 +9,7 @@ const morgan = require('morgan');
 const apiRoutes = require('./routes');
 const pageRoutes = require('./routes/pages.routes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
+const { originCheck, sanitizeInput } = require('./middleware/security');
 
 /**
  * App factory: called after the DB connection is established so the
@@ -30,6 +31,7 @@ function createApp() {
 
   app.use(express.json({ limit: '10kb' }));
   app.use(express.urlencoded({ extended: false }));
+  app.use(sanitizeInput);
 
   app.use(
     session({
@@ -54,7 +56,7 @@ function createApp() {
   // (/login serves public/login.html).
   app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));
 
-  app.use('/api', apiRoutes);
+  app.use('/api', originCheck, apiRoutes);
   app.use('/', pageRoutes);
 
   app.use(notFound);

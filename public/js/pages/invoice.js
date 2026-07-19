@@ -19,6 +19,7 @@ const STATUS_LABELS = {
 
 const orderId = new URLSearchParams(window.location.search).get('order');
 
+document.querySelector('#back-btn').addEventListener('click', () => history.back());
 document.querySelector('#print-btn').addEventListener('click', () => window.print());
 
 async function loadInvoice() {

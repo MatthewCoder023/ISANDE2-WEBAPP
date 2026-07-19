@@ -6,6 +6,7 @@ const Product = require('../models/Product');
 const Transaction = require('../models/Transaction');
 const ApiError = require('../utils/ApiError');
 const inventoryService = require('./inventory.service');
+const { notifyOrderEvent } = require('./notify.service');
 const {
   ORDER_STATUS,
   ORDER_TYPES,
@@ -221,12 +222,13 @@ async function verifyPayment(order, staffId) {
   order.paidAt = new Date();
   transition(order, ORDER_STATUS.PAYMENT_VERIFIED, { by: staffId, note: 'Payment verified' });
   await order.save();
+  await notifyOrderEvent(order, 'payment_verified');
 
   return { order, transaction };
 }
 
 /** Staff rejects the proof: back to pending_payment with a reason. */
-function rejectPayment(order, staffId, reason) {
+async function rejectPayment(order, staffId, reason) {
   if (order.status !== ORDER_STATUS.PENDING_VERIFICATION) {
     throw new ApiError(409, 'This order has no payment awaiting verification.');
   }
@@ -236,7 +238,9 @@ function rejectPayment(order, staffId, reason) {
     by: staffId,
     note: `Proof rejected: ${reason}`,
   });
-  return order.save();
+  await order.save();
+  await notifyOrderEvent(order, 'payment_rejected');
+  return order;
 }
 
 /** Staff starts preparing a verified order. */
@@ -249,13 +253,15 @@ function startPreparing(order, staffId) {
 }
 
 /** Staff marks a prepared order ready for pickup. */
-function markReady(order, staffId) {
+async function markReady(order, staffId) {
   if (order.status !== ORDER_STATUS.PREPARING) {
     throw new ApiError(409, `A ${order.status} order cannot be marked ready.`);
   }
   order.readyAt = new Date();
   transition(order, ORDER_STATUS.READY, { by: staffId, note: 'Ready for pickup' });
-  return order.save();
+  await order.save();
+  await notifyOrderEvent(order, 'ready');
+  return order;
 }
 
 /**
@@ -304,7 +310,7 @@ async function completeOrder(order, { method, amountTendered, cashierId }) {
 }
 
 /** Cancels an order and restores its stock. Caller enforces role rules. */
-async function cancelOrder(order, userId) {
+async function cancelOrder(order, userId, noteOverride) {
   if (!CANCELLABLE_STATUSES.includes(order.status)) {
     throw new ApiError(409, `A ${order.status} order cannot be cancelled.`);
   }
@@ -313,11 +319,47 @@ async function cancelOrder(order, userId) {
 
   order.cancelledAt = new Date();
   // Money already taken (verified GCash) is settled outside the system.
-  const note = order.paidAt ? 'Cancelled — refund to be arranged with the store' : '';
-  transition(order, ORDER_STATUS.CANCELLED, { by: userId, note });
+  const defaultNote = order.paidAt ? 'Cancelled — refund to be arranged with the store' : '';
+  transition(order, ORDER_STATUS.CANCELLED, { by: userId, note: noteOverride ?? defaultNote });
   await order.save();
 
   return order;
+}
+
+/** An unpaid online order may sit this long before it is auto-cancelled. */
+const STALE_PAYMENT_HOURS = 48;
+
+/**
+ * Sweeps abandoned checkouts: pending_payment orders with no activity for
+ * STALE_PAYMENT_HOURS are cancelled and their reserved stock returns to
+ * the shelf. The clock reads updatedAt, not createdAt — a proof upload or
+ * a rejection resets it, so an actively retrying customer is never cut off.
+ * Returns the number of orders cancelled.
+ */
+async function expireStaleOrders() {
+  const cutoff = new Date(Date.now() - STALE_PAYMENT_HOURS * 60 * 60 * 1000);
+  const stale = await Order.find({
+    status: ORDER_STATUS.PENDING_PAYMENT,
+    updatedAt: { $lt: cutoff },
+  });
+
+  let cancelled = 0;
+  for (const order of stale) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      await cancelOrder(
+        order,
+        null,
+        `Auto-cancelled — payment was not received within ${STALE_PAYMENT_HOURS} hours`
+      );
+      // eslint-disable-next-line no-await-in-loop
+      await notifyOrderEvent(order, 'auto_cancelled');
+      cancelled += 1;
+    } catch {
+      // One bad order must not stop the sweep; it will retry next run.
+    }
+  }
+  return cancelled;
 }
 
 /** One-step POS sale: create + pay + complete. */
@@ -351,6 +393,8 @@ module.exports = {
   markReady,
   completeOrder,
   cancelOrder,
+  expireStaleOrders,
+  STALE_PAYMENT_HOURS,
   walkInSale,
   PROOFS_DIR,
 };

@@ -265,7 +265,7 @@ async function loadMovements(productId) {
     list.innerHTML = data.movements
       .map((m) => {
         const sign = m.quantity > 0 ? '+' : '';
-        const who = m.performedBy ? escapeHtml(m.performedBy.fullName) : 'Unknown';
+        const who = m.performedBy ? escapeHtml(m.performedBy.fullName) : 'System';
         const reason = m.reason ? ` — “${escapeHtml(m.reason)}”` : '';
         return `<li><strong>${sign}${m.quantity}</strong> ${m.type} → ${m.quantityAfter} on hand
           · ${formatDate(m.createdAt)} · ${who}${reason}</li>`;

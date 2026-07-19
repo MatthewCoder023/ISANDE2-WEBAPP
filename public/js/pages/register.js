@@ -1,8 +1,12 @@
 import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
 import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
+import { addPasswordToggle, addPasswordChecklist } from '/js/password-ui.js';
 
 const form = document.querySelector('#register-form');
+addPasswordToggle(form.password);
+addPasswordToggle(form.confirmPassword);
+addPasswordChecklist(form.password);
 const submitButton = form.querySelector('button[type="submit"]');
 
 form.addEventListener('submit', async (event) => {

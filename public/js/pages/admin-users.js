@@ -6,7 +6,7 @@
 import { api } from '/js/api.js';
 import { tableSkeleton } from '/js/skeleton.js';
 import { showToast } from '/js/toast.js';
-import { escapeHtml, formatDate, debounce } from '/js/format.js';
+import { escapeHtml, formatDate, formatDateTime, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
 import { initModal } from '/js/modal.js';
 import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
@@ -19,6 +19,19 @@ const ROLE_LABELS = {
   cashier: 'Cashier / Secretary',
   paint_mixer: 'Paint Mixer',
   admin: 'System Administrator',
+};
+
+const EVENT_META = {
+  login_success: { label: 'Login', badge: 'badge-success' },
+  login_failed: { label: 'Failed login', badge: 'badge-danger' },
+  login_locked: { label: 'Locked out', badge: 'badge-danger' },
+  password_changed: { label: 'Password changed', badge: 'badge-info' },
+  password_reset: { label: 'Password reset', badge: 'badge-warning' },
+  reset_requested: { label: 'Reset link requested', badge: 'badge-info' },
+  role_changed: { label: 'Role changed', badge: 'badge-warning' },
+  account_deactivated: { label: 'Deactivated', badge: 'badge-danger' },
+  account_reactivated: { label: 'Reactivated', badge: 'badge-success' },
+  account_created: { label: 'Account created', badge: 'badge-info' },
 };
 
 const state = { page: 1, search: '', role: '', status: '' };
@@ -109,6 +122,57 @@ function renderTable(users) {
     .join('');
 }
 
+/* ---------- Security log ---------- */
+
+const eventsTbody = document.querySelector('#events-tbody');
+const eventsEmpty = document.querySelector('#events-empty');
+const eventsPagination = document.querySelector('#events-pagination');
+const eventState = { page: 1, type: '' };
+
+async function loadEvents() {
+  tableSkeleton(eventsTbody, 5);
+  const params = new URLSearchParams({ page: eventState.page, limit: 10 });
+  if (eventState.type) params.set('type', eventState.type);
+
+  try {
+    const { data } = await api(`/api/users/events?${params}`);
+    renderEvents(data.events);
+    renderPagination(eventsPagination, data.pagination, (page) => {
+      eventState.page = page;
+      loadEvents();
+    });
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
+
+function renderEvents(items) {
+  eventsEmpty.hidden = items.length > 0;
+
+  eventsTbody.innerHTML = items
+    .map((event) => {
+      const meta = EVENT_META[event.type] || { label: event.type, badge: 'badge-info' };
+      const details = [event.note, event.ip ? `IP ${event.ip}` : '']
+        .filter(Boolean)
+        .join(' · ');
+      return `
+        <tr>
+          <td style="white-space: nowrap;">${formatDateTime(event.createdAt)}</td>
+          <td><span class="badge badge-dot ${meta.badge}">${meta.label}</span></td>
+          <td>${escapeHtml(event.email || '—')}</td>
+          <td>${escapeHtml(event.actorName || '—')}</td>
+          <td class="text-muted" style="font-size: 0.8125rem;">${escapeHtml(details || '—')}</td>
+        </tr>`;
+    })
+    .join('');
+}
+
+document.querySelector('#event-filter').addEventListener('change', (event) => {
+  eventState.type = event.target.value;
+  eventState.page = 1;
+  loadEvents();
+});
+
 /* ---------- Filters ---------- */
 
 document.querySelector('#search-input').addEventListener(
@@ -185,6 +249,7 @@ userForm.addEventListener('submit', async (event) => {
     showToast(result.message, 'success');
     userModal.close();
     loadUsers();
+    loadEvents();
   } catch (error) {
     if (error.errors) showFieldErrors(userForm, error.errors);
     showToast(error.message, 'error');
@@ -211,6 +276,7 @@ passwordForm.addEventListener('submit', async (event) => {
     showToast(message, 'success');
     passwordModal.close();
     passwordUserId = null;
+    loadEvents();
   } catch (error) {
     if (error.errors) showFieldErrors(passwordForm, error.errors);
     showToast(error.message, 'error');
@@ -227,6 +293,7 @@ document.querySelector('#confirm-btn').addEventListener('click', async () => {
     const { message } = await confirmAction();
     showToast(message, 'success');
     loadUsers();
+    loadEvents();
   } catch (error) {
     showToast(error.message, 'error');
   } finally {
@@ -289,6 +356,7 @@ async function init() {
   const me = await getCurrentUser();
   currentAdminId = me.id;
   loadUsers();
+  loadEvents();
 }
 
 init();

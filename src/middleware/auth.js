@@ -11,6 +11,10 @@ async function loadSessionUser(req) {
   if (!req.session || !req.session.userId) return null;
   const user = await User.findById(req.session.userId);
   if (!user || !user.isActive) return null;
+  // Sessions carry the sessionVersion current at login; a password change
+  // bumps it, killing every other session for that account. Both sides
+  // default to 0 so sessions created before this field existed stay valid.
+  if ((req.session.sessionVersion || 0) !== (user.sessionVersion || 0)) return null;
   return user;
 }
 

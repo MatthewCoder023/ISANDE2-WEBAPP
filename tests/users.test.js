@@ -124,3 +124,25 @@ describe('customer records', () => {
     expect(res.body.data.orders.every((o) => o.customer === customerId)).toBe(true);
   });
 });
+
+describe('security log', () => {
+  it('records auth events and shows them to admins only', async () => {
+    // seedRoleAgents logged four accounts in; at minimum those succeeded.
+    const res = await agents.admin.get('/api/users/events');
+    expect(res.status).toBe(200);
+    expect(res.body.data.events.length).toBeGreaterThan(0);
+    expect(res.body.data.events.some((e) => e.type === 'login_success')).toBe(true);
+
+    // Non-admins get nothing.
+    expect((await agents.cashier.get('/api/users/events')).status).toBe(403);
+    expect((await agents.client.get('/api/users/events')).status).toBe(403);
+  });
+
+  it('strips NoSQL operator injections from query input', async () => {
+    // ?search[$gt]= would reach the controller as an object without the
+    // sanitizer; with it, the parameter simply disappears.
+    const res = await agents.admin.get('/api/users?search[$gt]=x');
+    expect(res.status).toBe(200);
+    expect(res.body.data.users.length).toBeGreaterThan(0);
+  });
+});

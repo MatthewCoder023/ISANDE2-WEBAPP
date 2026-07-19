@@ -139,3 +139,62 @@ describe('walk-in POS sales', () => {
     expect(await stockOf(product.id)).toBe(8);
   });
 });
+
+describe('stale-order expiry', () => {
+  const mongoose = require('mongoose');
+  const Order = require('../src/models/Order');
+  const orderService = require('../src/services/order.service');
+
+  const backdate = (orderId, hoursAgo) =>
+    Order.collection.updateOne(
+      { _id: new mongoose.Types.ObjectId(orderId) },
+      { $set: { updatedAt: new Date(Date.now() - hoursAgo * 60 * 60 * 1000) } }
+    );
+
+  it('cancels idle pending-payment orders and restores their stock', async () => {
+    const product = await createProduct({ stock: { quantity: 10, lowStockThreshold: 2 } });
+    const res = await agents.client.post('/api/orders').send({
+      items: [{ productId: product.id, quantity: 3 }],
+    });
+    const order = res.body.data.order;
+    expect(await stockOf(product.id)).toBe(7);
+
+    await backdate(order.id, 49);
+    expect(await orderService.expireStaleOrders()).toBe(1);
+
+    const after = (await agents.client.get(`/api/orders/${order.id}`)).body.data.order;
+    expect(after.status).toBe('cancelled');
+    expect(after.statusHistory.at(-1).note).toMatch(/Auto-cancelled/);
+    expect(await stockOf(product.id)).toBe(10);
+  });
+
+  it('leaves fresh and active orders alone', async () => {
+    const product = await createProduct({ stock: { quantity: 10, lowStockThreshold: 2 } });
+
+    // Fresh pending_payment order: inside the window.
+    const fresh = (
+      await agents.client.post('/api/orders').send({
+        items: [{ productId: product.id, quantity: 1 }],
+      })
+    ).body.data.order;
+
+    // Old order, but the customer chose cash on pickup — not pending_payment.
+    const active = (
+      await agents.client.post('/api/orders').send({
+        items: [{ productId: product.id, quantity: 1 }],
+      })
+    ).body.data.order;
+    await agents.client
+      .post(`/api/orders/${active.id}/payment-method`)
+      .send({ method: 'cash_on_pickup' });
+    await backdate(active.id, 100);
+
+    expect(await orderService.expireStaleOrders()).toBe(0);
+    expect((await agents.client.get(`/api/orders/${fresh.id}`)).body.data.order.status).toBe(
+      'pending_payment'
+    );
+    expect((await agents.client.get(`/api/orders/${active.id}`)).body.data.order.status).toBe(
+      'preparing'
+    );
+  });
+});

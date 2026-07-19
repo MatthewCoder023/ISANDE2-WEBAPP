@@ -3,10 +3,16 @@ import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
 import { formatDate } from '/js/format.js';
 import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
+import { addPasswordToggle, addPasswordChecklist } from '/js/password-ui.js';
 import { getCurrentUser } from '/js/session.js';
 
 const profileForm = document.querySelector('#profile-form');
 const passwordForm = document.querySelector('#password-form');
+
+addPasswordToggle(passwordForm.currentPassword);
+addPasswordToggle(passwordForm.newPassword);
+addPasswordToggle(passwordForm.confirmPassword);
+addPasswordChecklist(passwordForm.newPassword);
 
 async function loadProfile() {
   const user = await getCurrentUser();

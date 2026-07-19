@@ -9,6 +9,8 @@ const {
   loginRules,
   updateProfileRules,
   changePasswordRules,
+  forgotPasswordRules,
+  resetPasswordRules,
 } = require('../validators/auth.validators');
 
 const router = express.Router();
@@ -26,11 +28,40 @@ const authLimiter = rateLimit({
   },
 });
 
+// A hijacked session must not be able to brute-force the account's current
+// password through the change-password form. Failed attempts only.
+const changePasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many attempts. Please try again in 15 minutes.',
+  },
+});
+
+// Reset links are cheap to request — cap them hard (every request counts,
+// successful or not, since each one may send an email).
+const resetRequestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many reset requests. Please try again in 15 minutes.',
+  },
+});
+
 router.post('/register', authLimiter, registerRules, validate, authController.register);
 router.post('/login', authLimiter, loginRules, validate, authController.login);
+router.post('/forgot-password', resetRequestLimiter, forgotPasswordRules, validate, authController.forgotPassword);
+router.post('/reset-password', authLimiter, resetPasswordRules, validate, authController.resetPassword);
 router.post('/logout', authController.logout);
 router.get('/me', requireAuth, authController.me);
 router.patch('/profile', requireAuth, updateProfileRules, validate, authController.updateProfile);
-router.post('/change-password', requireAuth, changePasswordRules, validate, authController.changePassword);
+router.post('/change-password', requireAuth, changePasswordLimiter, changePasswordRules, validate, authController.changePassword);
 
 module.exports = router;

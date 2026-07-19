@@ -49,7 +49,6 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: Object.values(ORDER_STATUS),
       default: ORDER_STATUS.PENDING_PAYMENT,
-      index: true,
     },
     statusHistory: {
       type: [statusEventSchema],
@@ -60,7 +59,6 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
-      index: true,
     },
     customerName: {
       type: String,
@@ -112,6 +110,16 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+/**
+ * Every list view filters and/or sorts by these shapes: the staff orders
+ * page (-createdAt, optional status), a customer's own orders, and the
+ * per-customer history on the directory page. Compound indexes serve the
+ * filter and the sort together, so queries stay index-only as data grows.
+ */
+orderSchema.index({ createdAt: -1 });
+orderSchema.index({ customer: 1, createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
 
 orderSchema.virtual('itemCount').get(function () {
   return this.items.reduce((sum, item) => sum + item.quantity, 0);

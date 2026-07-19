@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 
 const Order = require('../models/Order');
@@ -191,12 +192,19 @@ const chooseCashOnPickup = asyncHandler(async (req, res) => {
 
 /** POST /api/orders/:id/proof — customer uploads GCash proof (multipart). */
 const uploadProof = asyncHandler(async (req, res) => {
-  const order = await loadOrderForUser(req.params.id, req.user);
-  if (!req.file) {
-    throw new ApiError(422, 'Attach a JPG, PNG, or WebP image of your payment.');
+  // Multer has already written the file; if anything below rejects the
+  // request, remove it so failed uploads never accumulate on disk.
+  let order;
+  try {
+    order = await loadOrderForUser(req.params.id, req.user);
+    if (!req.file) {
+      throw new ApiError(422, 'Attach a JPG, PNG, or WebP image of your payment.');
+    }
+    await orderService.attachProof(order, req.file, req.user._id);
+  } catch (err) {
+    if (req.file) fs.unlink(req.file.path, () => {});
+    throw err;
   }
-
-  await orderService.attachProof(order, req.file, req.user._id);
 
   res.json({
     success: true,

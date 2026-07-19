@@ -134,4 +134,111 @@ describe('self-service profile', () => {
       .send({ email: 'pwchange@test.com', password: 'Fresh9876' });
     expect(newLogin.status).toBe(200);
   });
+
+  it('signs out every other session when the password changes', async () => {
+    await createUser({ email: 'twodevices@test.com' });
+    const phone = await loginAgent(app, 'twodevices@test.com');
+    const laptop = await loginAgent(app, 'twodevices@test.com');
+
+    const res = await laptop
+      .post('/api/auth/change-password')
+      .send({ currentPassword: PASSWORD, newPassword: 'Fresh9876' });
+    expect(res.status).toBe(200);
+
+    // The session that changed the password stays alive...
+    expect((await laptop.get('/api/auth/me')).status).toBe(200);
+    // ...but a stolen/other session is dead immediately.
+    expect((await phone.get('/api/auth/me')).status).toBe(401);
+  });
+});
+
+describe('hardening', () => {
+  it('locks an account after repeated failed logins', async () => {
+    await createUser({ email: 'bruteforce@test.com' });
+
+    for (let i = 0; i < 5; i += 1) {
+      const res = await supertest(app)
+        .post('/api/auth/login')
+        .send({ email: 'bruteforce@test.com', password: 'WrongPass1' });
+      expect(res.status).toBe(401);
+    }
+
+    // Even the CORRECT password is refused while the account is locked.
+    const locked = await supertest(app)
+      .post('/api/auth/login')
+      .send({ email: 'bruteforce@test.com', password: PASSWORD });
+    expect(locked.status).toBe(429);
+  });
+
+  it('blocks state-changing requests from foreign origins', async () => {
+    const res = await supertest(app)
+      .post('/api/auth/login')
+      .set('Origin', 'https://evil.example')
+      .send({ email: 'whoever@test.com', password: 'Whatever1' });
+    expect(res.status).toBe(403);
+  });
+
+  it('rejects too-common passwords on registration', async () => {
+    const res = await supertest(app).post('/api/auth/register').send({
+      firstName: 'Weak',
+      lastName: 'Password',
+      email: 'weakpw@test.com',
+      password: 'password123',
+    });
+    expect(res.status).toBe(422);
+    expect(res.body.errors[0].field).toBe('password');
+  });
+});
+
+describe('password reset via email', () => {
+  const { outbox } = require('../src/services/mail.service');
+
+  it('emails a single-use link that resets the password and kills sessions', async () => {
+    await createUser({ email: 'resetme@test.com' });
+    const oldSession = await loginAgent(app, 'resetme@test.com');
+
+    outbox.length = 0;
+    const req = await supertest(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: 'resetme@test.com' });
+    expect(req.status).toBe(200);
+    expect(outbox).toHaveLength(1);
+    const token = outbox[0].text.match(/token=([a-f0-9]+)/)[1];
+
+    // The new password goes through the full validator stack.
+    const weak = await supertest(app)
+      .post('/api/auth/reset-password')
+      .send({ token, newPassword: 'password123' });
+    expect(weak.status).toBe(422);
+
+    const good = await supertest(app)
+      .post('/api/auth/reset-password')
+      .send({ token, newPassword: 'Rested987' });
+    expect(good.status).toBe(200);
+
+    // The token is single-use.
+    const reuse = await supertest(app)
+      .post('/api/auth/reset-password')
+      .send({ token, newPassword: 'Another987' });
+    expect(reuse.status).toBe(400);
+
+    // Old password dead, new one works, and the pre-reset session is out.
+    expect(
+      (await supertest(app).post('/api/auth/login').send({ email: 'resetme@test.com', password: PASSWORD })).status
+    ).toBe(401);
+    expect(
+      (await supertest(app).post('/api/auth/login').send({ email: 'resetme@test.com', password: 'Rested987' })).status
+    ).toBe(200);
+    expect((await oldSession.get('/api/auth/me')).status).toBe(401);
+  });
+
+  it('answers identically for unknown emails and sends nothing', async () => {
+    outbox.length = 0;
+    const res = await supertest(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: 'ghost@test.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.message).toMatch(/If that email/);
+    expect(outbox).toHaveLength(0);
+  });
 });

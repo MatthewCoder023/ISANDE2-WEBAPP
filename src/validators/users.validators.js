@@ -1,11 +1,13 @@
 const { body } = require('express-validator');
 const { ALL_ROLES } = require('../constants/roles');
+const { rejectCommonPassword } = require('./auth.validators');
 
 const passwordRules = (field = 'password') => [
   body(field)
     .isLength({ min: 8 }).withMessage('Password must be at least 8 characters.')
     .matches(/[a-zA-Z]/).withMessage('Password must contain at least one letter.')
-    .matches(/\d/).withMessage('Password must contain at least one number.'),
+    .matches(/\d/).withMessage('Password must contain at least one number.')
+    .custom(rejectCommonPassword),
 ];
 
 const createUserRules = [
