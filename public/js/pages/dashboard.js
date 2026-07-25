@@ -11,6 +11,7 @@ import { showToast } from '/js/toast.js';
 import { getCurrentUser } from '/js/session.js';
 import { renderNav, DASHBOARD_PATHS, ROLE_BADGE_CLASS } from '/js/nav.js';
 import { hydrateIcons, icon } from '/js/icons.js';
+import { hydrateIllustrations } from '/js/illustrations.js';
 
 /** Light/dark switch, injected above Sign Out on every authed page. */
 function setupThemeToggle() {
@@ -54,6 +55,7 @@ async function init() {
   // Fill static [data-icon] placeholders immediately — no need to wait
   // for the session lookup.
   hydrateIcons();
+  hydrateIllustrations();
   setupThemeToggle();
 
   let user;

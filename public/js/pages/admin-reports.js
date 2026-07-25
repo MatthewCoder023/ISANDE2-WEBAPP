@@ -8,6 +8,7 @@ import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, formatDate } from '/js/format.js';
 import { PAYMENT_LABELS } from '/js/orders-ui.js';
 import { statSkeleton, tableSkeleton } from '/js/skeleton.js';
+import { countUp } from '/js/count-up.js';
 
 const CATEGORY_LABELS = {
   interior: 'Interior Paint',
@@ -173,29 +174,48 @@ function renderSales(data) {
   const { totals, revenueByDay, byMethod, topProducts, byCategory, days, since } = data;
 
   const kpis = {
-    revenue: formatPrice(totals.revenue),
-    transactions: totals.transactions,
-    averageSale: formatPrice(totals.averageSale),
-    newCustomers: totals.newCustomers,
+    revenue: [totals.revenue, formatPrice],
+    transactions: [totals.transactions],
+    averageSale: [totals.averageSale, formatPrice],
+    newCustomers: [totals.newCustomers],
   };
-  for (const [key, value] of Object.entries(kpis)) {
-    document.querySelector(`[data-kpi="${key}"]`).textContent = value;
+  for (const [key, [value, format]] of Object.entries(kpis)) {
+    countUp(document.querySelector(`[data-kpi="${key}"]`), value, format);
   }
 
   document.querySelector('#chart-subtitle').textContent =
     `${formatDate(since)} to today · hover a bar for the exact amount`;
   renderChart(revenueByDay, days, since);
 
+  const topRevenue = Math.max(...topProducts.map((p) => p.revenue), 0);
   document.querySelector('#top-products-tbody').innerHTML =
     topProducts
-      .map(
-        (p) => `
+      .map((p) => {
+        // Each row is measured against the best seller and drawn in the
+        // paint it actually sold, so the ranking is legible at a glance.
+        const share = topRevenue > 0 ? (p.revenue / topRevenue) * 100 : 0;
+        const paint = p.colorHex || 'var(--primary-500)';
+        return `
         <tr>
-          <td><strong>${escapeHtml(p.name)}</strong><div class="text-muted" style="font-size: 0.8125rem;">${escapeHtml(p.sku)}</div></td>
+          <td>
+            <div class="product-cell" style="min-width: 0; gap: 0.625rem;">
+              ${
+                p.colorHex
+                  ? `<span class="swatch swatch-sm" data-finish="${escapeHtml(p.finish || '')}"
+                           style="background-color: ${escapeHtml(p.colorHex)}"></span>`
+                  : ''
+              }
+              <div style="min-width: 0;">
+                <strong>${escapeHtml(p.name)}</strong>
+                <div class="text-muted" style="font-size: 0.8125rem;">${escapeHtml(p.sku)}</div>
+                <div class="paint-bar"><span style="width: ${share.toFixed(1)}%; background-color: ${escapeHtml(paint)}"></span></div>
+              </div>
+            </div>
+          </td>
           <td>${p.unitsSold}</td>
           ${numCell(p.revenue)}
-        </tr>`
-      )
+        </tr>`;
+      })
       .join('') || '<tr><td colspan="3" class="text-muted">No completed sales in this period.</td></tr>';
 
   renderDonut(byMethod);

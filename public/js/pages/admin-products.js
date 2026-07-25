@@ -13,6 +13,7 @@ import { initModal } from '/js/modal.js';
 import { formatPrice, formatDate, escapeHtml, debounce } from '/js/format.js';
 import { icon } from '/js/icons.js';
 import { renderPagination } from '/js/pagination.js';
+import { applyUrlFilters } from '/js/url-filters.js';
 
 const CATEGORY_LABELS = {
   interior: 'Interior Paint',
@@ -89,7 +90,8 @@ async function loadProducts() {
 
 function swatchHtml(product) {
   if (product.color?.hex) {
-    return `<span class="swatch" style="background-color: ${escapeHtml(product.color.hex)}"></span>`;
+    return `<span class="swatch" data-finish="${escapeHtml(product.finish || '')}"
+                  style="background-color: ${escapeHtml(product.color.hex)}"></span>`;
   }
   return `<span class="swatch">${icon('brush', 18)}</span>`;
 }
@@ -365,4 +367,14 @@ tbody.addEventListener('click', (event) => {
   }
 });
 
+// Honour deep links like ?stock=low from the dashboard's Stock Alerts tile.
+// Runs after the category options are filled so those values validate too.
+Object.assign(
+  state,
+  applyUrlFilters({
+    stock: '#stock-filter',
+    category: '#category-filter',
+    status: '#status-filter',
+  })
+);
 loadProducts();

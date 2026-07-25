@@ -53,6 +53,7 @@
             </select>
             <select id="stock-filter" class="form-input form-select" aria-label="Filter by stock level">
               <option value="">All stock levels</option>
+              <option value="alert">Low or out of stock</option>
               <option value="low">Low stock</option>
               <option value="out">Out of stock</option>
             </select>
@@ -79,7 +80,7 @@
             </table>
           </div>
           <div id="empty-state" class="empty-state" hidden>
-            <div class="empty-state-icon" data-icon="palette" data-icon-size="34"></div>
+            <div class="empty-state-icon" data-illustration="no-results"></div>
             <p>No products match your filters.</p>
           </div>
           <div id="pagination" class="pagination"></div>

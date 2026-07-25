@@ -43,6 +43,7 @@
           <div class="toolbar">
             <select id="status-filter" class="form-input form-select" aria-label="Filter by status">
               <option value="">All statuses</option>
+              <option value="active">Active orders</option>
               <option value="pending_payment">Pending payment</option>
               <option value="pending_verification">Pending verification</option>
               <option value="payment_verified">Payment verified</option>
@@ -73,7 +74,7 @@
             </table>
           </div>
           <div id="empty-state" class="empty-state" hidden>
-            <div class="empty-state-icon" data-icon="package" data-icon-size="34"></div>
+            <div class="empty-state-icon" data-illustration="no-orders"></div>
             <p>No orders yet. Time to pick some colors!</p>
           </div>
           <div id="pagination" class="pagination"></div>

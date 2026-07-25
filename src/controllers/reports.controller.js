@@ -53,6 +53,24 @@ const sales = asyncHandler(async (req, res) => {
         },
         { $sort: { revenue: -1 } },
         { $limit: 5 },
+        // The catalogue's colour and finish, so the report can render each
+        // row in the paint it actually sold (display only — the money above
+        // still comes from the order's own snapshot).
+        {
+          $lookup: {
+            from: 'products',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'productDoc',
+          },
+        },
+        {
+          $addFields: {
+            colorHex: { $first: '$productDoc.color.hex' },
+            finish: { $first: '$productDoc.finish' },
+          },
+        },
+        { $project: { productDoc: 0 } },
       ]),
       Order.aggregate([
         { $match: { status: ORDER_STATUS.COMPLETED, completedAt: { $gte: since } } },

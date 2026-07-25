@@ -31,6 +31,7 @@ export function addItem(userId, product, quantity = 1) {
     name: product.name,
     price: product.price,
     hex: product.color?.hex || '',
+    finish: product.finish || '', // display only: drives the swatch sheen
     size: product.size || '',
     quantity: newQty,
   };

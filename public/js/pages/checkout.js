@@ -29,7 +29,7 @@ function render() {
     .map(
       (item) => `
       <div class="cart-line" data-product-id="${item.id}">
-        <span class="swatch" ${item.hex ? `style="background-color: ${escapeHtml(item.hex)}"` : ''}>${item.hex ? '' : icon('brush', 16)}</span>
+        <span class="swatch" ${item.hex ? `data-finish="${escapeHtml(item.finish || '')}" style="background-color: ${escapeHtml(item.hex)}"` : ''}>${item.hex ? '' : icon('brush', 16)}</span>
         <div class="cart-line-info">
           <div class="cart-line-name">${escapeHtml(item.name)}</div>
           <div class="cart-line-price">${formatPrice(item.price)}${item.size ? ` · ${escapeHtml(item.size)}` : ''}</div>

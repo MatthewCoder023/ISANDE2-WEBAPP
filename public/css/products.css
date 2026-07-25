@@ -19,14 +19,60 @@
   transform: translateY(-2px);
 }
 
+/* The card's edge picks up its own paint, so a shelf of cards reads as a
+   rack of chips rather than a grid of identical boxes. */
+.product-card[data-has-color] {
+  border-color: color-mix(in srgb, var(--chip) 32%, var(--border));
+}
+
+.product-card[data-has-color]:hover {
+  border-color: color-mix(in srgb, var(--chip) 58%, var(--border));
+}
+
 .product-swatch {
-  height: 110px;
+  height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-faint);
   background-color: var(--bg);
   border-bottom: 1px solid var(--border);
+}
+
+/**
+ * Colour chip: the paint is the hero and labels itself the way a physical
+ * chip in a store rack does — name and hex code set directly on the colour,
+ * in whichever ink stays legible (see readableTextOn in color-utils.js).
+ */
+.product-swatch.is-chip {
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.625rem;
+  padding: 0.8125rem 0.9375rem;
+  color: var(--chip-ink, #fff);
+  border-bottom-color: transparent;
+}
+
+.chip-name,
+.chip-hex {
+  position: relative; /* above the finish sheen overlay */
+  z-index: 1;
+}
+
+.chip-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.chip-hex {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  white-space: nowrap;
+  padding-bottom: 0.0625rem;
 }
 
 .product-body {

@@ -57,6 +57,11 @@ const list = asyncHandler(async (req, res) => {
   if (!isClient) {
     if (req.query.stock === 'low') Object.assign(filter, LOW_STOCK_FILTER);
     else if (req.query.stock === 'out') filter['stock.quantity'] = 0;
+    // "alert" is low AND out together — what the admin dashboard's
+    // Low / Out of Stock tile counts, so it can link to exactly that set.
+    else if (req.query.stock === 'alert') {
+      filter.$expr = { $lte: ['$stock.quantity', '$stock.lowStockThreshold'] };
+    }
   }
 
   const sortMap = {

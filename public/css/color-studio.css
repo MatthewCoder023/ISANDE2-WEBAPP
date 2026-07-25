@@ -39,6 +39,9 @@
   box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.35), var(--shadow-sm);
   transform: translate(-50%, -50%);
   pointer-events: none;
+  /* Glides when a palette chip or hex input moves it; dragging sets both
+     coordinates every frame, so the transition is imperceptible there. */
+  transition: left 0.28s var(--ease), top 0.28s var(--ease);
 }
 
 .lightness-slider {
@@ -77,6 +80,9 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   flex-shrink: 0;
+  /* Colours mix into each other rather than snapping, so dragging the
+     wheel or stepping through a palette reads as one continuous change. */
+  transition: background-color 0.28s var(--ease);
 }
 
 .color-values {

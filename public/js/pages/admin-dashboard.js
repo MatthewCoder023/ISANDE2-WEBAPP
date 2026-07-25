@@ -5,11 +5,10 @@
 import { api } from '/js/api.js';
 import { formatPrice } from '/js/format.js';
 import { statSkeleton } from '/js/skeleton.js';
+import { countUp } from '/js/count-up.js';
 
-const set = (key, value) => {
-  const el = document.querySelector(`[data-stat="${key}"]`);
-  if (el) el.textContent = value;
-};
+const set = (key, value, format) =>
+  countUp(document.querySelector(`[data-stat="${key}"]`), value, format);
 
 async function loadProductStats() {
   try {
@@ -23,7 +22,7 @@ async function loadProductStats() {
 async function loadOrderStats() {
   try {
     const { data } = await api('/api/orders/stats');
-    set('revenueThisMonth', formatPrice(data.stats.revenueThisMonth));
+    set('revenueThisMonth', data.stats.revenueThisMonth, formatPrice);
     set('totalOrders', data.stats.totalOrders);
   } catch {
     // Cards keep their placeholder.

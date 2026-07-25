@@ -5,6 +5,7 @@ import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, formatDateTime, debounce } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
 import { PAYMENT_LABELS } from '/js/orders-ui.js';
+import { applyUrlFilters } from '/js/url-filters.js';
 
 const state = { page: 1, search: '', method: '' };
 
@@ -72,4 +73,6 @@ document.querySelector('#export-btn').addEventListener('click', () => {
   window.location.assign(`/api/transactions/export?${params}`);
 });
 
+// Honour ?method= so a deep link opens the payments it refers to.
+Object.assign(state, applyUrlFilters({ method: '#method-filter' }));
 loadTransactions();

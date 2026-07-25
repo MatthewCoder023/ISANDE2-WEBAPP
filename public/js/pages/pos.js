@@ -54,7 +54,7 @@ function renderProducts(products) {
       const meta = [p.sku, p.size, p.finish].filter(Boolean).map(escapeHtml).join(' · ');
       return `
         <button type="button" class="pos-product" data-product-id="${p.id}" ${out ? 'disabled' : ''}>
-          <span class="swatch" ${p.color?.hex ? `style="background-color: ${escapeHtml(p.color.hex)}"` : ''}>${p.color?.hex ? '' : icon('brush', 16)}</span>
+          <span class="swatch" ${p.color?.hex ? `data-finish="${escapeHtml(p.finish || '')}" style="background-color: ${escapeHtml(p.color.hex)}"` : ''}>${p.color?.hex ? '' : icon('brush', 16)}</span>
           <span class="pos-product-info">
             <span class="pos-product-name">${escapeHtml(p.name)}</span>
             <span class="pos-product-meta">${meta} · ${out ? 'Out of stock' : `${p.stock.quantity} in stock`}</span>
@@ -89,6 +89,7 @@ productsEl.addEventListener('click', (event) => {
       name: product.name,
       price: product.price,
       hex: product.color?.hex || '',
+      finish: product.finish || '', // display only: drives the swatch sheen
       size: product.size || '',
       quantity: 1,
       maxQuantity: product.stock.quantity,
@@ -110,7 +111,7 @@ function renderSale() {
     .map(
       (line) => `
       <div class="cart-line" data-product-id="${line.id}">
-        <span class="swatch" ${line.hex ? `style="background-color: ${escapeHtml(line.hex)}"` : ''}>${line.hex ? '' : icon('brush', 16)}</span>
+        <span class="swatch" ${line.hex ? `data-finish="${escapeHtml(line.finish || '')}" style="background-color: ${escapeHtml(line.hex)}"` : ''}>${line.hex ? '' : icon('brush', 16)}</span>
         <div class="cart-line-info">
           <div class="cart-line-name">${escapeHtml(line.name)}</div>
           <div class="cart-line-price">${formatPrice(line.price)}${line.size ? ` · ${escapeHtml(line.size)}` : ''}</div>

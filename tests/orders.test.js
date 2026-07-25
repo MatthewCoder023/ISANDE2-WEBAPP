@@ -198,3 +198,47 @@ describe('stale-order expiry', () => {
     );
   });
 });
+
+describe('dashboard tile deep links', () => {
+  it('status=active returns exactly what the Active Orders tile counts', async () => {
+    const product = await createProduct({ stock: { quantity: 20, lowStockThreshold: 2 } });
+    const place = () =>
+      agents.client
+        .post('/api/orders')
+        .send({ items: [{ productId: product.id, quantity: 1 }] })
+        .then((r) => r.body.data.order);
+
+    const stillOpen = await place();
+    const toCancel = await place();
+    await agents.client.post(`/api/orders/${toCancel.id}/cancel`);
+
+    const [stats, active] = await Promise.all([
+      agents.client.get('/api/orders/stats'),
+      agents.client.get('/api/orders?status=active&limit=50'),
+    ]);
+
+    // The tile's number and the linked list must agree.
+    expect(active.body.data.pagination.total).toBe(stats.body.data.stats.activeOrders);
+    const ids = active.body.data.orders.map((o) => o.id);
+    expect(ids).toContain(stillOpen.id);
+    expect(ids).not.toContain(toCancel.id);
+    expect(active.body.data.orders.every((o) => !['completed', 'cancelled'].includes(o.status))).toBe(true);
+  });
+
+  it('stock=alert returns exactly what the Low / Out of Stock tile counts', async () => {
+    await createProduct({ stock: { quantity: 0, lowStockThreshold: 5 } }); // out
+    await createProduct({ stock: { quantity: 3, lowStockThreshold: 5 } }); // low
+    await createProduct({ stock: { quantity: 99, lowStockThreshold: 5 } }); // healthy
+
+    const [stats, alert] = await Promise.all([
+      agents.admin.get('/api/products/stats'),
+      agents.admin.get('/api/products?stock=alert&limit=100'),
+    ]);
+
+    const expected = stats.body.data.stats.lowStock + stats.body.data.stats.outOfStock;
+    expect(alert.body.data.pagination.total).toBe(expected);
+    expect(
+      alert.body.data.products.every((p) => p.stock.quantity <= p.stock.lowStockThreshold)
+    ).toBe(true);
+  });
+});

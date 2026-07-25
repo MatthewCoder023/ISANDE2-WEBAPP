@@ -10,6 +10,7 @@ import { renderPagination } from '/js/pagination.js';
 import { initModal } from '/js/modal.js';
 import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
 import { icon, hydrateIcons } from '/js/icons.js';
+import { applyUrlFilters } from '/js/url-filters.js';
 
 const STATUS_BADGES = {
   queued: '<span class="badge badge-dot badge-warning">Queued</span>',
@@ -329,4 +330,6 @@ document.querySelector('#confirm-btn').addEventListener('click', async () => {
 });
 
 hydrateIcons();
+// Honour ?status= so the dashboard tiles land on the mixes they counted.
+Object.assign(state, applyUrlFilters({ status: '#status-filter' }));
 loadQueue();

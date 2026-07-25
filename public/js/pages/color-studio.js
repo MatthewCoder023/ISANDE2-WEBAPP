@@ -431,10 +431,22 @@ document.querySelector('#confirm-btn').addEventListener('click', async () => {
 
 /* ---------- Init ---------- */
 
+/**
+ * The dashboard's Active Custom Mixes tile links to #my-mixes. The browser
+ * jumps to it before this page's async sections have rendered, which then
+ * pushes the target down — so re-apply the jump once content has landed.
+ */
+async function honourHashTarget() {
+  if (window.location.hash !== '#my-mixes') return;
+  await loadMixes();
+  document.querySelector('#my-mixes')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 async function init() {
   drawWheel();
   render();
-  loadMixes();
+  if (window.location.hash === '#my-mixes') honourHashTarget();
+  else loadMixes();
   const user = await getCurrentUser();
   userId = user.id;
 }

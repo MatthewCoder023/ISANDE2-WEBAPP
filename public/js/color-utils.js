@@ -23,6 +23,21 @@ export function rgbToHex(r, g, b) {
   return `#${to2(r)}${to2(g)}${to2(b)}`.toUpperCase();
 }
 
+/**
+ * Ink colour for text sitting on a paint colour. Uses WCAG relative
+ * luminance and switches at the crossover point (~0.18) where dark text
+ * starts out-contrasting white, so labels stay legible on any swatch.
+ */
+export function readableTextOn(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  const linear = (channel) => {
+    const v = channel / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+  return luminance > 0.18 ? '#101828' : '#ffffff';
+}
+
 /** r,g,b 0-255 -> { h: 0-360, s: 0-100, l: 0-100 } */
 export function rgbToHsl(r, g, b) {
   const rn = r / 255;

@@ -12,6 +12,7 @@ import { initModal } from '/js/modal.js';
 import { getCurrentUser } from '/js/session.js';
 import { getCart, addItem, setQuantity, cartCount, cartTotal } from '/js/cart.js';
 import { icon } from '/js/icons.js';
+import { readableTextOn } from '/js/color-utils.js';
 
 const CATEGORY_LABELS = {
   interior: 'Interior Paint',
@@ -75,14 +76,21 @@ function renderGrid(products) {
 
   grid.innerHTML = products
     .map((p) => {
-      const swatch = p.color?.hex
-        ? `<div class="product-swatch" style="background-color: ${escapeHtml(p.color.hex)}"></div>`
+      const hex = p.color?.hex;
+      // Chip: the colour labels itself; the meta line below then only needs
+      // the details the chip doesn't already show.
+      const swatch = hex
+        ? `<div class="product-swatch is-chip" data-finish="${escapeHtml(p.finish || '')}"
+                style="background-color: ${escapeHtml(hex)}; --chip-ink: ${readableTextOn(hex)}">
+             ${p.color?.name ? `<span class="chip-name">${escapeHtml(p.color.name)}</span>` : ''}
+             <span class="chip-hex">${escapeHtml(hex.toUpperCase())}</span>
+           </div>`
         : `<div class="product-swatch">${icon('brush', 32)}</div>`;
-      const meta = [p.color?.name, p.finish, p.size].filter(Boolean).map(escapeHtml).join(' · ');
+      const meta = [p.finish, p.size].filter(Boolean).map(escapeHtml).join(' · ');
       const outOfStock = p.availability === 'out_of_stock';
 
       return `
-        <article class="card product-card">
+        <article class="card product-card" ${hex ? `data-has-color style="--chip: ${escapeHtml(hex)}"` : ''}>
           ${swatch}
           <div class="product-body">
             <span class="badge badge-primary" style="align-self: flex-start;">
@@ -160,7 +168,7 @@ function renderCart() {
     .map(
       (item) => `
       <div class="cart-line" data-product-id="${item.id}">
-        <span class="swatch" ${item.hex ? `style="background-color: ${escapeHtml(item.hex)}"` : ''}>${item.hex ? '' : icon('brush', 16)}</span>
+        <span class="swatch" ${item.hex ? `data-finish="${escapeHtml(item.finish || '')}" style="background-color: ${escapeHtml(item.hex)}"` : ''}>${item.hex ? '' : icon('brush', 16)}</span>
         <div class="cart-line-info">
           <div class="cart-line-name">${escapeHtml(item.name)}</div>
           <div class="cart-line-price">${formatPrice(item.price)}${item.size ? ` · ${escapeHtml(item.size)}` : ''}</div>

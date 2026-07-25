@@ -2,6 +2,7 @@
 import { api } from '/js/api.js';
 import { formatPrice } from '/js/format.js';
 import { statSkeleton } from '/js/skeleton.js';
+import { countUp } from '/js/count-up.js';
 
 async function loadStats() {
   const clearSkeleton = statSkeleton();
@@ -9,12 +10,10 @@ async function loadStats() {
     const { data } = await api('/api/orders/stats');
     const { salesToday, awaitingVerification, readyOrders, transactionsToday } = data.stats;
 
-    const set = (key, value) => {
-      const el = document.querySelector(`[data-stat="${key}"]`);
-      if (el) el.textContent = value;
-    };
+    const set = (key, value, format) =>
+      countUp(document.querySelector(`[data-stat="${key}"]`), value, format);
 
-    set('salesToday', formatPrice(salesToday));
+    set('salesToday', salesToday, formatPrice);
     set('awaitingVerification', awaitingVerification);
     set('readyOrders', readyOrders);
     set('transactionsToday', transactionsToday);

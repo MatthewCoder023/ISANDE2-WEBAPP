@@ -9,6 +9,7 @@ import { escapeHtml, formatPrice, formatDateTime } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
 import { initModal } from '/js/modal.js';
 import { STATUS_BADGES } from '/js/orders-ui.js';
+import { applyUrlFilters } from '/js/url-filters.js';
 
 const state = { page: 1, status: '' };
 const ordersCache = new Map();
@@ -105,4 +106,6 @@ document.querySelector('#confirm-btn').addEventListener('click', async () => {
 });
 
 showFlashToast();
+// Honour ?status= so the dashboard tiles land on the orders they counted.
+Object.assign(state, applyUrlFilters({ status: '#status-filter' }));
 loadOrders();

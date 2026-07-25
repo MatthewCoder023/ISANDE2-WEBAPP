@@ -12,6 +12,7 @@ import { renderPagination } from '/js/pagination.js';
 import { initModal } from '/js/modal.js';
 import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
 import { STATUS_BADGES, TYPE_LABELS, renderOrderDetail } from '/js/orders-ui.js';
+import { applyUrlFilters } from '/js/url-filters.js';
 
 const state = { page: 1, search: '', status: '', type: '' };
 const ordersCache = new Map();
@@ -320,4 +321,6 @@ document.querySelector('#confirm-btn').addEventListener('click', async () => {
   }
 });
 
+// Honour ?status=/?type= so the dashboard tiles land on the queue they counted.
+Object.assign(state, applyUrlFilters({ status: '#status-filter', type: '#type-filter' }));
 loadOrders();

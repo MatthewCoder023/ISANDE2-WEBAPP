@@ -1,11 +1,11 @@
 /** Customer dashboard extras: live order and custom-mix counts. */
 import { api } from '/js/api.js';
 import { statSkeleton } from '/js/skeleton.js';
+import { countUp } from '/js/count-up.js';
 
 function fill(stats) {
   for (const [key, value] of Object.entries(stats)) {
-    const el = document.querySelector(`[data-stat="${key}"]`);
-    if (el) el.textContent = value;
+    countUp(document.querySelector(`[data-stat="${key}"]`), value);
   }
 }
 

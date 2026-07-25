@@ -67,7 +67,13 @@ const list = asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
   const filter = {};
 
-  if (Object.values(ORDER_STATUS).includes(req.query.status)) filter.status = req.query.status;
+  // "active" is a pseudo-status matching the dashboard's Active Orders
+  // count, so that tile can link straight to the orders it counted.
+  if (req.query.status === 'active') {
+    filter.status = { $nin: [ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELLED] };
+  } else if (Object.values(ORDER_STATUS).includes(req.query.status)) {
+    filter.status = req.query.status;
+  }
 
   if (isStaff(req.user.role)) {
     if (Object.values(ORDER_TYPES).includes(req.query.type)) filter.type = req.query.type;
