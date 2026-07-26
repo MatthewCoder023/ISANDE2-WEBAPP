@@ -12,9 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Track the Node major used in development. The lockfile is written by
+      # that npm, and an older npm here has rejected it before — keeping the
+      # two aligned removes a whole class of "works locally" failure.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       # mongodb-memory-server downloads a mongod binary on first run;
@@ -24,6 +27,11 @@ jobs:
           path: ~/.cache/mongodb-binaries
           key: mongodb-binaries-${{ runner.os }}
 
-      - run: npm ci
+      # Surface the toolchain and, on failure, npm's own log — the run
+      # summary alone doesn't say why an install was rejected.
+      - name: Install dependencies
+        run: |
+          node --version && npm --version
+          npm ci || { tail -n 60 "$(ls -t ~/.npm/_logs/*.log | head -1)"; exit 1; }
 
       - run: npm test
