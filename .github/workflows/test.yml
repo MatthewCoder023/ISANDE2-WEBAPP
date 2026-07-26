@@ -34,7 +34,7 @@ jobs:
           node --version && npm --version
           npm ci > /tmp/install.log 2>&1 || {
             cat /tmp/install.log
-            echo "::error title=npm ci failed::$(tail -c 1500 /tmp/install.log | tr '\n' ' | ')"
+            echo "::error title=npm ci failed::$(grep -E 'can only install|Missing:|Invalid:|Conflicting|ERESOLVE|EBADENGINE|code E' /tmp/install.log | head -20 | tr '\n' ' | ')"
             exit 1
           }
 
