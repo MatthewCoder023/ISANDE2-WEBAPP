@@ -94,6 +94,12 @@ const completeMixRules = [
   body('formulaId')
     .optional({ values: 'falsy' })
     .isMongoId().withMessage('Invalid formula.'),
+  // Overrides the quote computed from the base paint plus the mixing
+  // surcharge; omitted means "use the computed price".
+  body('unitPrice')
+    .optional({ values: 'null' })
+    .isFloat({ min: 0, max: 1000000 }).withMessage('Price must be zero or more.')
+    .toFloat(),
   // A brand-new formula can be recorded as part of completing a mix.
   body('newFormula.name')
     .if(body('newFormula').exists({ values: 'falsy' }))

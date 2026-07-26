@@ -395,9 +395,23 @@ function renderMixes(requests) {
               </div>
             </div>
           </td>
-          <td>${base} × ${r.quantity}</td>
+          <td>
+            ${base} × ${r.quantity}
+            ${
+              r.unitPrice !== null && r.unitPrice !== undefined
+                ? `<div class="meta text-muted" style="font-size: 0.8125rem;">${formatPrice(r.unitPrice)} each</div>`
+                : ''
+            }
+          </td>
           <td>${formatDate(r.createdAt)}</td>
-          <td>${MIX_STATUS_BADGES[r.status] || escapeHtml(r.status)}</td>
+          <td>
+            ${MIX_STATUS_BADGES[r.status] || escapeHtml(r.status)}
+            ${
+              r.status === 'completed' && r.readyProduct
+                ? '<div class="meta text-muted" style="font-size: 0.8125rem;">In your cart</div>'
+                : ''
+            }
+          </td>
           <td><div class="cell-actions">${cancelButton}</div></td>
         </tr>`;
     })

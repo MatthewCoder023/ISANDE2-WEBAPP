@@ -120,9 +120,12 @@ const sales = asyncHandler(async (req, res) => {
 
 /** GET /api/reports/inventory — stock position right now. */
 const inventory = asyncHandler(async (req, res) => {
+  // Custom mixes are one-off jobs, not shelf stock to reorder.
+  const catalogue = { isActive: true, isCustom: { $ne: true } };
+
   const [byCategory, lowStock] = await Promise.all([
     Product.aggregate([
-      { $match: { isActive: true } },
+      { $match: catalogue },
       {
         $group: {
           _id: '$category',
@@ -135,7 +138,7 @@ const inventory = asyncHandler(async (req, res) => {
     ]),
     // quantity <= threshold covers both low-stock and out-of-stock.
     Product.find({
-      isActive: true,
+      ...catalogue,
       $expr: { $lte: ['$stock.quantity', '$stock.lowStockThreshold'] },
     })
       .sort('stock.quantity')

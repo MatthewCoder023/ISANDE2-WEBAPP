@@ -209,6 +209,52 @@
   background-color: var(--success-500);
 }
 
+/* A button that reads as a link — for secondary choices inside a flow. */
+.btn-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--primary-600);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.btn-link:hover {
+  color: var(--primary-700);
+}
+
+/**
+ * Radio presented as a selectable card — used for payment choice at
+ * checkout, where the options need room to explain themselves.
+ */
+.choice-card {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  padding: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  margin-bottom: 0.625rem;
+  transition: border-color var(--speed-fast) ease, background-color var(--speed-fast) ease;
+}
+
+.choice-card:hover {
+  border-color: var(--border-strong);
+}
+
+.choice-card input {
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.choice-card:has(input:checked) {
+  border-color: var(--primary-500);
+  background-color: var(--primary-50);
+}
+
 /* ---------- Cards ---------- */
 .card {
   background-color: var(--surface);

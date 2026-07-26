@@ -27,7 +27,7 @@ const TEMPLATES = {
       `Hi ${name},\n\n` +
       `We couldn't verify the payment proof for order ${order.orderNumber}.` +
       (order.payment.rejectedReason ? ` Reason: ${order.payment.rejectedReason}.` : '') +
-      `\n\nPlease upload a new proof (or choose cash on pickup): ${APP_URL}/client/payment?order=${order.id}\n\n` +
+      `\n\nPlease upload a new proof (or choose cash on pickup): ${APP_URL}/client/track?order=${order.id}\n\n` +
       `— Flavor & Color`,
   }),
   ready: (order, name) => ({
@@ -51,6 +51,35 @@ const TEMPLATES = {
   }),
 };
 
+/**
+ * A hand-mixed paint is finished and has been published for sale. Sent once,
+ * when the mixer completes the job.
+ */
+async function notifyMixReady(request, product) {
+  try {
+    if (!request.customer) return;
+
+    const customer = await User.findById(request.customer);
+    if (!customer) return;
+
+    const total = (product.price * (request.quantity || 1)).toFixed(2);
+    await sendMail({
+      to: customer.email,
+      subject: `Your custom mix is ready — ${request.requestNumber}`,
+      text:
+        `Hi ${customer.firstName},\n\n` +
+        `We've finished mixing "${product.color?.name || request.targetColor.hex}" ` +
+        `(${request.targetColor.hex}) for request ${request.requestNumber}.\n\n` +
+        `${request.quantity || 1} × ₱${product.price.toFixed(2)} = ₱${total}\n\n` +
+        `We've placed it in your cart — check out whenever you're ready: ` +
+        `${APP_URL}/client/products\n\n` +
+        `— Flavor & Color`,
+    });
+  } catch (err) {
+    console.error('Mix-ready notification failed:', err.message);
+  }
+}
+
 async function notifyOrderEvent(order, event) {
   try {
     const template = TEMPLATES[event];
@@ -66,4 +95,4 @@ async function notifyOrderEvent(order, event) {
   }
 }
 
-module.exports = { notifyOrderEvent };
+module.exports = { notifyOrderEvent, notifyMixReady };

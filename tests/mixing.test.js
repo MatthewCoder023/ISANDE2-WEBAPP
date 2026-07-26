@@ -86,3 +86,112 @@ describe('mix request lifecycle', () => {
     expect(res.status).toBe(422);
   });
 });
+
+describe('custom mix becomes purchasable', () => {
+  const Product = require('../src/models/Product');
+
+  it('publishes a priced, customer-reserved product when the mix completes', async () => {
+    const request = await createRequest(agents.client, '#123456');
+
+    const complete = await agents.paint_mixer
+      .post(`/api/mixing/requests/${request.id}/complete`)
+      .send({ mixerNotes: 'Two coats recommended' });
+
+    expect(complete.status).toBe(200);
+    const { readyProduct, request: done } = complete.body.data;
+
+    // Default quote = configured base price + mixing surcharge (750 + 150).
+    expect(done.unitPrice).toBe(900);
+    expect(readyProduct.price).toBe(900);
+    expect(readyProduct.isCustom).toBe(true);
+    expect(readyProduct.color.hex).toBe('#123456');
+    expect(readyProduct.stock.quantity).toBe(request.quantity);
+    expect(done.readyProduct).toBe(readyProduct.id);
+
+    // The mixed batch enters the stock audit trail like any opening stock.
+    const movements = await agents.admin.get(`/api/products/${readyProduct.id}/movements`);
+    expect(movements.body.data.movements[0].type).toBe('initial');
+  });
+
+  it('honours a price the mixer sets by hand', async () => {
+    const request = await createRequest(agents.client, '#654321');
+    const res = await agents.paint_mixer
+      .post(`/api/mixing/requests/${request.id}/complete`)
+      .send({ unitPrice: 1234.5 });
+
+    expect(res.body.data.readyProduct.price).toBe(1234.5);
+    expect(res.body.data.request.unitPrice).toBe(1234.5);
+  });
+
+  it('offers the finished mix to its owner and no one else', async () => {
+    const request = await createRequest(agents.client, '#0AB0AB');
+    await agents.paint_mixer.post(`/api/mixing/requests/${request.id}/complete`).send({});
+
+    const ready = await agents.client.get('/api/mixing/ready');
+    expect(ready.status).toBe(200);
+    const mine = ready.body.data.items.find((i) => i.requestId === request.id);
+    expect(mine).toBeDefined();
+    expect(mine.product.color.hex).toBe('#0AB0AB');
+
+    await createUser({ email: 'nosy@test.com' });
+    const nosy = await loginAgent(app, 'nosy@test.com');
+    const theirs = await nosy.get('/api/mixing/ready');
+    expect(theirs.body.data.items).toHaveLength(0);
+  });
+
+  it('keeps custom paints out of everyone else\'s catalogue', async () => {
+    const request = await createRequest(agents.client, '#FEDCBA');
+    const complete = await agents.paint_mixer
+      .post(`/api/mixing/requests/${request.id}/complete`)
+      .send({});
+    const customId = complete.body.data.readyProduct.id;
+
+    // The owner sees it in their catalogue...
+    const ownerList = await agents.client.get('/api/products?limit=100');
+    expect(ownerList.body.data.products.map((p) => p.id)).toContain(customId);
+
+    // ...another customer sees neither the listing nor the product itself.
+    await createUser({ email: 'stranger@test.com' });
+    const stranger = await loginAgent(app, 'stranger@test.com');
+    const strangerList = await stranger.get('/api/products?limit=100');
+    expect(strangerList.body.data.products.map((p) => p.id)).not.toContain(customId);
+    expect((await stranger.get(`/api/products/${customId}`)).status).toBe(404);
+
+    // And it is never suggested as a colour match.
+    const match = await stranger.get('/api/products/match?hex=FEDCBA');
+    expect(match.body.data.matches.map((m) => m.product.id)).not.toContain(customId);
+  });
+
+  it('acknowledges once, so removing it from the cart sticks', async () => {
+    const request = await createRequest(agents.client, '#ABCDEF');
+    await agents.paint_mixer.post(`/api/mixing/requests/${request.id}/complete`).send({});
+
+    const ack = await agents.client
+      .post('/api/mixing/ready/ack')
+      .send({ requestIds: [request.id] });
+    expect(ack.body.data.acknowledged).toBe(1);
+
+    const after = await agents.client.get('/api/mixing/ready');
+    expect(after.body.data.items.map((i) => i.requestId)).not.toContain(request.id);
+  });
+
+  it('lets the customer actually order the finished mix', async () => {
+    const request = await createRequest(agents.client, '#C0FFEE');
+    const complete = await agents.paint_mixer
+      .post(`/api/mixing/requests/${request.id}/complete`)
+      .send({ unitPrice: 500 });
+    const productId = complete.body.data.readyProduct.id;
+
+    const order = await agents.client
+      .post('/api/orders')
+      .send({ items: [{ productId, quantity: 1 }] });
+
+    expect(order.status).toBe(201);
+    expect(order.body.data.order.total).toBe(500);
+    expect(order.body.data.order.items[0].name).toContain('Custom Mix');
+
+    // Stock for the one-off batch is consumed by the sale.
+    const product = await Product.findById(productId);
+    expect(product.stock.quantity).toBe(request.quantity - 1);
+  });
+});

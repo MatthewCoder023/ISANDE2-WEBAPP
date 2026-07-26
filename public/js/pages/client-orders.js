@@ -4,7 +4,10 @@
  */
 import { api } from '/js/api.js';
 import { tableSkeleton } from '/js/skeleton.js';
-import { showToast, showFlashToast } from '/js/toast.js';
+import { showToast, showFlashToast, flashToast } from '/js/toast.js';
+import { setBusy } from '/js/form-utils.js';
+import { getCurrentUser } from '/js/session.js';
+import { addItem } from '/js/cart.js';
 import { escapeHtml, formatPrice, formatDateTime } from '/js/format.js';
 import { renderPagination } from '/js/pagination.js';
 import { initModal } from '/js/modal.js';
@@ -12,6 +15,7 @@ import { STATUS_BADGES } from '/js/orders-ui.js';
 import { applyUrlFilters } from '/js/url-filters.js';
 
 const state = { page: 1, status: '' };
+let userId = null;
 const ordersCache = new Map();
 
 const tbody = document.querySelector('#orders-tbody');
@@ -48,10 +52,14 @@ function renderTable(orders) {
     .map((o) => {
       const awaitingPayment = o.status === 'pending_payment';
       const payButton = awaitingPayment
-        ? `<a class="btn btn-primary btn-sm" href="/client/payment?order=${o.id}">Pay Now</a>`
+        ? `<a class="btn btn-primary btn-sm" href="/client/track?order=${o.id}">Pay Now</a>`
         : '';
       const cancelButton = awaitingPayment
         ? `<button class="btn btn-outline btn-sm" data-action="cancel" data-id="${o.id}">Cancel</button>`
+        : '';
+      // Rebuying a finished order shouldn't mean hunting down each paint again.
+      const reorderButton = ['completed', 'cancelled'].includes(o.status)
+        ? `<button class="btn btn-outline btn-sm" data-action="reorder" data-id="${o.id}">Order Again</button>`
         : '';
       return `
         <tr>
@@ -65,6 +73,7 @@ function renderTable(orders) {
               <a class="btn btn-outline btn-sm" href="/client/track?order=${o.id}">Track</a>
               <a class="btn btn-outline btn-sm" href="/invoice?order=${o.id}">Invoice</a>
               ${payButton}
+              ${reorderButton}
               ${cancelButton}
             </div>
           </td>
@@ -79,7 +88,54 @@ document.querySelector('#status-filter').addEventListener('change', (event) => {
   loadOrders();
 });
 
-tbody.addEventListener('click', (event) => {
+/**
+ * Rebuilds a past order in the cart. Items that have since been archived or
+ * sold out are skipped and reported rather than silently dropped — and a
+ * one-off custom mix that has already been bought simply cannot repeat.
+ */
+async function reorder(order, button) {
+  if (!order || !userId) return;
+  setBusy(button, true, 'Adding…');
+
+  const skipped = [];
+  let added = 0;
+
+  for (const item of order.items) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const { data } = await api(`/api/products/${item.product}`);
+      // Customers see availability rather than a stock count.
+      if (data.product.availability === 'out_of_stock') {
+        skipped.push(`${item.name} (out of stock)`);
+        continue;
+      }
+      addItem(userId, data.product, item.quantity);
+      added += 1;
+    } catch {
+      skipped.push(`${item.name} (no longer available)`);
+    }
+  }
+
+  setBusy(button, false);
+
+  if (added === 0) {
+    showToast('None of those items can be reordered right now.', 'warning');
+    return;
+  }
+  if (skipped.length > 0) {
+    showToast(`Added ${added} item${added === 1 ? '' : 's'}. Skipped: ${skipped.join(', ')}.`, 'warning');
+  }
+  flashToast(`Added ${added} item${added === 1 ? '' : 's'} to your cart.`, 'success');
+  window.location.assign('/client/checkout');
+}
+
+tbody.addEventListener('click', async (event) => {
+  const reorderButton = event.target.closest('button[data-action="reorder"]');
+  if (reorderButton) {
+    await reorder(ordersCache.get(reorderButton.dataset.id), reorderButton);
+    return;
+  }
+
   const button = event.target.closest('button[data-action="cancel"]');
   if (!button) return;
   const order = ordersCache.get(button.dataset.id);
@@ -109,3 +165,8 @@ showFlashToast();
 // Honour ?status= so the dashboard tiles land on the orders they counted.
 Object.assign(state, applyUrlFilters({ status: '#status-filter' }));
 loadOrders();
+
+// Needed only by "Order Again", so it can trail the first paint.
+getCurrentUser().then((user) => {
+  userId = user.id;
+});

@@ -248,6 +248,11 @@ completeForm.addEventListener('submit', async (event) => {
   const body = { mixerNotes: document.querySelector('#c-notes').value };
   const choice = formulaSelect.value;
 
+  // Blank price means "use the standard quote", which the server computes
+  // from the base paint plus the mixing surcharge.
+  const price = document.querySelector('#c-price').value.trim();
+  if (price !== '') body.unitPrice = Number(price);
+
   if (choice === '__new__') {
     body.newFormula = {
       name: document.querySelector('#nf-name').value.trim(),

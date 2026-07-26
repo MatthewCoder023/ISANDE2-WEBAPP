@@ -65,16 +65,34 @@
             </div>
 
             <div class="form-group">
+              <label class="form-label">How would you like to pay?</label>
+              <label class="choice-card">
+                <input type="radio" name="checkout-method" value="gcash" checked />
+                <span>
+                  <strong>GCash</strong><br />
+                  <span class="text-muted" style="font-size: 0.875rem;">Pay by transfer and upload your receipt on the next screen.</span>
+                </span>
+              </label>
+              <label class="choice-card">
+                <input type="radio" name="checkout-method" value="cash_on_pickup" />
+                <span>
+                  <strong>Cash on Pickup</strong><br />
+                  <span class="text-muted" style="font-size: 0.875rem;">We start preparing right away; pay at the counter.</span>
+                </span>
+              </label>
+            </div>
+
+            <div class="form-group">
               <label class="form-label" for="order-notes">Notes for the store <span class="text-muted">(optional)</span></label>
               <input class="form-input" type="text" id="order-notes" maxlength="300"
                      placeholder="e.g. Pickup on Saturday morning" />
             </div>
 
             <button type="button" class="btn btn-primary btn-block" id="place-order-btn">
-              Place Order &amp; Continue to Payment
+              Place Order
             </button>
-            <p class="form-hint" style="text-align: center;">
-              You'll choose GCash or cash-on-pickup on the next step.
+            <p class="form-hint" style="text-align: center;" id="place-hint">
+              You'll get payment instructions and your invoice on the next screen.
             </p>
           </section>
         </div>

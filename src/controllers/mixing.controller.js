@@ -4,6 +4,8 @@ const Product = require('../models/Product');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
+const mixFulfillment = require('../services/mix-fulfillment.service');
+const { notifyMixReady } = require('../services/notify.service');
 const { ROLES } = require('../constants/roles');
 const { MIX_STATUS } = require('../constants/mixing');
 
@@ -162,13 +164,15 @@ const start = asyncHandler(async (req, res) => {
  * Optionally attaches an existing formula (reuse) or records a new one.
  */
 const complete = asyncHandler(async (req, res) => {
-  const request = await MixRequest.findById(req.params.id);
+  // The base paint is populated because it decides both the quote and the
+  // shape of the product published for sale.
+  const request = await MixRequest.findById(req.params.id).populate('product');
   if (!request) throw new ApiError(404, 'Mix request not found.');
   if (![MIX_STATUS.QUEUED, MIX_STATUS.MIXING].includes(request.status)) {
     throw new ApiError(409, `A ${request.status} request cannot be completed.`);
   }
 
-  const { formulaId, newFormula, mixerNotes } = req.body;
+  const { formulaId, newFormula, mixerNotes, unitPrice } = req.body;
   let formula = null;
 
   if (formulaId) {
@@ -193,13 +197,88 @@ const complete = asyncHandler(async (req, res) => {
   request.completedAt = new Date();
   request.formula = formula ? formula._id : null;
   if (mixerNotes !== undefined) request.mixerNotes = mixerNotes;
+
+  // Publish the finished paint so the customer can actually buy it. Staff
+  // jobs with no customer account skip this and behave exactly as before.
+  const price =
+    unitPrice !== undefined && unitPrice !== null
+      ? unitPrice
+      : await mixFulfillment.quoteUnitPrice(request);
+
+  const readyProduct = await mixFulfillment.publishMixProduct(request, {
+    unitPrice: price,
+    actorId: req.user._id,
+  });
+
+  if (readyProduct) {
+    request.unitPrice = price;
+    request.pricedBy = req.user._id;
+    request.readyProduct = readyProduct._id;
+  }
+
   await request.save();
+
+  if (readyProduct) await notifyMixReady(request, readyProduct);
 
   res.json({
     success: true,
-    message: `${request.requestNumber} completed${formula ? ` using formula "${formula.name}"` : ''}.`,
-    data: { request: request.toJSON(), formula: formula ? formula.toJSON() : null },
+    message:
+      `${request.requestNumber} completed${formula ? ` using formula "${formula.name}"` : ''}.` +
+      (readyProduct ? ' It is now in the customer’s cart, ready to buy.' : ''),
+    data: {
+      request: request.toJSON(),
+      formula: formula ? formula.toJSON() : null,
+      readyProduct: readyProduct ? readyProduct.toJSON() : null,
+    },
   });
+});
+
+/**
+ * GET /api/mixing/ready — the caller's finished mixes that have been
+ * published for sale but not yet placed in their cart. The client merges
+ * these in on load, which is how an approved mix "appears" in the cart
+ * despite the cart living in the browser.
+ */
+const listReady = asyncHandler(async (req, res) => {
+  const requests = await MixRequest.find({
+    customer: req.user._id,
+    status: MIX_STATUS.COMPLETED,
+    readyProduct: { $ne: null },
+    addedToCartAt: null,
+  })
+    .sort('-completedAt')
+    .limit(20)
+    .populate('readyProduct');
+
+  // Only offer paints that are still actually buyable.
+  const items = requests
+    .filter((r) => r.readyProduct && r.readyProduct.isActive && r.readyProduct.stock.quantity > 0)
+    .map((r) => ({
+      requestId: r.id,
+      requestNumber: r.requestNumber,
+      quantity: r.quantity,
+      product: r.readyProduct.toJSON(),
+    }));
+
+  res.json({ success: true, data: { items } });
+});
+
+/**
+ * POST /api/mixing/ready/ack — marks mixes as delivered to the cart so the
+ * auto-add happens once and a later removal is respected.
+ */
+const acknowledgeReady = asyncHandler(async (req, res) => {
+  const ids = Array.isArray(req.body.requestIds) ? req.body.requestIds.slice(0, 20) : [];
+  if (ids.length === 0) {
+    return res.json({ success: true, data: { acknowledged: 0 } });
+  }
+
+  const result = await MixRequest.updateMany(
+    { _id: { $in: ids }, customer: req.user._id, addedToCartAt: null },
+    { $set: { addedToCartAt: new Date() } }
+  );
+
+  res.json({ success: true, data: { acknowledged: result.modifiedCount } });
 });
 
 /**
@@ -228,4 +307,14 @@ const cancel = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { create, list, stats, getById, start, complete, cancel };
+module.exports = {
+  create,
+  list,
+  stats,
+  getById,
+  start,
+  complete,
+  cancel,
+  listReady,
+  acknowledgeReady,
+};

@@ -45,6 +45,20 @@ const list = asyncHandler(async (req, res) => {
   else if (status === 'archived') filter.isActive = false;
   // status === 'all' -> no isActive filter (staff only)
 
+  /**
+   * Custom paints are mixed for one customer and must never appear in
+   * anyone else's catalogue. Customers see the ordinary catalogue plus
+   * their own mixes; staff see everything so they can sell and manage them.
+   * Products created before custom mixes existed have no isCustom field at
+   * all, so the test is `$ne: true` rather than `false`.
+   */
+  if (isClient) {
+    filter.$and = [
+      ...(filter.$and || []),
+      { $or: [{ isCustom: { $ne: true } }, { customFor: req.user._id }] },
+    ];
+  }
+
   if (CATEGORY_VALUES.includes(req.query.category)) {
     filter.category = req.query.category;
   }
@@ -88,12 +102,16 @@ const list = asyncHandler(async (req, res) => {
 
 /** GET /api/products/stats — admin dashboard summary. */
 const stats = asyncHandler(async (req, res) => {
+  // Catalogue health is about shelf stock. A sold custom mix hitting zero is
+  // the expected end of its life, not a stock alert worth chasing.
+  const catalogue = { isActive: true, isCustom: { $ne: true } };
+
   const [totalActive, lowStock, outOfStock, valueAgg] = await Promise.all([
-    Product.countDocuments({ isActive: true }),
-    Product.countDocuments({ isActive: true, ...LOW_STOCK_FILTER }),
-    Product.countDocuments({ isActive: true, 'stock.quantity': 0 }),
+    Product.countDocuments(catalogue),
+    Product.countDocuments({ ...catalogue, ...LOW_STOCK_FILTER }),
+    Product.countDocuments({ ...catalogue, 'stock.quantity': 0 }),
     Product.aggregate([
-      { $match: { isActive: true } },
+      { $match: catalogue },
       { $group: { _id: null, total: { $sum: { $multiply: ['$price', '$stock.quantity'] } } } },
     ]),
   ]);
@@ -124,7 +142,13 @@ const matchByColor = asyncHandler(async (req, res) => {
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 4, 1), 8);
 
   const targetLab = hexToLab(hex);
-  const products = await Product.find({ isActive: true, 'color.hex': { $ne: '' } });
+  // One-off custom mixes are not shelf stock — suggesting someone else's
+  // bespoke colour as a "closest paint" would be both wrong and a leak.
+  const products = await Product.find({
+    isActive: true,
+    'color.hex': { $ne: '' },
+    isCustom: { $ne: true },
+  });
 
   const matches = products
     .map((product) => {
@@ -174,8 +198,13 @@ const getById = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   const isClient = req.user.role === ROLES.CLIENT;
 
-  // Archived products don't exist as far as customers are concerned.
-  if (!product || (isClient && !product.isActive)) {
+  // Archived products don't exist as far as customers are concerned, and
+  // neither does another customer's custom mix — a 404 rather than a 403,
+  // so the response can't be used to prove such a product exists.
+  const foreignCustomMix =
+    isClient && product?.isCustom && !product.customFor?.equals(req.user._id);
+
+  if (!product || (isClient && !product.isActive) || foreignCustomMix) {
     throw new ApiError(404, 'Product not found.');
   }
 

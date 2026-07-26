@@ -192,6 +192,9 @@ document.querySelector('#cart-btn').addEventListener('click', () => {
   cartModal.open();
 });
 
+// A finished custom mix can land in the cart while this page is open.
+window.addEventListener('fc:cart-changed', () => renderCart());
+
 document.querySelector('#cart-items').addEventListener('click', (event) => {
   const line = event.target.closest('.cart-line');
   if (!line) return;

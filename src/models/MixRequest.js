@@ -67,6 +67,25 @@ const mixRequestSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    /**
+     * Commercial side of the job, filled in when the mixer completes it.
+     * `unitPrice` is the agreed price per unit (quantity lives above), and
+     * `readyProduct` is the catalogue entry published so the customer can
+     * buy this mix through the normal cart. `addedToCartAt` records the one
+     * time it was auto-added, so removing it from the cart sticks.
+     */
+    unitPrice: { type: Number, min: 0, default: null },
+    pricedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    readyProduct: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      default: null,
+    },
+    addedToCartAt: { type: Date, default: null },
     startedAt: { type: Date, default: null },
     completedAt: { type: Date, default: null },
     cancelledAt: { type: Date, default: null },

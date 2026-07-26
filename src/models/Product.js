@@ -67,6 +67,22 @@ const productSchema = new mongoose.Schema(
       lowStockThreshold: { type: Number, min: 0, default: 5 },
     },
     // Soft delete: archived products keep their history and can be restored.
+    /**
+     * A paint mixed to order for one customer, published by the mixer so it
+     * can be bought through the normal cart/checkout path. Custom paints are
+     * hidden from the public catalogue, colour matching and catalogue stats —
+     * they belong to `customFor` alone. Pre-existing products have neither
+     * field, so every catalogue query tests `isCustom: { $ne: true }`.
+     */
+    isCustom: {
+      type: Boolean,
+      default: false,
+    },
+    customFor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -75,6 +91,10 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Every catalogue read filters on isCustom, and a customer's own custom
+// paints are looked up by owner.
+productSchema.index({ isCustom: 1, customFor: 1 });
 
 productSchema.virtual('availability').get(function () {
   if (this.stock.quantity <= 0) return 'out_of_stock';

@@ -54,11 +54,64 @@
             <div id="track-summary"></div>
             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem;">
               <a href="#" class="btn btn-outline" id="track-invoice-link">View Invoice</a>
-              <a href="#" class="btn btn-primary" id="track-pay-link" hidden>Pay Now</a>
               <a href="/client/orders" class="btn btn-outline">My Orders</a>
             </div>
           </section>
         </div>
+
+        <!--
+          Payment lives on this screen too, so placing an order leads to one
+          destination that answers "what now?" — progress, invoice and the
+          payment step together. Shown only while the order still needs paying.
+        -->
+        <section class="card" id="payment-card" hidden style="max-width: 960px; margin-top: 1.5rem;">
+          <h2 class="card-title">Complete your payment</h2>
+          <p class="card-subtitle" style="margin-bottom: 1.25rem;">
+            Amount due: <strong id="pay-total" style="font-size: 1.25rem; color: var(--text);"></strong>
+          </p>
+
+          <div id="rejected-alert" hidden
+               style="background-color: var(--danger-50); border: 1px solid var(--danger-500); border-radius: var(--radius-md); padding: 0.875rem 1rem; margin-bottom: 1.25rem; font-size: 0.875rem;">
+            <strong>Your previous proof was rejected:</strong> <span id="rejected-reason"></span><br />
+            Please upload a new proof of payment below.
+          </div>
+
+          <div id="gcash-section">
+            <div style="background-color: var(--info-50); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.125rem; font-size: 0.875rem;">
+              <strong>GCash payment instructions</strong>
+              <ol style="margin: 0.5rem 0 0 1.25rem; display: grid; gap: 0.25rem;">
+                <li>Send <strong id="gcash-amount"></strong> to <strong id="gcash-number">0917 555 0123</strong> (<span id="gcash-name">Vernici Artisan Corp.</span>)</li>
+                <li>Put your order number <strong id="gcash-reference"></strong> in the message/reference field</li>
+                <li>Screenshot the confirmation and upload it below</li>
+              </ol>
+            </div>
+
+            <div class="upload-zone" id="upload-zone" role="button" tabindex="0"
+                 aria-label="Upload your proof of payment">
+              <span data-icon="image" data-icon-size="30"></span>
+              <p><strong>Click to upload</strong> or drag your receipt here</p>
+              <p style="font-size: 0.8125rem;">JPG, PNG, or WebP — up to 5 MB</p>
+            </div>
+            <input type="file" id="proof-input" accept="image/jpeg,image/png,image/webp" class="visually-hidden" />
+
+            <div id="proof-preview" hidden style="margin-top: 1rem;">
+              <img id="proof-img" alt="Selected proof of payment"
+                   style="max-width: 100%; max-height: 260px; border-radius: var(--radius-md); border: 1px solid var(--border);" />
+              <p class="form-hint" id="proof-filename"></p>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" id="submit-proof-btn"
+                    style="margin-top: 1.125rem;" disabled>
+              Submit Proof of Payment
+            </button>
+
+            <p style="text-align: center; margin-top: 0.875rem; font-size: 0.875rem;">
+              <button type="button" class="btn-link" id="switch-cash-btn">
+                Rather pay cash when you pick it up?
+              </button>
+            </p>
+          </div>
+        </section>
       </main>
     </div>
   </div>

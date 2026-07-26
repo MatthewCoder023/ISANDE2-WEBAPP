@@ -7,7 +7,7 @@ import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice } from '/js/format.js';
 import { setBusy } from '/js/form-utils.js';
 import { getCurrentUser } from '/js/session.js';
-import { getCart, setQuantity, clearCart, cartTotal } from '/js/cart.js';
+import { getCart, setQuantity, clearCart, cartTotal, revalidateCart } from '/js/cart.js';
 import { icon } from '/js/icons.js';
 
 let userId = null;
@@ -74,6 +74,7 @@ placeButton.addEventListener('click', async () => {
   const items = Object.values(cart).map(({ id, quantity }) => ({ productId: id, quantity }));
   if (items.length === 0) return;
 
+  const method = document.querySelector('input[name="checkout-method"]:checked')?.value;
   setBusy(placeButton, true, 'Placing order…');
 
   try {
@@ -82,7 +83,25 @@ placeButton.addEventListener('click', async () => {
       body: { items, notes: document.querySelector('#order-notes').value },
     });
     clearCart(userId);
-    window.location.assign(`/client/payment?order=${data.order.id}`);
+
+    /**
+     * Cash on pickup needs no further input, so settle it here rather than
+     * making the customer confirm the same choice on another screen. A
+     * failure is not fatal — the order exists and the next screen still
+     * offers both methods.
+     */
+    if (method === 'cash_on_pickup') {
+      try {
+        await api(`/api/orders/${data.order.id}/payment-method`, {
+          method: 'POST',
+          body: { method: 'cash_on_pickup' },
+        });
+      } catch {
+        // Fall through: the order screen will ask again.
+      }
+    }
+
+    window.location.assign(`/client/track?order=${data.order.id}`);
   } catch (error) {
     showToast(error.message, 'error');
     setBusy(placeButton, false);
@@ -93,6 +112,25 @@ async function init() {
   const user = await getCurrentUser();
   userId = user.id;
   render();
+  // A mix collected by the shared bootstrap may arrive after this render.
+  window.addEventListener('fc:cart-changed', render);
+
+  // Tell the customer about stale lines here, not after they hit Place Order.
+  const { unavailable, repriced } = await revalidateCart(userId);
+  if (unavailable.length > 0 || repriced.length > 0) {
+    render();
+    for (const item of unavailable) {
+      showToast(`${item.name} was removed — ${item.reason}.`, 'warning');
+    }
+    if (repriced.length > 0) {
+      showToast(
+        repriced.length === 1
+          ? `${repriced[0].name} is now ${formatPrice(repriced[0].to)}.`
+          : `${repriced.length} prices were updated to today's rates.`,
+        'info'
+      );
+    }
+  }
 }
 
 init();

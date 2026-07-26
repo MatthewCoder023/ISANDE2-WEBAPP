@@ -12,6 +12,7 @@ import { getCurrentUser } from '/js/session.js';
 import { renderNav, DASHBOARD_PATHS, ROLE_BADGE_CLASS } from '/js/nav.js';
 import { hydrateIcons, icon } from '/js/icons.js';
 import { hydrateIllustrations } from '/js/illustrations.js';
+import { syncReadyMixes } from '/js/cart.js';
 
 /** Light/dark switch, injected above Sign Out on every authed page. */
 function setupThemeToggle() {
@@ -90,6 +91,22 @@ async function init() {
       el.classList.add(ROLE_BADGE_CLASS[user.role]);
     }
   });
+
+  /**
+   * A finished custom mix should simply be waiting in the cart. Runs on
+   * every customer page (not just the shop) so the news reaches them
+   * wherever they land, and never blocks the rest of the bootstrap.
+   */
+  if (user.role === 'client') {
+    syncReadyMixes(user.id).then((mixes) => {
+      if (mixes.length === 0) return;
+      const label =
+        mixes.length === 1
+          ? `Your custom mix ${mixes[0].requestNumber} is ready — it's in your cart.`
+          : `${mixes.length} custom mixes are ready — they're in your cart.`;
+      showToast(label, 'success');
+    });
+  }
 
   // The sidebar user card links to the profile page for every role.
   const userCard = document.querySelector('.dash-user');

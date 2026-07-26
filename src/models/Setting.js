@@ -21,6 +21,14 @@ const settingSchema = new mongoose.Schema(
     gcashName: { type: String, trim: true, maxlength: 80, default: 'Vernici Artisan Corp.' },
     acceptOnlineOrders: { type: Boolean, default: true },
     defaultLowStockThreshold: { type: Number, min: 0, max: 999, default: 5 },
+    /**
+     * Custom-mix pricing. A mix is quoted as the base paint's price (or
+     * customMixBasePrice when the customer let the mixer choose the base)
+     * plus the surcharge for the hand-mixing labour. Staff may override the
+     * quote when completing the job.
+     */
+    customMixBasePrice: { type: Number, min: 0, max: 100000, default: 750 },
+    customMixSurcharge: { type: Number, min: 0, max: 100000, default: 150 },
   },
   { timestamps: true }
 );

@@ -15,6 +15,11 @@ router.use(requireAuth);
 // Reads are role-shaped in the controller (clients only ever see their own).
 router.get('/requests', mixingController.list);
 router.get('/stats', mixingController.stats);
+
+// Finished mixes waiting to be dropped into the requester's own cart.
+router.get('/ready', mixingController.listReady);
+router.post('/ready/ack', mixingController.acknowledgeReady);
+
 router.get('/requests/:id', mixingController.getById);
 
 // Any signed-in user can request a mix (customers, cashiers on behalf of
