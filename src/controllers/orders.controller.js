@@ -8,11 +8,28 @@ const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
 const orderService = require('../services/order.service');
+const { renderInvoice } = require('../services/pdf.service');
+const { verifyCode, documentCode } = require('../services/document.service');
+const { toSectionedCsv, sendCsv } = require('../utils/csv');
 const { PROOFS_DIR } = require('../middleware/upload');
 const { ROLES } = require('../constants/roles');
 const { ORDER_STATUS, ORDER_TYPES } = require('../constants/orders');
 
 const isStaff = (role) => role === ROLES.CASHIER || role === ROLES.ADMIN;
+
+/**
+ * Whitelisted sorts for the staff list. Anything unrecognised falls back to
+ * newest-first, so a hand-typed parameter can never reach the query.
+ */
+const ORDER_SORTS = {
+  newest: '-createdAt',
+  oldest: 'createdAt',
+  total_desc: '-total',
+  total_asc: 'total',
+  status: 'status',
+};
+
+const orderSort = (key) => ORDER_SORTS[key] || ORDER_SORTS.newest;
 
 function parsePagination(query, defaultLimit = 10) {
   const page = Math.max(parseInt(query.page, 10) || 1, 1);
@@ -88,7 +105,7 @@ const list = asyncHandler(async (req, res) => {
   }
 
   const [orders, total] = await Promise.all([
-    Order.find(filter).sort('-createdAt').skip(skip).limit(limit),
+    Order.find(filter).sort(orderSort(req.query.sort)).skip(skip).limit(limit),
     Order.countDocuments(filter),
   ]);
 
@@ -181,6 +198,112 @@ const getById = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: { order: order.toJSON(), transaction: transaction ? transaction.toJSON() : null },
+  });
+});
+
+/**
+ * GET /api/orders/:id/invoice.pdf — the invoice as a real file, for the
+ * order's owner or any staff member. The browser-print path on the invoice
+ * page remains; this is the archivable, emailable version.
+ */
+const invoicePdf = asyncHandler(async (req, res) => {
+  const order = await loadOrderForUser(req.params.id, req.user);
+  const transaction = await Transaction.findOne({ order: order._id });
+
+  const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+  const pdf = await renderInvoice(order, transaction, { appUrl });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="invoice-${order.orderNumber}.pdf"`
+  );
+  res.send(pdf);
+});
+
+/**
+ * GET /api/orders/:id/export.csv — the invoice's *content* as data, for
+ * anyone who needs the figures in a spreadsheet. Branding and layout do not
+ * survive CSV; the PDF above is the presentable document.
+ */
+const exportOrderCsv = asyncHandler(async (req, res) => {
+  const order = await loadOrderForUser(req.params.id, req.user);
+  const transaction = await Transaction.findOne({ order: order._id });
+  const settings = await Setting.get();
+
+  const paid = transaction
+    ? `${transaction.method} - paid ${transaction.createdAt.toISOString().slice(0, 16).replace('T', ' ')}`
+    : order.payment?.method
+      ? `${order.payment.method} - not yet paid`
+      : 'Not yet selected';
+
+  const csv = toSectionedCsv([
+    {
+      title: 'Invoice',
+      rows: [
+        ['Shop', settings.shopName],
+        ['Address', settings.addressLine],
+        ['Order Number', order.orderNumber],
+        ['Order Date', order.createdAt.toISOString().slice(0, 16).replace('T', ' ')],
+        ['Status', order.status],
+        ['Payment', paid],
+        ['Verification Code', documentCode(order)],
+      ],
+    },
+    {
+      title: 'Billed To',
+      rows: [['Customer', order.customerName || 'Walk-in Customer']],
+    },
+    {
+      title: 'Items',
+      headers: ['Item', 'SKU', 'Unit Price', 'Quantity', 'Amount'],
+      rows: order.items.map((i) => [i.name, i.sku, i.price, i.quantity, i.lineTotal]),
+    },
+    {
+      title: 'Totals',
+      rows: [
+        ['Subtotal', order.subtotal],
+        ['Total', order.total],
+      ],
+    },
+  ]);
+
+  sendCsv(res, `invoice-${order.orderNumber}`, csv);
+});
+
+/**
+ * GET /api/orders/verify — confirms a downloaded document still matches the
+ * order on file. Deliberately public: whoever holds the paper needs to be
+ * able to check it. It answers only yes/no plus the figures the document
+ * already shows, and the code is an HMAC, so it reveals nothing to guessers.
+ */
+const verifyDocument = asyncHandler(async (req, res) => {
+  const orderNumber = String(req.query.order || '').trim();
+  const code = String(req.query.code || '').trim();
+
+  const order = orderNumber ? await Order.findOne({ orderNumber }) : null;
+  const valid = Boolean(order) && verifyCode(order, code);
+
+  if (!valid) {
+    return res.status(404).json({
+      success: false,
+      message:
+        'We could not verify this document. It may have been edited after download, ' +
+        'or the code was typed incorrectly.',
+      data: { valid: false },
+    });
+  }
+
+  res.json({
+    success: true,
+    message: 'This document matches our records.',
+    data: {
+      valid: true,
+      orderNumber: order.orderNumber,
+      issuedAt: order.createdAt,
+      total: order.total,
+      itemCount: order.items.length,
+    },
   });
 });
 
@@ -323,6 +446,9 @@ module.exports = {
   list,
   stats,
   getById,
+  invoicePdf,
+  exportOrderCsv,
+  verifyDocument,
   chooseCashOnPickup,
   uploadProof,
   getProof,

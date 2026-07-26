@@ -6,6 +6,8 @@
 import { api } from '/js/api.js';
 import { escapeHtml, formatPrice, formatDateTime } from '/js/format.js';
 import { PAYMENT_LABELS } from '/js/orders-ui.js';
+// This page stands alone (no dashboard shell), so it hydrates its own icons.
+import { hydrateIcons } from '/js/icons.js';
 
 const STATUS_LABELS = {
   pending_payment: 'Pending Payment',
@@ -21,6 +23,14 @@ const orderId = new URLSearchParams(window.location.search).get('order');
 
 document.querySelector('#back-btn').addEventListener('click', () => history.back());
 document.querySelector('#print-btn').addEventListener('click', () => window.print());
+
+// The server-rendered file carries a verification code and QR; the print
+// path above stays for anyone who just wants paper.
+if (orderId) {
+  document.querySelector('#download-pdf').href = `/api/orders/${orderId}/invoice.pdf`;
+}
+
+hydrateIcons();
 
 async function loadInvoice() {
   try {

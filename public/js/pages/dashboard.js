@@ -13,6 +13,7 @@ import { renderNav, DASHBOARD_PATHS, ROLE_BADGE_CLASS } from '/js/nav.js';
 import { hydrateIcons, icon } from '/js/icons.js';
 import { hydrateIllustrations } from '/js/illustrations.js';
 import { syncReadyMixes } from '/js/cart.js';
+import { setupNotifications } from '/js/notifications.js';
 
 /** Light/dark switch, injected above Sign Out on every authed page. */
 function setupThemeToggle() {
@@ -45,6 +46,45 @@ function setupThemeToggle() {
   footer.insertBefore(button, logoutButton);
 }
 
+/**
+ * On phones the sidebar becomes a drawer. The toggle lives in the topbar,
+ * a scrim covers the page behind it, and choosing a destination closes it —
+ * otherwise the drawer would still be sitting over the page you just asked for.
+ */
+function setupMobileNav() {
+  const sidebar = document.querySelector('.dash-sidebar');
+  const topbar = document.querySelector('.dash-topbar');
+  if (!sidebar || !topbar || topbar.querySelector('.nav-toggle')) return;
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'nav-toggle';
+  toggle.setAttribute('aria-label', 'Open navigation');
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.innerHTML = icon('menu', 20);
+  topbar.prepend(toggle);
+
+  const scrim = document.createElement('div');
+  scrim.className = 'nav-scrim';
+  document.body.appendChild(scrim);
+
+  const setOpen = (open) => {
+    sidebar.classList.toggle('is-open', open);
+    scrim.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  };
+
+  toggle.addEventListener('click', () => setOpen(!sidebar.classList.contains('is-open')));
+  scrim.addEventListener('click', () => setOpen(false));
+  sidebar.addEventListener('click', (event) => {
+    if (event.target.closest('a')) setOpen(false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setOpen(false);
+  });
+}
+
 const ROLE_LABELS = {
   client: 'Customer',
   paint_mixer: 'Paint Mixer',
@@ -70,6 +110,10 @@ async function init() {
 
   const navContainer = document.querySelector('[data-nav]');
   if (navContainer) renderNav(navContainer, user.role);
+
+  // Every role gets a bell; what lands in it differs by role.
+  setupNotifications();
+  setupMobileNav();
 
   document.querySelectorAll('[data-brand-link]').forEach((el) => {
     el.setAttribute('href', DASHBOARD_PATHS[user.role] || '/');

@@ -6,7 +6,7 @@ const Product = require('../models/Product');
 const Transaction = require('../models/Transaction');
 const ApiError = require('../utils/ApiError');
 const inventoryService = require('./inventory.service');
-const { notifyOrderEvent } = require('./notify.service');
+const { notifyOrderEvent, notifyStaffProofUploaded } = require('./notify.service');
 const {
   ORDER_STATUS,
   ORDER_TYPES,
@@ -112,6 +112,48 @@ async function releaseStock(items, reason, userId) {
  * pending_payment (the checkout flow takes it from there); walk-in POS
  * sales are completed by the caller immediately after.
  */
+/**
+ * A custom mix is a single batch made for one person. Once it has been
+ * bought there is nothing left to sell, and leaving it active would clutter
+ * that customer's catalogue with a permanently out-of-stock entry. Archiving
+ * keeps the order history and stock trail intact — it only takes the product
+ * off the shelf. Catalogue paints are never touched: running out is normal
+ * for them, and it should show up as a restock alert.
+ */
+async function retireSoldOutCustomMixes(items) {
+  try {
+    await Product.updateMany(
+      {
+        _id: { $in: items.map((item) => item.product) },
+        isCustom: true,
+        isActive: true,
+        'stock.quantity': { $lte: 0 },
+      },
+      { $set: { isActive: false } }
+    );
+  } catch (err) {
+    // Housekeeping must never fail a completed sale.
+    console.error('Could not retire sold-out custom mixes:', err.message);
+  }
+}
+
+/** The mirror of the above: a cancelled sale puts the batch back on offer. */
+async function restoreCustomMixes(items) {
+  try {
+    await Product.updateMany(
+      {
+        _id: { $in: items.map((item) => item.product) },
+        isCustom: true,
+        isActive: false,
+        'stock.quantity': { $gt: 0 },
+      },
+      { $set: { isActive: true } }
+    );
+  } catch (err) {
+    console.error('Could not restore custom mixes after cancellation:', err.message);
+  }
+}
+
 async function createOrder({ requestedItems, notes = '', type, customerId = null, customerName = '', placedById }) {
   const { items, subtotal, total } = await priceItems(requestedItems);
   const orderNumber = await Order.generateOrderNumber();
@@ -132,6 +174,8 @@ async function createOrder({ requestedItems, notes = '', type, customerId = null
     });
     transition(order, ORDER_STATUS.PENDING_PAYMENT, { by: placedById, note: 'Order placed' });
     await order.save();
+
+    await retireSoldOutCustomMixes(items);
     return order;
   } catch (err) {
     // Order document failed after stock was taken — give it back.
@@ -175,7 +219,7 @@ function chooseCashOnPickup(order, userId) {
 }
 
 /** Customer uploads GCash proof: awaits staff verification. */
-function attachProof(order, file, userId) {
+async function attachProof(order, file, userId) {
   if (order.status !== ORDER_STATUS.PENDING_PAYMENT) {
     throw new ApiError(409, 'This order is not awaiting payment.');
   }
@@ -198,7 +242,11 @@ function attachProof(order, file, userId) {
     by: userId,
     note: 'Proof of payment submitted',
   });
-  return order.save();
+  await order.save();
+
+  // Tell the counter there is something waiting to be checked.
+  await notifyStaffProofUploaded(order);
+  return order;
 }
 
 /** Staff approves the proof: the money is now recorded as a Transaction. */
@@ -316,6 +364,7 @@ async function cancelOrder(order, userId, noteOverride) {
   }
 
   await releaseStock(order.items, `Order ${order.orderNumber} cancelled`, userId);
+  await restoreCustomMixes(order.items);
 
   order.cancelledAt = new Date();
   // Money already taken (verified GCash) is settled outside the system.

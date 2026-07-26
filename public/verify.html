@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify a Document — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/auth.css" />
+</head>
+<!--
+  Public on purpose: whoever is holding a printed invoice needs to be able
+  to check it, and they may well not have an account. The code is an HMAC,
+  so this reveals nothing to anyone guessing.
+-->
+<body>
+  <main class="auth-page">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <a href="/" aria-label="Back to home"><img src="/images/logo.png" alt="Flavor &amp; Color logo" class="auth-logo" /></a>
+        <div>
+          <h1 class="auth-title">Verify a document</h1>
+          <p class="auth-subtitle">Check an invoice against our records</p>
+        </div>
+      </div>
+
+      <form id="verify-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="order">Order number</label>
+          <input class="form-input" type="text" id="order" name="order"
+                 placeholder="ORD-20260726-1234" spellcheck="false" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="code">Verification code</label>
+          <input class="form-input" type="text" id="code" name="code"
+                 placeholder="Printed at the foot of the invoice" spellcheck="false"
+                 style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase;" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Check Document</button>
+      </form>
+
+      <div id="result" hidden style="margin-top: 1.25rem;">
+        <div id="result-box" style="border-radius: var(--radius-md); padding: 1rem 1.125rem;">
+          <strong id="result-title"></strong>
+          <p id="result-message" style="font-size: 0.875rem; margin-top: 0.25rem;"></p>
+          <dl id="result-facts" hidden
+              style="display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; margin-top: 0.75rem; font-size: 0.875rem;"></dl>
+        </div>
+      </div>
+
+      <div class="auth-footer">
+        <p class="text-muted" style="font-size: 0.8125rem;">
+          A document that fails this check may have been altered after it was downloaded.
+          When in doubt, ask us for a fresh copy.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/js/pages/verify.js"></script>
+</body>
+</html>

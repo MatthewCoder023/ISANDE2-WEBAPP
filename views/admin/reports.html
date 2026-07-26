@@ -86,11 +86,27 @@
     <div class="dash-main">
       <header class="dash-topbar">
         <h1>Reports</h1>
-        <select id="period-select" class="form-input form-select" aria-label="Report period" style="width: auto;">
-          <option value="7">Last 7 days</option>
-          <option value="30" selected>Last 30 days</option>
-          <option value="90">Last 90 days</option>
-        </select>
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <select id="period-select" class="form-input form-select" aria-label="Report period" style="width: auto;">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="custom">Custom range…</option>
+          </select>
+
+          <!-- Answering "how did March go?" needs explicit dates, not a
+               trailing window. Hidden until the period select asks for it. -->
+          <span id="custom-range" hidden style="display: flex; align-items: center; gap: 0.375rem;">
+            <input type="date" id="range-from" class="form-input" aria-label="From date" style="width: auto;" />
+            <span class="text-muted">to</span>
+            <input type="date" id="range-to" class="form-input" aria-label="To date" style="width: auto;" />
+            <button type="button" id="apply-range" class="btn btn-outline btn-sm">Apply</button>
+          </span>
+
+          <button type="button" id="export-report" class="btn btn-outline btn-sm">
+            <span data-icon="download"></span> Export
+          </button>
+        </div>
       </header>
 
       <main class="dash-content">

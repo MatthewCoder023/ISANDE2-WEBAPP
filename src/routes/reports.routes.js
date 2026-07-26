@@ -10,6 +10,7 @@ const router = express.Router();
 router.use(requireAuth, requireRole(ROLES.ADMIN));
 
 router.get('/sales', reportsController.sales);
+router.get('/sales/export', reportsController.exportSales);
 router.get('/inventory', reportsController.inventory);
 
 module.exports = router;

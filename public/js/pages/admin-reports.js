@@ -171,7 +171,7 @@ function renderDonut(byMethod) {
 const numCell = (value) => `<td style="text-align: right;"><strong>${formatPrice(value)}</strong></td>`;
 
 function renderSales(data) {
-  const { totals, revenueByDay, byMethod, topProducts, byCategory, days, since } = data;
+  const { totals, revenueByDay, byMethod, topProducts, byCategory, days, since, until } = data;
 
   const kpis = {
     revenue: [totals.revenue, formatPrice],
@@ -183,8 +183,9 @@ function renderSales(data) {
     countUp(document.querySelector(`[data-kpi="${key}"]`), value, format);
   }
 
+  // A custom window may well end in the past — don't claim it runs to today.
   document.querySelector('#chart-subtitle').textContent =
-    `${formatDate(since)} to today · hover a bar for the exact amount`;
+    `${formatDate(since)} to ${formatDate(until)} · hover a bar for the exact amount`;
   renderChart(revenueByDay, days, since);
 
   const topRevenue = Math.max(...topProducts.map((p) => p.revenue), 0);
@@ -278,7 +279,11 @@ function renderInventory(data) {
 
 /* ---------- Load ---------- */
 
-async function loadReports(days) {
+/** Current window, as query params. Either trailing days or explicit dates. */
+let windowParams = new URLSearchParams({ days: '30' });
+
+async function loadReports(params = windowParams) {
+  windowParams = params;
   const clearSkeleton = statSkeleton('[data-kpi]');
   tableSkeleton(document.querySelector('#top-products-tbody'), 3, 4);
   tableSkeleton(document.querySelector('#methods-tbody'), 3, 3);
@@ -288,7 +293,7 @@ async function loadReports(days) {
 
   try {
     const [salesRes, inventoryRes] = await Promise.all([
-      api(`/api/reports/sales?days=${days}`),
+      api(`/api/reports/sales?${params}`),
       api('/api/reports/inventory'),
     ]);
     renderSales(salesRes.data);
@@ -300,8 +305,32 @@ async function loadReports(days) {
   }
 }
 
+const customRange = document.querySelector('#custom-range');
+
 document.querySelector('#period-select').addEventListener('change', (event) => {
-  loadReports(event.target.value);
+  const isCustom = event.target.value === 'custom';
+  customRange.hidden = !isCustom;
+  // Wait for Apply on a custom range — reloading per keystroke is noise.
+  if (!isCustom) loadReports(new URLSearchParams({ days: event.target.value }));
 });
 
-loadReports(30);
+document.querySelector('#apply-range').addEventListener('click', () => {
+  const from = document.querySelector('#range-from').value;
+  const to = document.querySelector('#range-to').value;
+  if (!from || !to) {
+    showToast('Pick both a start and an end date.', 'warning');
+    return;
+  }
+  if (from > to) {
+    showToast('The start date needs to come before the end date.', 'warning');
+    return;
+  }
+  loadReports(new URLSearchParams({ from, to }));
+});
+
+// Exports whatever window is on screen, so the file matches the page.
+document.querySelector('#export-report').addEventListener('click', () => {
+  window.location.assign(`/api/reports/sales/export?${windowParams}`);
+});
+
+loadReports();

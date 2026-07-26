@@ -216,6 +216,138 @@
 
 .dash-topbar h1 {
   font-size: 1.25rem;
+  margin-right: auto; /* pushes the bell and role badge to the right */
+}
+
+/* ---------- Notification bell (see /js/notifications.js) ---------- */
+.notif {
+  position: relative;
+}
+
+.notif-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--speed-fast) ease, border-color var(--speed-fast) ease;
+}
+
+.notif-button:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.notif-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background-color: var(--danger-500);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  border: 2px solid var(--surface);
+}
+
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: min(360px, calc(100vw - 2rem));
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.notif-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9375rem;
+}
+
+.notif-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.notif-empty {
+  padding: 1.75rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.notif-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--speed-fast) ease;
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item:hover {
+  background-color: var(--bg);
+  text-decoration: none;
+}
+
+/* Unread carries a tinted rail so the eye finds it without reading. */
+.notif-item.is-unread {
+  box-shadow: inset 3px 0 0 var(--primary-500);
+  background-color: var(--primary-50);
+}
+
+.notif-item-icon {
+  color: var(--text-faint);
+  flex-shrink: 0;
+  padding-top: 0.125rem;
+}
+
+.notif-item-body {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.notif-item-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.notif-item-text,
+.notif-item-time {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.notif-item-time {
+  font-size: 0.75rem;
+  color: var(--text-faint);
 }
 
 .dash-content {
@@ -411,33 +543,66 @@ a.stat-card:focus-visible::after {
 }
 
 /* ---------- Responsive ---------- */
+/**
+ * Below this width the sidebar becomes a drawer that slides in over the
+ * page. The previous wrapping chip bar worked, but with seven nav items it
+ * ate most of a phone screen before any content appeared.
+ */
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nav-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 60;
+}
+
 @media (max-width: 860px) {
   .dash-layout {
     grid-template-columns: 1fr;
   }
 
+  .nav-toggle {
+    display: inline-flex;
+  }
+
   .dash-sidebar {
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(280px, 84vw);
+    z-index: 70;
+    transform: translateX(-100%);
+    transition: transform var(--speed) var(--ease);
+    overflow-y: auto;
   }
 
-  .dash-sidebar .brand {
-    padding: 0;
-    margin-right: auto;
+  .dash-sidebar.is-open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
   }
 
-  .dash-nav {
-    order: 3;
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
+  .nav-scrim.is-open {
+    display: block;
   }
 
   .dash-nav a {
-    padding: 0.5rem 0.75rem;
+    padding: 0.625rem 0.875rem;
   }
 
   .dash-nav .nav-soon {

@@ -10,5 +10,6 @@ router.use(requireAuth, requireRole(ROLES.CASHIER, ROLES.ADMIN));
 
 router.get('/', transactionsController.list);
 router.get('/export', transactionsController.exportCsv);
+router.get('/export.xlsx', transactionsController.exportXlsx);
 
 module.exports = router;

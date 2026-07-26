@@ -13,13 +13,22 @@ import { initModal } from '/js/modal.js';
 import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
 import { STATUS_BADGES, TYPE_LABELS, renderOrderDetail } from '/js/orders-ui.js';
 import { applyUrlFilters } from '/js/url-filters.js';
+import { initTableSort } from '/js/table-sort.js';
 
-const state = { page: 1, search: '', status: '', type: '' };
+const state = { page: 1, search: '', status: '', type: '', sort: 'newest' };
 const ordersCache = new Map();
 
 const tbody = document.querySelector('#orders-tbody');
 const emptyState = document.querySelector('#empty-state');
 const paginationEl = document.querySelector('#pagination');
+
+// Sorting runs server-side: a page shows ten of many, so reordering only
+// what's on screen would misrepresent the list.
+const paintSort = initTableSort(document.querySelector('#orders-thead'), (sort) => {
+  state.sort = sort;
+  state.page = 1;
+  loadOrders();
+});
 
 const detailModal = initModal(document.querySelector('#detail-modal'));
 const paymentModal = initModal(document.querySelector('#payment-modal'));
@@ -39,10 +48,12 @@ async function loadOrders() {
   if (state.search) params.set('search', state.search);
   if (state.status) params.set('status', state.status);
   if (state.type) params.set('type', state.type);
+  params.set('sort', state.sort);
 
   try {
     const { data } = await api(`/api/orders?${params}`);
     renderTable(data.orders);
+    paintSort(state.sort);
     renderPagination(paginationEl, data.pagination, (page) => {
       state.page = page;
       loadOrders();

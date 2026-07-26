@@ -42,6 +42,21 @@ const uploadLimiter = rateLimit({
   },
 });
 
+/**
+ * Document verification is public by design — whoever is holding a printed
+ * invoice must be able to check it, and the code is an unguessable HMAC.
+ * Registered before the auth gate below.
+ */
+const verifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many verification attempts. Please try again later.' },
+});
+
+router.get('/verify', verifyLimiter, ordersController.verifyDocument);
+
 router.use(requireAuth);
 
 // Reads are role-shaped in the controller (clients only ever see their own).
@@ -49,6 +64,8 @@ router.get('/', requireRole(...ORDER_ROLES), ordersController.list);
 router.get('/stats', requireRole(...ORDER_ROLES), ordersController.stats);
 router.get('/:id', requireRole(...ORDER_ROLES), ordersController.getById);
 router.get('/:id/proof', requireRole(...ORDER_ROLES), ordersController.getProof);
+router.get('/:id/invoice.pdf', requireRole(...ORDER_ROLES), checkOrderId, ordersController.invoicePdf);
+router.get('/:id/export.csv', requireRole(...ORDER_ROLES), checkOrderId, ordersController.exportOrderCsv);
 
 // Checkout: place, then settle payment (customer actions).
 router.post('/', requireRole(ROLES.CLIENT), placeOrderRules, validate, ordersController.placeOrder);

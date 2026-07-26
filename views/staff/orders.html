@@ -66,16 +66,16 @@
         <section class="card card--flush">
           <div class="table-wrap">
             <table class="table" aria-label="Orders">
-              <thead>
+              <thead id="orders-thead">
                 <tr>
-                  <th>Order #</th>
-                  <th>Placed</th>
-                  <th>Customer</th>
-                  <th>Items</th>
-                  <th class="num">Total</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th><span class="visually-hidden">Actions</span></th>
+                  <th scope="col">Order #</th>
+                  <th scope="col" data-sort-asc="oldest" data-sort-desc="newest" data-sort-default="desc">Placed</th>
+                  <th scope="col">Customer</th>
+                  <th scope="col">Items</th>
+                  <th scope="col" class="num" data-sort-asc="total_asc" data-sort-desc="total_desc" data-sort-default="desc">Total</th>
+                  <th scope="col">Type</th>
+                  <th scope="col" data-sort-asc="status">Status</th>
+                  <th scope="col"><span class="visually-hidden">Actions</span></th>
                 </tr>
               </thead>
               <tbody id="orders-tbody"></tbody>

@@ -13,7 +13,12 @@
   <main class="invoice-page">
     <div class="invoice-actions">
       <button type="button" class="btn btn-outline" id="back-btn">Back</button>
-      <button type="button" class="btn btn-primary" id="print-btn">Print / Save as PDF</button>
+      <span style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline" id="print-btn">Print</button>
+        <a class="btn btn-primary" id="download-pdf" href="#" download>
+          <span data-icon="download"></span> Download PDF
+        </a>
+      </span>
     </div>
 
     <div class="invoice-sheet" id="invoice-sheet" hidden>

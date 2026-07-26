@@ -5,7 +5,7 @@ const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
 const mixFulfillment = require('../services/mix-fulfillment.service');
-const { notifyMixReady } = require('../services/notify.service');
+const { notifyMixReady, notifyStaffMixRequested } = require('../services/notify.service');
 const { ROLES } = require('../constants/roles');
 const { MIX_STATUS } = require('../constants/mixing');
 
@@ -40,6 +40,9 @@ const create = asyncHandler(async (req, res) => {
     notes,
     placedBy: req.user._id,
   });
+
+  // Put the job on the mixer's radar without them watching the queue.
+  await notifyStaffMixRequested(request);
 
   res.status(201).json({
     success: true,

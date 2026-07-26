@@ -242,3 +242,71 @@ describe('dashboard tile deep links', () => {
     ).toBe(true);
   });
 });
+
+describe('custom-mix housekeeping and list controls', () => {
+  const Product = require('../src/models/Product');
+
+  async function publishedMix(hex = '#5A5A5A') {
+    const req = await agents.client
+      .post('/api/mixing/requests')
+      .send({ targetColor: { hex }, quantity: 1 });
+    const done = await agents.paint_mixer
+      .post(`/api/mixing/requests/${req.body.data.request.id}/complete`)
+      .send({ unitPrice: 700 });
+    return done.body.data.readyProduct;
+  }
+
+  it('retires a custom mix once its single batch is sold', async () => {
+    const mix = await publishedMix('#5A5A5A');
+    expect(mix.isActive).toBe(true);
+
+    await agents.client.post('/api/orders').send({
+      items: [{ productId: mix.id, quantity: 1 }],
+    });
+
+    const after = await Product.findById(mix.id);
+    expect(after.stock.quantity).toBe(0);
+    expect(after.isActive).toBe(false); // off the shelf, history intact
+  });
+
+  it('puts it back on offer if that order is cancelled', async () => {
+    const mix = await publishedMix('#6B6B6B');
+    const order = (
+      await agents.client.post('/api/orders').send({
+        items: [{ productId: mix.id, quantity: 1 }],
+      })
+    ).body.data.order;
+
+    expect((await Product.findById(mix.id)).isActive).toBe(false);
+
+    await agents.client.post(`/api/orders/${order.id}/cancel`);
+
+    const restored = await Product.findById(mix.id);
+    expect(restored.stock.quantity).toBe(1);
+    expect(restored.isActive).toBe(true);
+  });
+
+  it('never retires an ordinary catalogue paint that sells out', async () => {
+    const product = await createProduct({ stock: { quantity: 1, lowStockThreshold: 1 } });
+    await agents.client.post('/api/orders').send({
+      items: [{ productId: product.id, quantity: 1 }],
+    });
+
+    const after = await Product.findById(product.id);
+    expect(after.stock.quantity).toBe(0);
+    // Running out is a restock signal, not the end of the product.
+    expect(after.isActive).toBe(true);
+  });
+
+  it('sorts the staff list on request and ignores anything unrecognised', async () => {
+    const asc = await agents.cashier.get('/api/orders?sort=total_asc&limit=20');
+    const totals = asc.body.data.orders.map((o) => o.total);
+    expect([...totals].sort((a, b) => a - b)).toEqual(totals);
+
+    // A hand-typed key must fall back rather than reach the query.
+    const junk = await agents.cashier.get('/api/orders?sort=;drop&limit=5');
+    expect(junk.status).toBe(200);
+    const dates = junk.body.data.orders.map((o) => new Date(o.createdAt).valueOf());
+    expect([...dates].sort((a, b) => b - a)).toEqual(dates); // newest-first default
+  });
+});

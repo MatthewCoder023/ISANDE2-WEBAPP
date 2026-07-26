@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const { sendMail } = require('./mail.service');
+const { notifyUser, notifyRoles } = require('./notification.service');
+const { ROLES } = require('../constants/roles');
 
 /**
  * Customer-facing order notifications. Called (fire-and-forget) from
@@ -62,6 +64,13 @@ async function notifyMixReady(request, product) {
     const customer = await User.findById(request.customer);
     if (!customer) return;
 
+    await notifyUser(request.customer, {
+      type: 'mix_ready',
+      title: `Your custom mix ${request.requestNumber} is ready`,
+      body: "It's in your cart — check out whenever you like.",
+      link: '/client/products',
+    });
+
     const total = (product.price * (request.quantity || 1)).toFixed(2);
     await sendMail({
       to: customer.email,
@@ -80,6 +89,28 @@ async function notifyMixReady(request, product) {
   }
 }
 
+/** Short in-app wording for the same events the emails above cover. */
+const IN_APP = {
+  payment_verified: (order) => ({
+    title: `Payment confirmed for ${order.orderNumber}`,
+    body: "We're preparing your order now.",
+  }),
+  payment_rejected: (order) => ({
+    title: `Payment proof needs another look`,
+    body:
+      `We couldn't verify the proof for ${order.orderNumber}.` +
+      (order.payment?.rejectedReason ? ` ${order.payment.rejectedReason}.` : ''),
+  }),
+  ready: (order) => ({
+    title: `${order.orderNumber} is ready for pickup`,
+    body: 'Drop by the store whenever suits you.',
+  }),
+  auto_cancelled: (order) => ({
+    title: `${order.orderNumber} was cancelled`,
+    body: 'Payment was not received in time, so the items went back on the shelf.',
+  }),
+};
+
 async function notifyOrderEvent(order, event) {
   try {
     const template = TEMPLATES[event];
@@ -89,10 +120,47 @@ async function notifyOrderEvent(order, event) {
     if (!customer) return;
 
     await sendMail({ to: customer.email, ...template(order, customer.firstName) });
+
+    // Email reaches people who are away; this reaches whoever is looking.
+    const inApp = IN_APP[event];
+    if (inApp) {
+      await notifyUser(order.customer, {
+        type: `order_${event}`,
+        link: `/client/track?order=${order.id}`,
+        ...inApp(order),
+      });
+    }
   } catch (err) {
     // Notifications must never break the flow that triggered them.
     console.error(`Order notification "${event}" failed:`, err.message);
   }
 }
 
-module.exports = { notifyOrderEvent, notifyMixReady };
+/**
+ * Work arriving on a staff desk. There is no email for these — staff are
+ * in the app, and a queue that fills up silently is the actual problem.
+ */
+async function notifyStaffProofUploaded(order) {
+  await notifyRoles([ROLES.CASHIER, ROLES.ADMIN], {
+    type: 'proof_uploaded',
+    title: `Payment proof to verify — ${order.orderNumber}`,
+    body: `${order.customerName || 'A customer'} uploaded proof for review.`,
+    link: `/orders?status=pending_verification`,
+  });
+}
+
+async function notifyStaffMixRequested(request) {
+  await notifyRoles([ROLES.PAINT_MIXER, ROLES.ADMIN], {
+    type: 'mix_requested',
+    title: `New custom mix — ${request.requestNumber}`,
+    body: `${request.targetColor?.name || request.targetColor.hex}, ${request.quantity} unit(s).`,
+    link: '/mixing?status=queued',
+  });
+}
+
+module.exports = {
+  notifyOrderEvent,
+  notifyMixReady,
+  notifyStaffProofUploaded,
+  notifyStaffMixRequested,
+};

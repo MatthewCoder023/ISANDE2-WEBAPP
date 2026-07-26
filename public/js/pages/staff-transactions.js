@@ -6,22 +6,31 @@ import { escapeHtml, formatPrice, formatDateTime, debounce } from '/js/format.js
 import { renderPagination } from '/js/pagination.js';
 import { PAYMENT_LABELS } from '/js/orders-ui.js';
 import { applyUrlFilters } from '/js/url-filters.js';
+import { initTableSort } from '/js/table-sort.js';
 
-const state = { page: 1, search: '', method: '' };
+const state = { page: 1, search: '', method: '', sort: 'newest' };
 
 const tbody = document.querySelector('#transactions-tbody');
 const emptyState = document.querySelector('#empty-state');
 const paginationEl = document.querySelector('#pagination');
+
+const paintSort = initTableSort(document.querySelector('#transactions-thead'), (sort) => {
+  state.sort = sort;
+  state.page = 1;
+  loadTransactions();
+});
 
 async function loadTransactions() {
   tableSkeleton(tbody, 7);
   const params = new URLSearchParams({ page: state.page, limit: 10 });
   if (state.search) params.set('search', state.search);
   if (state.method) params.set('method', state.method);
+  params.set('sort', state.sort);
 
   try {
     const { data } = await api(`/api/transactions?${params}`);
     renderTable(data.transactions);
+    paintSort(state.sort);
     renderPagination(paginationEl, data.pagination, (page) => {
       state.page = page;
       loadTransactions();
@@ -66,11 +75,21 @@ document.querySelector('#method-filter').addEventListener('change', (event) => {
 });
 
 // CSV download honors the current filters; navigation keeps the session cookie.
-document.querySelector('#export-btn').addEventListener('click', () => {
+function exportParams() {
   const params = new URLSearchParams();
   if (state.search) params.set('search', state.search);
   if (state.method) params.set('method', state.method);
-  window.location.assign(`/api/transactions/export?${params}`);
+  return params;
+}
+
+// CSV stays the raw-data export; the workbook is branded and locked for
+// anything that gets passed on to someone else.
+document.querySelector('#export-btn').addEventListener('click', () => {
+  window.location.assign(`/api/transactions/export?${exportParams()}`);
+});
+
+document.querySelector('#export-xlsx-btn')?.addEventListener('click', () => {
+  window.location.assign(`/api/transactions/export.xlsx?${exportParams()}`);
 });
 
 // Honour ?method= so a deep link opens the payments it refers to.
