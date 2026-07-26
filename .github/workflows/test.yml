@@ -32,6 +32,10 @@ jobs:
       - name: Install dependencies
         run: |
           node --version && npm --version
-          npm ci || { tail -n 60 "$(ls -t ~/.npm/_logs/*.log | head -1)"; exit 1; }
+          npm ci > /tmp/install.log 2>&1 || {
+            cat /tmp/install.log
+            echo "::error title=npm ci failed::$(tail -c 1500 /tmp/install.log | tr '\n' ' | ')"
+            exit 1
+          }
 
       - run: npm test
