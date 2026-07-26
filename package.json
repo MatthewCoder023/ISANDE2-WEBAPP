@@ -39,5 +39,9 @@
     "mongodb-memory-server": "^11.2.0",
     "nodemon": "^3.1.4",
     "supertest": "^7.2.2"
+  },
+  "overrides": {
+    "@emnapi/core": "1.11.3",
+    "@emnapi/runtime": "1.11.3"
   }
 }
