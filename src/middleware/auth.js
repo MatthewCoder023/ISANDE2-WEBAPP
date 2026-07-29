@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
-const { DASHBOARD_PATHS, ROLES } = require('../constants/roles');
+const { DASHBOARD_PATHS } = require('../constants/roles');
 
 /**
  * Resolves the session to a live user document on every request.
@@ -45,18 +45,19 @@ function requireRole(...roles) {
 
 /**
  * Page guard: protects server-rendered HTML pages.
- * - Not logged in           -> redirect to the appropriate login page
+ * - Not logged in           -> redirect to the login page
  * - Logged in, wrong role   -> redirect to the user's own dashboard
  * - Called with no roles    -> any authenticated user passes
+ *
+ * There is one login page for everyone: the credentials, the endpoint and
+ * the checks are identical for customers and staff, and the server sends
+ * each user to their own dashboard from the role on their account.
  */
 function requirePageAuth(...roles) {
   return (req, res, next) => {
     loadSessionUser(req)
       .then((user) => {
-        if (!user) {
-          const loginPath = roles.includes(ROLES.CLIENT) ? '/login' : '/employee-login';
-          return res.redirect(loginPath);
-        }
+        if (!user) return res.redirect('/login');
         if (roles.length > 0 && !roles.includes(user.role)) {
           return res.redirect(DASHBOARD_PATHS[user.role]);
         }

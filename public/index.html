@@ -97,25 +97,26 @@
       </div>
     </section>
 
-    <section class="portal-section" aria-label="Choose your portal" data-reveal>
+    <!--
+      One door for everyone. Customers and staff share the same sign-in;
+      the server reads the role on the account and opens the right dashboard,
+      so there is nothing here for a visitor to choose wrongly.
+    -->
+    <section class="portal-section" aria-label="Sign in" data-reveal>
       <h2>Sign in to get started</h2>
       <div class="portal-grid">
         <div class="card portal-card">
           <div class="portal-icon portal-icon-customer" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
           </div>
-          <h3>Customer Portal</h3>
-          <p>Browse products, place orders, and view your order history.</p>
-          <a href="/login" class="btn btn-primary btn-block">Customer Login</a>
-        </div>
-
-        <div class="card portal-card">
-          <div class="portal-icon portal-icon-employee" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <h3>Employee Portal</h3>
-          <p>For administrators, cashiers, and paint mixers of Flavor &amp; Color.</p>
-          <a href="/employee-login" class="btn btn-outline btn-block">Employee Login</a>
+          <h3>Sign in</h3>
+          <p>
+            Customers browse paints, place orders and track them here.
+            Administrators, cashiers and paint mixers use the same sign-in —
+            you'll land on your own dashboard.
+          </p>
+          <a href="/login" class="btn btn-primary btn-block">Sign In</a>
+          <p class="portal-alt">New here? <a href="/register">Create an account</a></p>
         </div>
       </div>
     </section>

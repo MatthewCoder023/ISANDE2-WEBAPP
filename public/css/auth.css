@@ -1,4 +1,4 @@
-/* Authentication pages: login, register, employee login */
+/* Authentication pages: login, register, forgot/reset password */
 
 .auth-page {
   position: relative;
@@ -98,18 +98,6 @@
   padding: 4px;
 }
 
-/* Photo backdrop variant (employee portal) — no blobs over the photo. */
-.auth-page--photo {
-  background:
-    linear-gradient(rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.82)),
-    url('/images/storefront.jpg') center / cover no-repeat;
-}
-
-.auth-page--photo::before,
-.auth-page--photo::after {
-  display: none;
-}
-
 .auth-title {
   font-size: 1.375rem;
 }
@@ -127,9 +115,4 @@
   text-align: center;
   font-size: 0.875rem;
   color: var(--text-muted);
-}
-
-.auth-portal-tag {
-  display: inline-block;
-  margin-top: 0.5rem;
 }

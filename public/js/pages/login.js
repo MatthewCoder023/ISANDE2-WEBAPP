@@ -1,7 +1,7 @@
 /**
- * Shared by the customer login and employee login pages —
- * both submit to the same endpoint; the server decides the
- * destination dashboard from the authenticated user's role.
+ * The one sign-in form, for customers and staff alike. The server decides
+ * the destination dashboard from the authenticated user's role, so nobody
+ * has to know which "portal" they belong to before they log in.
  */
 import { api } from '/js/api.js';
 import { showToast, showFlashToast } from '/js/toast.js';

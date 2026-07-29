@@ -214,7 +214,7 @@ before completion. Completed/cancelled requests form the production log.
 
 | Path | Access |
 |---|---|
-| `/`, `/login`, `/employee-login`, `/register` | Public |
+| `/`, `/login`, `/register` | Public — one sign-in for customers and staff alike |
 | `/client` | Client only |
 | `/client/products` | Client only — browse the catalog, cart, place orders |
 | `/client/orders` | Client only — order history, details, cancel pending |

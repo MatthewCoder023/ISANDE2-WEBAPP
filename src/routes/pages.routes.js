@@ -47,6 +47,13 @@ router.get('/orders', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('sta
 router.get('/transactions', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('staff/transactions.html'));
 router.get('/customers', requirePageAuth(ROLES.CASHIER, ROLES.ADMIN), sendView('staff/customers.html'));
 
+/**
+ * The employee portal was a second login page that behaved identically to
+ * the customer one — same form, same endpoint, same checks — so it was
+ * removed. Staff bookmarks and any link still pointing here keep working.
+ */
+router.get('/employee-login', (req, res) => res.redirect(301, '/login'));
+
 /** Convenience: /dashboard forwards any logged-in user to their own dashboard. */
 router.get('/dashboard', requirePageAuth(), (req, res) => {
   res.redirect(DASHBOARD_PATHS[req.user.role]);

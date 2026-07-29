@@ -62,7 +62,7 @@ const register = asyncHandler(async (req, res) => {
   });
 });
 
-/** POST /api/auth/login — shared by the customer and employee portals. */
+/** POST /api/auth/login — every role signs in here; the reply carries their dashboard. */
 const login = asyncHandler(async (req, res) => {
   const { password } = req.body;
   const email = req.body.email.toLowerCase();

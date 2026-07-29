@@ -93,9 +93,13 @@ describe('role-based access control', () => {
   });
 
   it('guards protected pages with role-aware redirects', async () => {
+    // One login page for everyone — staff and customers alike land there.
     const anonymous = await supertest(app).get('/admin');
     expect(anonymous.status).toBe(302);
-    expect(anonymous.headers.location).toBe('/employee-login');
+    expect(anonymous.headers.location).toBe('/login');
+
+    const anonymousClientPage = await supertest(app).get('/client/products');
+    expect(anonymousClientPage.headers.location).toBe('/login');
 
     const wrongRole = await agents.client.get('/admin');
     expect(wrongRole.status).toBe(302);

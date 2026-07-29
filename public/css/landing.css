@@ -356,14 +356,22 @@ body {
   margin-bottom: 2rem;
 }
 
+/**
+ * A grid that also reads well holding a single card: auto-fit would stretch
+ * one child across the whole section, so the card carries its own width and
+ * the grid centres it.
+ */
 .portal-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
+  justify-items: center;
   text-align: left;
 }
 
 .portal-card {
+  width: 100%;
+  max-width: 26rem;
   text-align: center;
   padding: 2.25rem 1.75rem;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
@@ -389,11 +397,6 @@ body {
   color: var(--primary-600);
 }
 
-.portal-icon-employee {
-  background-color: var(--warning-50);
-  color: var(--warning-500);
-}
-
 .portal-card h3 {
   font-size: 1.25rem;
   margin-bottom: 0.5rem;
@@ -403,6 +406,12 @@ body {
   color: var(--text-muted);
   font-size: 0.9375rem;
   margin-bottom: 1.5rem;
+}
+
+/* Secondary route out of the card, under the primary action. */
+.portal-alt {
+  margin: 1rem 0 0;
+  font-size: 0.875rem;
 }
 
 /* ---------- Footer ---------- */
