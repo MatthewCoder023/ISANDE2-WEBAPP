@@ -23,9 +23,14 @@
   --accent-400: #fbbf24;
   --accent-500: #f59e0b;
 
-  /* Gradients — used for primary actions, active nav, icon tiles */
-  --gradient-primary: linear-gradient(135deg, var(--primary-600), var(--violet-600));
-  --gradient-brand: linear-gradient(135deg, var(--primary-500), var(--accent-400));
+  /**
+   * Primary actions take a flat fill. A gradient on every button is the
+   * fastest way to date an interface, and on the catalogue a row of them
+   * shouts over the paint colours that are the actual product. Gradients
+   * are now spent in one place — the landing hero — where they earn it.
+   */
+  --primary-fill: var(--primary-600);
+  --primary-fill-hover: var(--primary-700);
   --gradient-sidebar: linear-gradient(180deg, #10142a 0%, #191c3a 100%);
 
   /* Semantic colors */
@@ -38,23 +43,34 @@
   --info-500: #0284c7;
   --info-50: #f0f9ff;
 
-  /* Neutrals */
-  --bg: #f6f7fb;
+  /* Neutrals. The border does more work now, so it carries more contrast. */
+  --bg: #f7f8fa;
   --surface: #ffffff;
-  --border: #e5e8f0;
-  --border-strong: #cbd2e0;
+  --border: #e3e6ec;
+  --border-strong: #c4cad6;
   --text: #0f172a;
   --text-muted: #5b6474;
   --text-faint: #8b93a5;
 
-  /* Shape & elevation (layered, soft) */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 6px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 2px 4px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 4px 8px rgba(15, 23, 42, 0.06), 0 18px 46px rgba(15, 23, 42, 0.14);
-  --shadow-primary: 0 6px 18px rgba(79, 70, 229, 0.32);
+  /* A tighter radius ladder: crisp on controls, still soft on panels. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /**
+   * Separation comes from the 1px border, not from a shadow under every
+   * card. Only things that genuinely float above the page — modals,
+   * dropdowns, toasts — take --shadow-lg; sm and md are barely-there.
+   */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 2px 6px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.13);
+
+  /* Control density — one place to tune how tight the whole UI feels. */
+  --control-py: 0.5rem;
+  --control-px: 1.125rem;
+  --cell-py: 0.625rem;
+  --cell-px: 1rem;
 
   /* Motion */
   --ease: cubic-bezier(0.16, 1, 0.3, 1); /* ease-out-expo-ish */
@@ -80,8 +96,13 @@
   --primary-700: #a5b4fc;
   --violet-600: #a78bfa;
 
-  /* Buttons keep the rich gradient (white text needs the deep hues). */
-  --gradient-primary: linear-gradient(135deg, #4f46e5, #7c3aed);
+  /**
+   * Buttons keep the deep hue rather than following --primary-600 up: the
+   * lightened brand colours above are tuned for text on dark, and white
+   * label text needs the dark fill underneath it to stay readable.
+   */
+  --primary-fill: #4f46e5;
+  --primary-fill-hover: #4338ca;
   --gradient-sidebar: linear-gradient(180deg, #0a0d19 0%, #131731 100%);
 
   --success-500: #4ade80;
@@ -93,17 +114,18 @@
   --info-500: #38bdf8;
   --info-50: rgba(56, 189, 248, 0.13);
 
-  --bg: #0d1120;
-  --surface: #161b2d;
-  --border: #272e47;
-  --border-strong: #3b4468;
+  --bg: #0c1020;
+  --surface: #151a2b;
+  /* Borders separate surfaces here too, so they lift away from the panel. */
+  --border: #2b3350;
+  --border-strong: #414b70;
   --text: #eef1f8;
   --text-muted: #a2abc4;
   --text-faint: #707a97;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 6px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.35), 0 18px 46px rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.34);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
 
   color-scheme: dark; /* native scrollbars, inputs, etc. */
 }

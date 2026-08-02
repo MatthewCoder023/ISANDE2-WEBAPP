@@ -131,9 +131,23 @@ const stats = asyncHandler(async (req, res) => {
     return res.json({ success: true, data: { stats: { activeOrders, completedOrders } } });
   }
 
+  const now = new Date();
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+
+  /**
+   * The comparison window for "revenue this month" is the same *distance
+   * into* last month, not the whole of it. On the 2nd, a month-to-date
+   * figure measured against a complete previous month would report a 95%
+   * collapse every month — a number that says nothing about the business.
+   * The end is clamped so a 31st never spills into the current month.
+   */
+  const lastMonthStart = new Date(todayStart.getFullYear(), todayStart.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+  const lastMonthToDate = new Date(
+    Math.min(lastMonthStart.getTime() + (now - monthStart), lastMonthEnd.getTime() - 1)
+  );
 
   const [
     salesTodayAgg,
@@ -142,6 +156,7 @@ const stats = asyncHandler(async (req, res) => {
     preparingOrders,
     readyOrders,
     revenueMonthAgg,
+    revenueLastMonthAgg,
     totalOrders,
   ] = await Promise.all([
     Transaction.aggregate([
@@ -158,6 +173,10 @@ const stats = asyncHandler(async (req, res) => {
       { $match: { createdAt: { $gte: monthStart } } },
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]),
+    Transaction.aggregate([
+      { $match: { createdAt: { $gte: lastMonthStart, $lte: lastMonthToDate } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]),
     Order.countDocuments({}),
   ]);
 
@@ -171,6 +190,8 @@ const stats = asyncHandler(async (req, res) => {
         preparingOrders,
         readyOrders,
         revenueThisMonth: revenueMonthAgg[0]?.total || 0,
+        // Same span of last month, for the month-to-date comparison above.
+        revenueLastMonthToDate: revenueLastMonthAgg[0]?.total || 0,
         totalOrders,
       },
     },

@@ -61,8 +61,26 @@ const sales = asyncHandler(async (req, res) => {
   const { since, until, days } = resolveWindow(req.query);
   const window = { $gte: since, $lte: until };
 
-  const [revenueByDay, totalsAgg, byMethod, topProducts, byCategory, newCustomers] =
-    await Promise.all([
+  /**
+   * The window of equal length immediately before this one. A KPI on its own
+   * is a number; against the period before it, it's a direction. Equal length
+   * matters — comparing 7 days to 30 would make every figure look like a
+   * collapse.
+   */
+  const priorUntil = new Date(since.getTime() - 1);
+  const priorSince = new Date(priorUntil.getTime() - (until.getTime() - since.getTime()));
+  const priorWindow = { $gte: priorSince, $lte: priorUntil };
+
+  const [
+    revenueByDay,
+    totalsAgg,
+    byMethod,
+    topProducts,
+    byCategory,
+    newCustomers,
+    priorTotalsAgg,
+    priorNewCustomers,
+  ] = await Promise.all([
       Transaction.aggregate([
         { $match: { createdAt: window } },
         {
@@ -137,9 +155,16 @@ const sales = asyncHandler(async (req, res) => {
         { $sort: { revenue: -1 } },
       ]),
       User.countDocuments({ role: ROLES.CLIENT, createdAt: window }),
+      Transaction.aggregate([
+        { $match: { createdAt: priorWindow } },
+        { $group: { _id: null, revenue: { $sum: '$amount' }, transactions: { $sum: 1 } } },
+      ]),
+      User.countDocuments({ role: ROLES.CLIENT, createdAt: priorWindow }),
     ]);
 
   const totals = totalsAgg[0] || { revenue: 0, transactions: 0 };
+  const prior = priorTotalsAgg[0] || { revenue: 0, transactions: 0 };
+  const mean = (revenue, count) => (count ? Math.round((revenue / count) * 100) / 100 : 0);
 
   res.json({
     success: true,
@@ -151,10 +176,17 @@ const sales = asyncHandler(async (req, res) => {
       totals: {
         revenue: totals.revenue,
         transactions: totals.transactions,
-        averageSale: totals.transactions
-          ? Math.round((totals.revenue / totals.transactions) * 100) / 100
-          : 0,
+        averageSale: mean(totals.revenue, totals.transactions),
         newCustomers,
+      },
+      // The same figures for the equal-length window immediately before.
+      previous: {
+        from: localDay(priorSince),
+        to: localDay(priorUntil),
+        revenue: prior.revenue,
+        transactions: prior.transactions,
+        averageSale: mean(prior.revenue, prior.transactions),
+        newCustomers: priorNewCustomers,
       },
       revenueByDay,
       byMethod,

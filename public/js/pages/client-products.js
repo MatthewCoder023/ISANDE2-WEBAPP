@@ -102,7 +102,7 @@ function renderGrid(products) {
               <span class="product-price">${formatPrice(p.price)}</span>
               ${AVAILABILITY_BADGES[p.availability] || ''}
             </div>
-            <button class="btn ${outOfStock ? 'btn-outline' : 'btn-primary'} btn-sm"
+            <button class="btn ${outOfStock ? 'btn-outline' : 'btn-quiet'} btn-sm"
                     data-add-to-cart="${p.id}" ${outOfStock ? 'disabled' : ''}
                     style="margin-top: 0.625rem;">
               ${outOfStock ? 'Out of Stock' : `${icon('shopping-cart', 15)} Add to Cart`}

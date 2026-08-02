@@ -14,6 +14,7 @@ import { formatPrice, formatDate, escapeHtml, debounce } from '/js/format.js';
 import { icon } from '/js/icons.js';
 import { renderPagination } from '/js/pagination.js';
 import { applyUrlFilters } from '/js/url-filters.js';
+import { initRowMenus } from '/js/row-menu.js';
 
 const CATEGORY_LABELS = {
   interior: 'Interior Paint',
@@ -101,6 +102,8 @@ function renderTable(products) {
   products.forEach((p) => productsCache.set(p.id, p));
 
   emptyState.hidden = products.length > 0;
+  // Delegated to the tbody, so replacing its contents below needs no rebind.
+  initRowMenus(tbody);
 
   tbody.innerHTML = products
     .map((p) => {
@@ -109,10 +112,16 @@ function renderTable(products) {
       const statusBadge = p.isActive
         ? '<span class="badge badge-dot badge-success">Active</span>'
         : '<span class="badge badge-dot badge-info">Archived</span>';
-      const archiveButton = p.isActive
-        ? `<button class="btn btn-outline btn-sm" data-action="archive" data-id="${p.id}">Archive</button>`
-        : `<button class="btn btn-primary btn-sm" data-action="restore" data-id="${p.id}">Restore</button>`;
+      const archiveItem = p.isActive
+        ? `<button role="menuitem" data-action="archive" data-id="${p.id}">Archive product</button>`
+        : `<button role="menuitem" data-action="restore" data-id="${p.id}">Restore product</button>`;
 
+      /**
+       * The SKU rides under the name rather than holding a column of its
+       * own. It is a lookup key, not something you scan down a table — and
+       * as a column it wrapped onto three lines, which was most of the
+       * reason a row was twice as tall as the text inside it.
+       */
       return `
         <tr>
           <td>
@@ -120,20 +129,27 @@ function renderTable(products) {
               ${swatchHtml(p)}
               <div>
                 <div class="name">${escapeHtml(p.name)}</div>
-                ${meta ? `<div class="meta">${meta}</div>` : ''}
+                <div class="meta">
+                  <span class="sku">${escapeHtml(p.sku)}</span>${meta ? ` · ${meta}` : ''}
+                </div>
               </div>
             </div>
           </td>
-          <td>${escapeHtml(p.sku)}</td>
           <td>${CATEGORY_LABELS[p.category] || escapeHtml(p.category)}</td>
           <td class="num">${formatPrice(p.price)}</td>
           <td>${p.stock.quantity} ${availabilityBadge}</td>
           <td>${statusBadge}</td>
           <td>
-            <div class="cell-actions">
-              <button class="btn btn-outline btn-sm" data-action="edit" data-id="${p.id}">Edit</button>
-              <button class="btn btn-outline btn-sm" data-action="stock" data-id="${p.id}">Stock</button>
-              ${archiveButton}
+            <div class="row-menu">
+              <button type="button" class="row-menu-toggle" data-menu-toggle
+                      aria-haspopup="menu" aria-expanded="false"
+                      aria-label="Actions for ${escapeHtml(p.name)}">⋯</button>
+              <div class="row-menu-list" role="menu"
+                   aria-label="Actions for ${escapeHtml(p.name)}" hidden>
+                <button role="menuitem" data-action="edit" data-id="${p.id}">Edit details</button>
+                <button role="menuitem" data-action="stock" data-id="${p.id}">Adjust stock</button>
+                ${archiveItem}
+              </div>
             </div>
           </td>
         </tr>`;

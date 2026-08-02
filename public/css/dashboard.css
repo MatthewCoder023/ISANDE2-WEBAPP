@@ -72,9 +72,8 @@
 }
 
 .dash-nav a.is-active {
-  background-image: var(--gradient-primary);
+  background-color: var(--primary-fill);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
 }
 
 .dash-nav a.is-active:hover {
@@ -385,21 +384,28 @@
 }
 
 /* ---------- Stat cards ---------- */
+/**
+ * The tinted icon square that used to sit here carried no information — it
+ * repeated the label in pictogram form and took a third of the tile. The
+ * space now goes to the figure and, where one exists, to what that figure
+ * is doing compared with the period before it.
+ */
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.25rem;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 1rem;
 }
 
+.stat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* The flat aesthetic answers hover with the border, not by taking off. */
 .stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
 }
 
 /* Anchor targets clear the sticky topbar instead of hiding behind it. */
@@ -420,10 +426,11 @@ a.stat-card:hover {
 
 a.stat-card::after {
   content: "";
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
   width: 7px;
   height: 7px;
-  margin-left: auto;
-  flex-shrink: 0;
   border-top: 2px solid var(--text-faint);
   border-right: 2px solid var(--text-faint);
   transform: rotate(45deg);
@@ -437,36 +444,41 @@ a.stat-card:focus-visible::after {
   transform: rotate(45deg) translate(2px, -2px);
 }
 
-.stat-card:hover .stat-icon {
-  transform: scale(1.08) rotate(-3deg);
+/**
+ * Only tiles with something true to say carry this line — a figure like
+ * "Total Orders" has no previous period to be measured against, and a
+ * fabricated trend would be exactly the decoration this replaced. Grid
+ * rows stretch to equal height, so the tiles stay aligned regardless.
+ */
+.stat-meta:empty {
+  display: none;
 }
 
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
+.stat-meta {
+  margin-top: 0.375rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.375rem;
-  flex-shrink: 0;
-  transition: transform var(--speed) var(--ease);
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
 }
 
-.stat-icon-primary { background-image: linear-gradient(135deg, #eef2ff, #ddd8fd); color: var(--primary-600); }
-.stat-icon-success { background-image: linear-gradient(135deg, #f0fdf4, #d5f5e0); color: var(--success-500); }
-.stat-icon-warning { background-image: linear-gradient(135deg, #fffbeb, #fdeec8); color: var(--warning-500); }
-.stat-icon-info    { background-image: linear-gradient(135deg, #f0f9ff, #d9effd); color: var(--info-500); }
+.stat-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-delta.is-up { color: var(--success-500); }
+.stat-delta.is-down { color: var(--danger-500); }
+.stat-delta.is-flat { color: var(--text-faint); }
 
 /* ---------- Dark theme overrides (hardcoded surfaces) ---------- */
 :root[data-theme='dark'] .dash-topbar {
   background-color: rgba(13, 17, 32, 0.85);
 }
-
-:root[data-theme='dark'] .stat-icon-primary { background-image: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(124, 58, 237, 0.24)); }
-:root[data-theme='dark'] .stat-icon-success { background-image: linear-gradient(135deg, rgba(74, 222, 128, 0.14), rgba(22, 163, 74, 0.22)); }
-:root[data-theme='dark'] .stat-icon-warning { background-image: linear-gradient(135deg, rgba(251, 191, 36, 0.14), rgba(217, 119, 6, 0.22)); }
-:root[data-theme='dark'] .stat-icon-info    { background-image: linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(2, 132, 199, 0.22)); }
 
 /* Tab strip for page groups (e.g. mixing queue / formulas / log) */
 .page-tabs {
@@ -492,10 +504,9 @@ a.stat-card:focus-visible::after {
 }
 
 .page-tabs a.is-active {
-  background-image: var(--gradient-primary);
+  background-color: var(--primary-fill);
   border-color: transparent;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
 }
 
 /* Promo banner card with a photo (e.g. client dashboard) */

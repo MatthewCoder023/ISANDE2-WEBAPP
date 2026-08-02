@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: var(--control-py) var(--control-px);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   font-size: 0.9375rem;
@@ -35,15 +35,14 @@
 }
 
 .btn-primary {
-  background-image: var(--gradient-primary);
+  background-color: var(--primary-fill);
   color: #fff;
-  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.25);
 }
 
+/* Darken on hover rather than lift-and-glow — quieter, and it reads as a
+   surface responding rather than a card floating off the page. */
 .btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-primary);
-  filter: brightness(1.06);
+  background-color: var(--primary-fill-hover);
 }
 
 .btn-outline {
@@ -57,7 +56,26 @@
   border-color: var(--primary-500);
   color: var(--primary-600);
   background-color: var(--primary-50);
-  transform: translateY(-1px);
+}
+
+/**
+ * A deliberately recessive action, for places where every item in a grid
+ * carries one. On the catalogue a solid button per card out-shouts the
+ * paint colours those cards exist to show — so this states itself with a
+ * border and commits to the primary fill only once a pointer or the
+ * keyboard arrives.
+ */
+.btn-quiet {
+  background-color: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-quiet:hover:not(:disabled),
+.btn-quiet:focus-visible {
+  background-color: var(--primary-fill);
+  border-color: var(--primary-fill);
+  color: #fff;
 }
 
 .btn-danger {
@@ -102,14 +120,13 @@
 
 .form-input {
   width: 100%;
-  padding: 0.625rem 0.875rem;
+  padding: var(--control-py) 0.875rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   font-size: 0.9375rem;
   font-family: inherit;
   color: var(--text);
   background-color: var(--surface);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
   transition: border-color var(--speed-fast) ease, box-shadow var(--speed) var(--ease);
 }
 
@@ -261,7 +278,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  padding: 1.5rem;
+  padding: 1.25rem;
   transition: box-shadow var(--speed) var(--ease), transform var(--speed) var(--ease);
 }
 
@@ -412,7 +429,7 @@
   top: 0;
   z-index: 1;
   text-align: left;
-  padding: 0.75rem 1.25rem;
+  padding: var(--cell-py) var(--cell-px);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -424,7 +441,7 @@
 }
 
 .table td {
-  padding: 0.875rem 1.25rem;
+  padding: var(--cell-py) var(--cell-px);
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
@@ -596,6 +613,82 @@ tr:hover .swatch,
   color: var(--text-muted);
 }
 
+/* A SKU is read character by character — a mono face stops 0/O and 1/l
+   from being a guess, and the tracking sets it apart from the prose. */
+.product-cell .sku {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--text-faint);
+}
+
+/* ---------- Row action menu ---------- */
+.row-menu {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.row-menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--speed-fast) ease, border-color var(--speed-fast) ease,
+    color var(--speed-fast) ease;
+}
+
+.row-menu-toggle:hover,
+.row-menu-toggle[aria-expanded='true'] {
+  background-color: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/**
+ * Fixed, because `.table-wrap` scrolls and would otherwise clip this.
+ * row-menu.js measures and places it on open; see the note there.
+ */
+.row-menu-list {
+  position: fixed;
+  z-index: 60;
+  min-width: 11rem;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.row-menu-list button {
+  padding: 0.5rem 0.625rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--text);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.row-menu-list button:hover,
+.row-menu-list button:focus-visible {
+  background-color: var(--primary-50);
+  color: var(--primary-700);
+}
+
 /* ---------- Cart / sale line items ---------- */
 .cart-line {
   display: flex;
@@ -675,7 +768,7 @@ tr:hover .swatch,
 .qty-stepper button:hover {
   border-color: var(--primary-600);
   color: #fff;
-  background-image: var(--gradient-primary);
+  background-color: var(--primary-fill);
   transform: scale(1.08);
 }
 

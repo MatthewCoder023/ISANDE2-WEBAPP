@@ -174,6 +174,40 @@ describe('sales report window', () => {
     expect(backwards.body.data.days).toBe(30); // default window, not a negative one
   });
 
+  /**
+   * The comparison window is what turns a KPI into a direction, so it has
+   * to be the same length as the window it is measured against — otherwise
+   * a 7-day view compared with a 30-day one reports a collapse every time.
+   */
+  it('compares against an equal-length window ending the day before', async () => {
+    const res = await agents.admin.get('/api/reports/sales?from=2026-03-01&to=2026-03-31');
+    const { range, previous } = res.body.data;
+
+    // Adjacent: the comparison ends the day before the window opens.
+    expect(previous.to).toBe('2026-02-28');
+
+    // Equal length, asserted rather than hand-computed — March's 31 days
+    // are matched by 3 of January plus all 28 of February.
+    const inclusiveDays = (from, to) =>
+      Math.round((new Date(`${to}T00:00:00Z`) - new Date(`${from}T00:00:00Z`)) / 86400000) + 1;
+    expect(inclusiveDays(previous.from, previous.to)).toBe(inclusiveDays(range.from, range.to));
+    expect(inclusiveDays(range.from, range.to)).toBe(31);
+  });
+
+  it('reports the previous window for the trailing-days form too', async () => {
+    const res = await agents.admin.get('/api/reports/sales?days=7');
+    const { range, previous } = res.body.data;
+
+    // The prior window must end the day before this one starts — no gap,
+    // no overlap that would count a transaction into both periods.
+    const dayBefore = new Date(`${range.from}T00:00:00Z`);
+    dayBefore.setUTCDate(dayBefore.getUTCDate() - 1);
+    expect(previous.to).toBe(dayBefore.toISOString().slice(0, 10));
+    expect(previous).toHaveProperty('revenue');
+    expect(previous).toHaveProperty('transactions');
+    expect(previous).toHaveProperty('newCustomers');
+  });
+
   it('exports the report for the window on screen, admin only', async () => {
     const res = await agents.admin.get('/api/reports/sales/export?from=2026-03-01&to=2026-03-31');
     expect(res.status).toBe(200);
