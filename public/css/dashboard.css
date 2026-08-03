@@ -213,9 +213,52 @@
   gap: 1rem;
 }
 
+.dash-topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-right: auto;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background-color: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--speed-fast) ease, border-color var(--speed-fast) ease,
+    color var(--speed-fast) ease, transform var(--speed-fast) var(--ease);
+}
+
+.back-button.is-hidden {
+  display: none;
+}
+
+.back-button:hover {
+  background-color: var(--surface-strong);
+  border-color: var(--border-strong);
+  color: var(--text);
+  transform: translateX(-1px);
+}
+
+.back-button:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+.back-button svg {
+  flex-shrink: 0;
+}
+
 .dash-topbar h1 {
   font-size: 1.25rem;
-  margin-right: auto; /* pushes the bell and role badge to the right */
+  margin: 0;
 }
 
 /* ---------- Notification bell (see /js/notifications.js) ---------- */

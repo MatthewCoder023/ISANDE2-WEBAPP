@@ -47,10 +47,46 @@ function setupThemeToggle() {
 }
 
 /**
+ * Sets up the back button in the topbar with role-based fallback path.
+ */
+function setupBackButton(userRole) {
+  const topbar = document.querySelector('.dash-topbar');
+  if (!topbar || topbar.querySelector('.back-button')) return;
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'back-button';
+  button.setAttribute('aria-label', 'Go back to the previous page');
+  button.innerHTML = `${icon('arrow-left', 16)}`;
+
+  const fallbackPath = DASHBOARD_PATHS[userRole] || '/';
+  button.addEventListener('click', () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.assign(fallbackPath);
+    }
+  });
+
+  const title = topbar.querySelector('h1');
+  if (title) {
+    const titleGroup = document.createElement('div');
+    titleGroup.className = 'dash-topbar-title';
+    titleGroup.appendChild(button);
+
+    topbar.replaceChild(titleGroup, title);
+    titleGroup.appendChild(title);
+  } else {
+    topbar.prepend(button);
+  }
+}
+
+/**
  * On phones the sidebar becomes a drawer. The toggle lives in the topbar,
  * a scrim covers the page behind it, and choosing a destination closes it —
  * otherwise the drawer would still be sitting over the page you just asked for.
  */
+
 function setupMobileNav() {
   const sidebar = document.querySelector('.dash-sidebar');
   const topbar = document.querySelector('.dash-topbar');
@@ -107,6 +143,9 @@ async function init() {
     window.location.assign('/');
     return;
   }
+
+  // Set up back button after user is fetched for role-based fallback
+  setupBackButton(user.role);
 
   const navContainer = document.querySelector('[data-nav]');
   if (navContainer) renderNav(navContainer, user.role);
