@@ -14,7 +14,7 @@ describe('registration', () => {
       firstName: 'New',
       lastName: 'Customer',
       email: 'new@test.com',
-      password: 'Passw0rd1',
+      password: PASSWORD,
     });
 
     expect(res.status).toBe(201);
@@ -30,7 +30,7 @@ describe('registration', () => {
       firstName: 'Eve',
       lastName: 'Attacker',
       email: 'eve@test.com',
-      password: 'Passw0rd1',
+      password: PASSWORD,
       role: 'admin',
     });
 
@@ -43,7 +43,7 @@ describe('registration', () => {
       firstName: 'Eve',
       lastName: 'Again',
       email: 'eve@test.com',
-      password: 'Passw0rd1',
+      password: PASSWORD,
     });
     expect(res.status).toBe(409);
   });
@@ -66,10 +66,10 @@ describe('login & sessions', () => {
 
     const wrongPassword = await supertest(app)
       .post('/api/auth/login')
-      .send({ email: 'carlos@test.com', password: 'Nope1234' });
+      .send({ email: 'carlos@test.com', password: 'Wr0ngP@ss2026!' });
     const unknownEmail = await supertest(app)
       .post('/api/auth/login')
-      .send({ email: 'ghost@test.com', password: 'Nope1234' });
+      .send({ email: 'ghost@test.com', password: 'Wr0ngP@ss2026!' });
 
     expect(wrongPassword.status).toBe(401);
     expect(unknownEmail.status).toBe(401);
@@ -116,12 +116,12 @@ describe('self-service profile', () => {
 
     const wrong = await agent
       .post('/api/auth/change-password')
-      .send({ currentPassword: 'WrongOne1', newPassword: 'Fresh9876' });
+      .send({ currentPassword: 'Wr0ngP@ss2026!', newPassword: 'Fr3shP@ss2026!' });
     expect(wrong.status).toBe(400);
 
     const right = await agent
       .post('/api/auth/change-password')
-      .send({ currentPassword: PASSWORD, newPassword: 'Fresh9876' });
+      .send({ currentPassword: PASSWORD, newPassword: 'Fr3shP@ss2026!' });
     expect(right.status).toBe(200);
 
     const oldLogin = await supertest(app)
@@ -131,7 +131,7 @@ describe('self-service profile', () => {
 
     const newLogin = await supertest(app)
       .post('/api/auth/login')
-      .send({ email: 'pwchange@test.com', password: 'Fresh9876' });
+      .send({ email: 'pwchange@test.com', password: 'Fr3shP@ss2026!' });
     expect(newLogin.status).toBe(200);
   });
 
@@ -142,7 +142,7 @@ describe('self-service profile', () => {
 
     const res = await laptop
       .post('/api/auth/change-password')
-      .send({ currentPassword: PASSWORD, newPassword: 'Fresh9876' });
+      .send({ currentPassword: PASSWORD, newPassword: 'Fr3shP@ss2026!' });
     expect(res.status).toBe(200);
 
     // The session that changed the password stays alive...
@@ -159,7 +159,7 @@ describe('hardening', () => {
     for (let i = 0; i < 5; i += 1) {
       const res = await supertest(app)
         .post('/api/auth/login')
-        .send({ email: 'bruteforce@test.com', password: 'WrongPass1' });
+        .send({ email: 'bruteforce@test.com', password: 'Wr0ngP@ss2026!' });
       expect(res.status).toBe(401);
     }
 
@@ -174,7 +174,7 @@ describe('hardening', () => {
     const res = await supertest(app)
       .post('/api/auth/login')
       .set('Origin', 'https://evil.example')
-      .send({ email: 'whoever@test.com', password: 'Whatever1' });
+      .send({ email: 'whoever@test.com', password: PASSWORD });
     expect(res.status).toBe(403);
   });
 
@@ -213,13 +213,13 @@ describe('password reset via email', () => {
 
     const good = await supertest(app)
       .post('/api/auth/reset-password')
-      .send({ token, newPassword: 'Rested987' });
+      .send({ token, newPassword: 'R3st3dP@ss2026!' });
     expect(good.status).toBe(200);
 
     // The token is single-use.
     const reuse = await supertest(app)
       .post('/api/auth/reset-password')
-      .send({ token, newPassword: 'Another987' });
+      .send({ token, newPassword: 'An0th3rP@ss2026!' });
     expect(reuse.status).toBe(400);
 
     // Old password dead, new one works, and the pre-reset session is out.
@@ -227,7 +227,7 @@ describe('password reset via email', () => {
       (await supertest(app).post('/api/auth/login').send({ email: 'resetme@test.com', password: PASSWORD })).status
     ).toBe(401);
     expect(
-      (await supertest(app).post('/api/auth/login').send({ email: 'resetme@test.com', password: 'Rested987' })).status
+      (await supertest(app).post('/api/auth/login').send({ email: 'resetme@test.com', password: 'R3st3dP@ss2026!' })).status
     ).toBe(200);
     expect((await oldSession.get('/api/auth/me')).status).toBe(401);
   });

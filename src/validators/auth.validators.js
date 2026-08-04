@@ -1,25 +1,14 @@
 const { body } = require('express-validator');
-
+const { isCommonPassword} = require('../utils/commonPasswords');
 /**
  * The most common leaked passwords that also satisfy the basic
  * letter+number rule. Checked case-insensitively on every endpoint
  * that sets a password.
  */
-const COMMON_PASSWORDS = new Set([
-  'password1', 'password12', 'password123', 'password1234', 'passw0rd',
-  'p@ssw0rd', 'p4ssword', 'abc12345', 'abcd1234', 'qwerty12', 'qwerty123',
-  'qwerty1234', 'qwertyuiop1', '1q2w3e4r', '1q2w3e4r5t', '1qaz2wsx',
-  'qazwsx123', 'asdf1234', 'zxcv1234', 'iloveyou1', 'iloveyou2',
-  'welcome1', 'welcome12', 'welcome123', 'admin123', 'admin1234',
-  'letmein1', 'letmein123', 'monkey123', 'dragon123', 'sunshine1',
-  'princess1', 'football1', 'baseball1', 'superman1', 'batman123',
-  'trustno1', 'master123', 'hello123', 'freedom1', 'whatever1',
-  'changeme1', 'temp1234', 'test1234', 'user1234', 'pass1234',
-  'password2025', 'password2026', 'flavor123', 'color123', 'paint123',
-]);
+
 
 const rejectCommonPassword = (value) => {
-  if (COMMON_PASSWORDS.has(String(value).toLowerCase())) {
+  if (isCommonPassword(value)) {
     throw new Error('This password is too common — please choose something harder to guess.');
   }
   return true;

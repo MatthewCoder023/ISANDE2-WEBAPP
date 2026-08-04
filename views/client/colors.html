@@ -86,9 +86,12 @@
             <input type="file" id="photo-input" accept="image/*" class="visually-hidden" />
 
             <div class="photo-preview" id="photo-preview">
-              <img id="photo-img" alt="Uploaded inspiration" />
+              <div class="photo-img-wrap" style="position: relative;">
+                <img id="photo-img" alt="Uploaded inspiration" />
+                <div class="photo-pick-marker" id="photo-pick-marker"></div>
+              </div>
               <div class="palette-row" id="palette-row" aria-label="Colors detected in your photo"></div>
-              <p class="form-hint">Click a chip to select that color.</p>
+              <p class="form-hint">Click a chip below, or click anywhere on the photo to pick that exact color.</p>
             </div>
           </section>
         </div>

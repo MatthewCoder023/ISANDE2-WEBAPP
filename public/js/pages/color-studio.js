@@ -12,7 +12,7 @@ import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
 import { getCurrentUser } from '/js/session.js';
 import { addItem } from '/js/cart.js';
 import { icon } from '/js/icons.js';
-import { hexToRgb, rgbToHex, rgbToHsl, hslToRgb, extractPalette } from '/js/color-utils.js';
+import { hexToRgb, rgbToHex, rgbToHsl, hslToRgb, extractPalette, samplePixelColorAt } from '/js/color-utils.js';
 
 const HEX_RE = /^#?[0-9a-fA-F]{6}$/;
 
@@ -153,6 +153,7 @@ const uploadZone = document.querySelector('#upload-zone');
 const photoInput = document.querySelector('#photo-input');
 const photoImg = document.querySelector('#photo-img');
 const paletteRow = document.querySelector('#palette-row');
+const pickMarker = document.querySelector('#photo-pick-marker');
 
 uploadZone.addEventListener('click', () => photoInput.click());
 uploadZone.addEventListener('keydown', (event) => {
@@ -184,6 +185,8 @@ function loadPhoto(file) {
     showToast('Please choose an image file.', 'warning');
     return;
   }
+
+  pickMarker.style.display = 'none';
 
   const reader = new FileReader();
   reader.onload = () => {
@@ -219,6 +222,23 @@ function selectPaletteColor(hex) {
 paletteRow.addEventListener('click', (event) => {
   const chip = event.target.closest('.palette-chip');
   if (chip) selectPaletteColor(chip.dataset.hex);
+});
+
+photoImg.addEventListener('click', (event) => {
+  const hex = samplePixelColorAt(photoImg, event.clientX, event.clientY);
+  if (!hex) return; // clicked the letterboxed padding, not the photo
+
+  const rect = photoImg.getBoundingClientRect();
+  pickMarker.style.left = `${event.clientX - rect.left}px`;
+  pickMarker.style.top = `${event.clientY - rect.top}px`;
+  pickMarker.style.backgroundColor = hex;
+  pickMarker.style.display = 'block';
+
+  paletteRow.querySelectorAll('.palette-chip').forEach((chip) => chip.classList.remove('is-selected'));
+
+  const { r, g, b } = hexToRgb(hex);
+  Object.assign(color, rgbToHsl(r, g, b));
+  render();
 });
 
 /* ---------- Matching paints ---------- */

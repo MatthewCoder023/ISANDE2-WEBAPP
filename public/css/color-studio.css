@@ -127,11 +127,26 @@
 }
 
 .photo-preview img {
+  display: block;
   width: 100%;
-  max-height: 220px;
-  object-fit: cover;
+  max-height: 320px;
+  object-fit: contain;
+  background: var(--surface-2, #f1f5f9); 
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
+  cursor: crosshair;
+}
+
+.photo-pick-marker {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.35), var(--shadow-sm);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: none;
 }
 
 .palette-row {
@@ -221,4 +236,27 @@
 
 .match-percent.is-far {
   color: var(--warning-500);
+}
+
+@media (max-width: 600px) {
+  .match-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.625rem;
+  }
+
+  /* Retain square dimensions so swatch-split stays 1:1 */
+  .match-row .swatch {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .match-info {
+    width: 100%;
+  }
+
+  .match-percent {
+    align-self: flex-end;
+  }
 }
