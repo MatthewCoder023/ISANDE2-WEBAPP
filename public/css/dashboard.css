@@ -298,7 +298,32 @@
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  /* Takes the slack and may shrink; the h1's min-width below stops it being
+     squeezed away entirely. */
+  flex: 1 1 auto;
+  min-width: 0;
   margin-right: auto;
+}
+
+/**
+ * On a narrow bar the page title used to wrap to two lines and shove the
+ * search and notification controls off the right edge. One line, truncated,
+ * with a floor so it cannot vanish either.
+ */
+.dash-topbar h1 {
+  min-width: 5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The role badge is the first thing to go when room runs out: the sidebar
+   footer already names the role, so here it is pure duplication competing
+   with the page title. */
+@media (max-width: 720px) {
+  .dash-topbar > .badge {
+    display: none;
+  }
 }
 
 .back-button {
@@ -697,6 +722,328 @@ a.stat-card:focus-visible::after {
   flex-shrink: 0;
 }
 
+/* ============================================================
+   Dashboard widgets (see /js/widgets.js)
+
+   The KPI row answers "how are we doing"; these answer "what needs me
+   now". Every one is built from an endpoint the page already had access
+   to, and every row in them is a link into the screen where the work
+   actually happens — a dashboard that can only be read is a poster.
+   ============================================================ */
+
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (min-width: 1080px) {
+  .widget-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* A panel that needs the whole row takes it outright. */
+  .widget--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.widget {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.125rem 1.25rem 1.25rem;
+}
+
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.widget-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.widget-title svg {
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.widget-link {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  transition: color var(--speed-fast) ease;
+}
+
+.widget-link:hover {
+  color: var(--primary-600);
+  text-decoration: none;
+}
+
+.widget-link svg {
+  transition: transform var(--speed) var(--ease);
+}
+
+.widget-link:hover svg {
+  transform: translateX(2px);
+}
+
+.widget-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  color: var(--text-faint);
+}
+
+/* "Nothing to show" and "could not load" are different news. */
+.widget-empty.is-error {
+  color: var(--warning-500);
+}
+
+.widget-empty svg {
+  flex-shrink: 0;
+}
+
+/* ---------- Pipeline: where every open order currently sits ---------- */
+
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 0.5rem;
+}
+
+.pipeline-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.75rem 0.75rem 0.6875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--bg);
+  color: var(--text);
+  /* The tone lives on the top edge, so four stages read as one strip of
+     progress rather than four differently coloured cards. */
+  border-top: 2px solid var(--stage-tone, var(--border-strong));
+  transition: background-color var(--speed-fast) ease, border-color var(--speed-fast) ease,
+    transform var(--speed-fast) var(--ease);
+}
+
+.pipeline-stage:hover {
+  background-color: var(--surface);
+  border-color: var(--border-strong);
+  border-top-color: var(--stage-tone, var(--border-strong));
+  color: var(--text);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.pipeline-stage[data-tone='warning'] { --stage-tone: var(--warning-500); }
+.pipeline-stage[data-tone='info']    { --stage-tone: var(--info-500); }
+.pipeline-stage[data-tone='success'] { --stage-tone: var(--success-500); }
+.pipeline-stage[data-tone='muted']   { --stage-tone: var(--border-strong); }
+
+.pipeline-count {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pipeline-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
+
+/* ---------- Sparkline: revenue per day over the last week ---------- */
+
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.375rem;
+  height: 92px;
+}
+
+.spark-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.375rem;
+  height: 100%;
+  min-width: 0;
+}
+
+.spark-bar {
+  width: 100%;
+  border-radius: var(--radius-sm) var(--radius-sm) 2px 2px;
+  background-color: var(--primary-500);
+  opacity: 0.32;
+  /* Grows from the axis on load; the height itself is set inline. */
+  transform-origin: bottom;
+  animation: spark-grow 0.55s var(--ease) backwards;
+  transition: opacity var(--speed-fast) ease;
+}
+
+.spark-col:hover .spark-bar {
+  opacity: 0.62;
+}
+
+/* Today is the bar the reader is looking for. */
+.spark-col[data-today] .spark-bar {
+  opacity: 1;
+}
+
+.spark-day {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.spark-col[data-today] .spark-day {
+  color: var(--primary-600);
+}
+
+@keyframes spark-grow {
+  from { transform: scaleY(0); }
+}
+
+.spark-total {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.spark-total small {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0;
+}
+
+/* ---------- Row lists: inventory alerts, recent activity, bench queue ---------- */
+
+.mini-list {
+  display: flex;
+  flex-direction: column;
+  /* Negative margin lets each row's hover run the full panel width. */
+  margin: 0 -0.5rem;
+}
+
+.mini-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5625rem 0.5rem;
+  border-radius: var(--radius-md);
+  color: var(--text);
+  transition: background-color var(--speed-fast) ease;
+}
+
+.mini-row + .mini-row {
+  border-top: 1px solid var(--border);
+}
+
+.mini-row:hover {
+  background-color: var(--bg);
+  color: var(--text);
+  text-decoration: none;
+  /* The divider would cut through the hover tint of the row below it. */
+  border-top-color: transparent;
+}
+
+.mini-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.mini-name {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-meta {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-trail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.mini-amount {
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.mini-time {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stock remaining, as a proportion of the level it should be restocked at. */
+.stock-bar {
+  width: 56px;
+  height: 5px;
+  border-radius: 999px;
+  background-color: var(--border);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.stock-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--warning-500);
+}
+
+/* Nothing left means nothing to draw, so the label carries the severity
+   rather than the bar faking a fill it does not have. */
+.mini-meta.is-critical {
+  color: var(--danger-500);
+  font-weight: 600;
+}
+
 /* ---------- Command palette ---------- */
 .cmdk-backdrop {
   position: fixed;
@@ -845,6 +1192,13 @@ a.stat-card:focus-visible::after {
 .cmdk-trigger:hover {
   border-color: var(--border-strong);
   color: var(--text);
+}
+
+/* The button is a flex row, so the glyph shrinks to nothing the moment the
+   row runs out of room — which is exactly what the phone rule below causes,
+   leaving an empty capsule in the topbar. */
+.cmdk-trigger svg {
+  flex-shrink: 0;
 }
 
 /* On phones the label and hint go; the glyph alone opens it. */
