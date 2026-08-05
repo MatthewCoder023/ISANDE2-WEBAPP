@@ -317,6 +317,14 @@
   color: var(--text-muted);
 }
 
+/**
+ * Sign Out and the theme toggle. The alignment here — flex, centred
+ * cross-axis, a fixed gap — is the fix Marr made on the old sidebar button
+ * (a6665ec), kept because the problem it solved is the same one. What is
+ * deliberately dropped is `justify-content: center` and the bottom margin:
+ * those suited a full-width button in a rail, and these are now rows in a
+ * dropdown, where every label starts at the same left edge as My Profile.
+ */
 .theme-toggle,
 .btn-logout {
   width: 100%;
@@ -325,7 +333,7 @@
   gap: 0.5rem;
   padding: 0.5rem 0.625rem;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: none;
   color: var(--text);
   font-size: 0.875rem;
@@ -333,6 +341,13 @@
   text-align: left;
   cursor: pointer;
   transition: background-color var(--speed-fast) ease, color var(--speed-fast) ease;
+}
+
+/* The glyph must never be what a tight row shrinks — the misalignment the
+   original fix chased comes straight back if it does. */
+.theme-toggle svg,
+.btn-logout svg {
+  flex-shrink: 0;
 }
 
 .theme-toggle:hover,
