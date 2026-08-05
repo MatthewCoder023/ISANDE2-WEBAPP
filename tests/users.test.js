@@ -17,19 +17,19 @@ describe('employee management', () => {
       firstName: 'Nina',
       lastName: 'Reyes',
       email: 'nina@test.com',
-      password: 'Nina@1234',
+      password: 'N1naP@ss2026!',
       role: 'cashier',
     });
 
     expect(res.status).toBe(201);
     expect(res.body.data.user.role).toBe('cashier');
 
-    const agent = await loginAgent(app, 'nina@test.com', 'Nina@1234');
+    const agent = await loginAgent(app, 'nina@test.com', 'N1naP@ss2026!');
     expect((await agent.get('/api/orders')).status).toBe(200);
   });
 
   it('locks a deactivated employee out on their very next request', async () => {
-    const nina = await loginAgent(app, 'nina@test.com', 'Nina@1234');
+    const nina = await loginAgent(app, 'nina@test.com', 'N1naP@ss2026!');
     expect((await nina.get('/api/orders')).status).toBe(200);
 
     const ninaId = (await agents.admin.get('/api/users?search=nina')).body.data.users[0].id;
@@ -42,16 +42,16 @@ describe('employee management', () => {
 
   it('resets a password: the old one stops working immediately', async () => {
     const ninaId = (await agents.admin.get('/api/users?search=nina')).body.data.users[0].id;
-    await agents.admin.post(`/api/users/${ninaId}/reset-password`).send({ password: 'Fresh9876' });
+    await agents.admin.post(`/api/users/${ninaId}/reset-password`).send({ password: 'Fr3shP@ss2026!' });
 
     const oldLogin = await supertest(app)
       .post('/api/auth/login')
-      .send({ email: 'nina@test.com', password: 'Nina@1234' });
+      .send({ email: 'nina@test.com', password: 'N1naP@ss2026!' });
     expect(oldLogin.status).toBe(401);
 
     const newLogin = await supertest(app)
       .post('/api/auth/login')
-      .send({ email: 'nina@test.com', password: 'Fresh9876' });
+      .send({ email: 'nina@test.com', password: 'Fr3shP@ss2026!' });
     expect(newLogin.status).toBe(200);
   });
 
@@ -127,20 +127,16 @@ describe('customer records', () => {
 
 describe('security log', () => {
   it('records auth events and shows them to admins only', async () => {
-    // seedRoleAgents logged four accounts in; at minimum those succeeded.
     const res = await agents.admin.get('/api/users/events');
     expect(res.status).toBe(200);
     expect(res.body.data.events.length).toBeGreaterThan(0);
     expect(res.body.data.events.some((e) => e.type === 'login_success')).toBe(true);
 
-    // Non-admins get nothing.
     expect((await agents.cashier.get('/api/users/events')).status).toBe(403);
     expect((await agents.client.get('/api/users/events')).status).toBe(403);
   });
 
   it('strips NoSQL operator injections from query input', async () => {
-    // ?search[$gt]= would reach the controller as an object without the
-    // sanitizer; with it, the parameter simply disappears.
     const res = await agents.admin.get('/api/users?search[$gt]=x');
     expect(res.status).toBe(200);
     expect(res.body.data.users.length).toBeGreaterThan(0);

@@ -165,3 +165,31 @@ export function extractPalette(img, colorCount = 6) {
 
   return boxes.sort((a, b) => b.length - a.length).map(averageColor);
 }
+
+export function samplePixelColorAt(img, clientX, clientY) {
+  const rect = img.getBoundingClientRect();
+  const scale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+  const renderedW = img.naturalWidth * scale;
+  const renderedH = img.naturalHeight * scale;
+  const offsetX = (rect.width - renderedW) / 2;
+  const offsetY = (rect.height - renderedH) / 2;
+
+  const xInRendered = clientX - rect.left - offsetX;
+  const yInRendered = clientY - rect.top - offsetY;
+
+  if (xInRendered < 0 || yInRendered < 0 || xInRendered > renderedW || yInRendered > renderedH) {
+    return null;
+  }
+
+  const px = Math.min(img.naturalWidth - 1, Math.floor(xInRendered / scale));
+  const py = Math.min(img.naturalHeight - 1, Math.floor(yInRendered / scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+  const { data } = ctx.getImageData(px, py, 1, 1);
+
+  return rgbToHex(data[0], data[1], data[2]);
+}

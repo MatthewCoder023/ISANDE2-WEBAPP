@@ -13,7 +13,7 @@ const createApp = require('../src/app');
 const User = require('../src/models/User');
 const Product = require('../src/models/Product');
 
-const PASSWORD = 'Passw0rd1';
+const PASSWORD = 'S3cur3P@ss2026!';
 let mongod;
 
 async function setup() {
