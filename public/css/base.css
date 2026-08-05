@@ -52,55 +52,19 @@
   --text-muted: #5b6474;
   --text-faint: #8b93a5;
 
-  /**
-   * A tighter radius ladder: crisp on controls, still soft on panels.
-   * The top two rungs are for surfaces that float free of the page —
-   * the dock and its menus — where a control-sized corner looks pinched.
-   */
+  /* A tighter radius ladder: crisp on controls, still soft on panels. */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
-  --radius-xl: 18px;
-  --radius-2xl: 22px;
-
-  /**
-   * Icon sizes. One ladder, so the same glyph in a button, a table cell and
-   * the dock never disagrees by a pixel — the commonest way a UI built over
-   * months stops looking like one piece of work.
-   */
-  --icon-xs: 14px;
-  --icon-sm: 15px;
-  --icon-md: 16px;
-  --icon-lg: 18px;
-  --icon-xl: 22px;
 
   /**
    * Separation comes from the 1px border, not from a shadow under every
    * card. Only things that genuinely float above the page — modals,
    * dropdowns, toasts — take --shadow-lg; sm and md are barely-there.
-   * --shadow-hover is the one a card is allowed to reach for on hover.
    */
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-md: 0 2px 6px rgba(15, 23, 42, 0.06);
   --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.13);
-  --shadow-hover: 0 6px 20px rgba(15, 23, 42, 0.09);
-
-  /**
-   * Glass. One recipe for every surface that floats over the page — the
-   * dock, its menus, the command palette, the sticky topbar — so they read
-   * as panes of the same material rather than four takes on the idea.
-   *
-   * -strong is for panels carrying text over busy content (a menu above a
-   * table); the plain one is for chrome that only has to feel present.
-   * Nothing here is decorative: the tint is what stops the page reading
-   * through, and the blur is what turns what remains into a wash.
-   */
-  --glass-bg: rgba(255, 255, 255, 0.66);
-  --glass-bg-strong: rgba(255, 255, 255, 0.86);
-  --glass-border: rgba(255, 255, 255, 0.7);
-  --glass-highlight: rgba(255, 255, 255, 0.8);
-  --glass-blur: blur(22px) saturate(180%);
-  --glass-shadow: 0 16px 40px rgba(15, 23, 42, 0.16), 0 2px 8px rgba(15, 23, 42, 0.08);
 
   /* Control density — one place to tune how tight the whole UI feels. */
   --control-py: 0.5rem;
@@ -162,18 +126,6 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
   --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.34);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
-  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.42);
-
-  /**
-   * Dark glass is tinted rather than lightened: a white veil over a dark
-   * page turns milky, where a dark veil keeps the depth and lets the thin
-   * top highlight do the work of catching the light.
-   */
-  --glass-bg: rgba(21, 26, 43, 0.66);
-  --glass-bg-strong: rgba(21, 26, 43, 0.88);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-highlight: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 16px 44px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
 
   color-scheme: dark; /* native scrollbars, inputs, etc. */
 }

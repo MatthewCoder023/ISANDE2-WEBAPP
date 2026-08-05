@@ -7,13 +7,6 @@ import { formatPrice } from '/js/format.js';
 import { statSkeleton } from '/js/skeleton.js';
 import { countUp } from '/js/count-up.js';
 import { deltaMarkup, setMeta } from '/js/trend.js';
-import {
-  mount,
-  pipeline,
-  weeklyRevenue,
-  inventoryAlerts,
-  recentOrders,
-} from '/js/widgets.js';
 
 const set = (key, value, format) =>
   countUp(document.querySelector(`[data-stat="${key}"]`), value, format);
@@ -56,10 +49,6 @@ async function loadOrderStats() {
         'same point last month'
       )
     );
-
-    // The same payload feeds the pipeline panel — one request, two readings
-    // of it, so the tiles and the pipeline can never disagree.
-    mount('[data-widget="pipeline"]', () => pipeline(data.stats));
   } catch {
     // Cards keep their placeholder.
   }
@@ -83,31 +72,8 @@ async function loadUserStats() {
   }
 }
 
-/** Widgets that need their own request. Each panel fails on its own. */
-function loadWidgets() {
-  mount('[data-widget="revenue"]', async () => {
-    const { data } = await api('/api/reports/sales?days=7');
-    return weeklyRevenue(data.revenueByDay, data.since, data.days);
-  });
-
-  mount('[data-widget="alerts"]', async () => {
-    // A wide page, because inventoryAlerts ranks by how close to empty each
-    // paint is and the API cannot sort on that.
-    const { data } = await api('/api/products?stock=alert&limit=50&sort=name');
-    return inventoryAlerts(data.products, '/admin/products');
-  });
-
-  mount('[data-widget="recent"]', async () => {
-    const { data } = await api('/api/orders?limit=5&sort=newest');
-    return recentOrders(data.orders, { viewPath: '/orders' });
-  });
-}
-
 async function init() {
   const clearSkeleton = statSkeleton();
-  // The tiles are what the reader looks at first, so they are awaited; the
-  // panels below fill in behind them rather than holding up the count-ups.
-  loadWidgets();
   await Promise.allSettled([loadProductStats(), loadOrderStats(), loadUserStats()]);
   clearSkeleton();
 }

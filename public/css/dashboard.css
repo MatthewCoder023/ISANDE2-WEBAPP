@@ -1,15 +1,190 @@
 /* Dashboard shell shared by all four roles */
 
-@import url('/css/dock.css');
+.dash-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  min-height: 100vh;
+}
+
+/* ---------- Sidebar ---------- */
+.dash-sidebar {
+  background-image: var(--gradient-sidebar);
+  color: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 0.875rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.dash-sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.25rem 0.625rem 1.25rem;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.0625rem;
+}
+
+.brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background-color: #fff;
+  object-fit: contain;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.dash-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dash-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  color: #9ca3af;
+  font-size: 0.9075rem;
+  font-weight: 500;
+  transition: background-color var(--speed-fast) ease, color var(--speed-fast) ease,
+    transform var(--speed-fast) var(--ease);
+}
+
+.dash-nav a svg {
+  flex-shrink: 0;
+  transition: transform var(--speed-fast) var(--ease);
+}
+
+.dash-nav a:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  text-decoration: none;
+  transform: translateX(3px);
+}
+
+.dash-nav a:hover svg {
+  transform: scale(1.12);
+}
 
 /**
- * One column. Navigation used to hold the left 250px of every page and now
- * floats over the bottom instead — see /css/dock.css. The wrapper stays so
- * the views did not all need re-nesting, and so the shell has one place to
- * grow a second column again if it ever needs one.
+ * The active item reads as a raised surface with an accent at its edge
+ * rather than a filled pill. A solid block of brand colour was the loudest
+ * thing on the page and competed with the primary button it sat beside;
+ * the accent marks position without shouting it.
  */
-.dash-layout {
-  min-height: 100vh;
+.dash-nav a.is-active {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.09);
+  color: #fff;
+  font-weight: 600;
+}
+
+.dash-nav a.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 1.25rem;
+  border-radius: 0 3px 3px 0;
+  background-color: var(--primary-500);
+  transform: translateY(-50%);
+}
+
+.dash-nav a.is-active:hover {
+  transform: none;
+  background-color: rgba(255, 255, 255, 0.13);
+}
+
+.dash-nav .nav-soon {
+  margin-left: auto;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  border: 1px solid #374151;
+  border-radius: 999px;
+  padding: 0.0625rem 0.4375rem;
+}
+
+.dash-sidebar-footer {
+  border-top: 1px solid #1f2937;
+  padding-top: 0.875rem;
+}
+
+.dash-user {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.375rem 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--speed-fast) ease;
+}
+
+.dash-user:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+/* ---------- Collapsed sidebar (icon rail) ---------- */
+/**
+ * Dense pages — the orders table, the POS — want their horizontal space
+ * back. Collapsing keeps every destination reachable as an icon, and the
+ * choice is remembered (see theme.js, which stamps it before first paint
+ * so the sidebar never renders wide and then jumps).
+ *
+ * Scoped above the mobile breakpoint: below it the sidebar is already a
+ * drawer, where a rail would mean two competing collapsed states.
+ */
+@media (min-width: 861px) {
+  :root[data-rail='1'] .dash-layout {
+    grid-template-columns: 68px 1fr;
+  }
+
+  :root[data-rail='1'] .dash-sidebar {
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+    /* Only the horizontal axis: the shorthand would also cancel the
+       sidebar's own overflow-y, and a rail still has to scroll when the
+       nav is taller than the viewport. */
+    overflow-x: hidden;
+  }
+
+  /* Everything that is words rather than a glyph steps aside. */
+  :root[data-rail='1'] .nav-label,
+  :root[data-rail='1'] .nav-soon,
+  :root[data-rail='1'] .brand span,
+  :root[data-rail='1'] .dash-user > div,
+  :root[data-rail='1'] .theme-toggle span,
+  :root[data-rail='1'] .btn-logout span {
+    display: none;
+  }
+
+  :root[data-rail='1'] .dash-nav a,
+  :root[data-rail='1'] .theme-toggle,
+  :root[data-rail='1'] .btn-logout,
+  :root[data-rail='1'] .dash-sidebar .brand,
+  :root[data-rail='1'] .dash-user {
+    justify-content: center;
+    gap: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* A hover that shifts sideways has nowhere to go in a 68px column. */
+  :root[data-rail='1'] .dash-nav a:hover {
+    transform: none;
+  }
 }
 
 /* Two-column detail grids collapse on narrow screens (profile, tracker). */
@@ -20,7 +195,6 @@
   }
 }
 
-/* Also the avatar circle in the users and customers tables. */
 .dash-user-avatar {
   width: 36px;
   height: 36px;
@@ -35,6 +209,69 @@
   flex-shrink: 0;
 }
 
+.dash-user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #f3f4f6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-user-role {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.theme-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: none;
+  border: 1px solid #374151;
+  color: #d1d5db;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  transition: background-color var(--speed-fast) ease, border-color var(--speed-fast) ease,
+    color var(--speed-fast) ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--primary-500);
+  color: #fff;
+  background-color: rgba(99, 102, 241, 0.15);
+}
+
+.btn-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: none;
+  border: 1px solid #374151;
+  color: #d1d5db;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-logout:hover {
+  background-color: var(--danger-500);
+  border-color: var(--danger-500);
+  color: #fff;
+}
+
 /* ---------- Main area ---------- */
 .dash-main {
   display: flex;
@@ -42,19 +279,15 @@
   min-width: 0;
 }
 
-/**
- * The topbar is glass like the dock — the two are the app's chrome, and
- * they should be made of the same thing at opposite ends of the screen.
- */
 .dash-topbar {
   position: sticky;
   top: 0;
   z-index: 40;
-  background-color: var(--glass-bg-strong);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background-color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
-  padding: 0.875rem 2rem;
+  padding: 1rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -64,74 +297,8 @@
 .dash-topbar-title {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  /* Takes the slack, and is allowed to shrink — but see the h1's own
-     min-width, which stops it being squeezed away to nothing. */
-  flex: 1 1 auto;
-  min-width: 0;
+  gap: 0.65rem;
   margin-right: auto;
-}
-
-/* ---------- Brand lockup (see setupTopbarLead in /js/pages/dashboard.js) ---------- */
-/**
- * Top-left on every page, and the way home. Reads as one object: the mark
- * and the name share a hover, and the whole lockup is a single link target.
- */
-.topbar-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
-  border-radius: var(--radius-md);
-  color: var(--text);
-  font-weight: 700;
-  font-size: 0.9375rem;
-  letter-spacing: -0.015em;
-  white-space: nowrap;
-  transition: background-color var(--speed-fast) ease;
-}
-
-.topbar-brand:hover {
-  background-color: var(--primary-50);
-  color: var(--text);
-  text-decoration: none;
-}
-
-.topbar-brand:focus-visible {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 1px;
-}
-
-.topbar-logo {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-sm);
-  background-color: #fff;
-  object-fit: contain;
-  padding: 2px;
-  flex-shrink: 0;
-  transition: transform var(--speed) var(--ease);
-}
-
-.topbar-brand:hover .topbar-logo {
-  transform: scale(1.06);
-}
-
-/* Hairline between the brand and the page it is currently showing. */
-.topbar-rule {
-  width: 1px;
-  height: 22px;
-  background-color: var(--border);
-  flex-shrink: 0;
-}
-
-/* The wordmark is the first thing to go when the bar gets tight — the mark
-   alone still carries the brand, and the page title needs the room more. */
-@media (max-width: 900px) {
-  .topbar-wordmark,
-  .topbar-rule {
-    display: none;
-  }
 }
 
 .back-button {
@@ -170,31 +337,9 @@
   flex-shrink: 0;
 }
 
-/**
- * The page name, not the app name — the brand beside it already says that.
- *
- * min-width keeps it on screen when the bar runs out of room. Without it a
- * shrinkable flex item with overflow:hidden collapses to zero width, and on
- * a phone the title vanished entirely while the role badge — the least
- * important thing in the bar — kept its space.
- */
 .dash-topbar h1 {
-  font-size: 1.125rem;
-  font-weight: 700;
-  letter-spacing: -0.015em;
+  font-size: 1.25rem;
   margin: 0;
-  min-width: 5rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* The role badge is the first thing to go: the account menu names the role,
-   so on a narrow bar it is pure duplication competing with the page title. */
-@media (max-width: 720px) {
-  .dash-topbar > .badge {
-    display: none;
-  }
 }
 
 /* ---------- Notification bell (see /js/notifications.js) ---------- */
@@ -328,13 +473,8 @@
   color: var(--text-faint);
 }
 
-/**
- * The bottom padding is the dock's parking space. The dock floats over the
- * page, so without it the last thing on a scrolled page — usually the
- * pagination bar — would sit permanently underneath the glass.
- */
 .dash-content {
-  padding: 2rem 2rem calc(6.5rem + env(safe-area-inset-bottom));
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -369,18 +509,14 @@
 
 /* ---------- Stat cards ---------- */
 /**
- * An icon lives here again. The version removed earlier failed on size, not
- * on principle — a tinted square big enough to be a third of the tile, with
- * the figure squeezed beside it. This one is a 30px mark on the label line,
- * where it works as a colour-coded index into a row of four: you find the
- * revenue tile by its green before you have read a word.
- *
- * Order is label, figure, trend — reading order matching importance, with
- * the figure given the room.
+ * The tinted icon square that used to sit here carried no information — it
+ * repeated the label in pictogram form and took a third of the tile. The
+ * space now goes to the figure and, where one exists, to what that figure
+ * is doing compared with the period before it.
  */
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 1rem;
 }
 
@@ -389,53 +525,12 @@
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
-  padding: 1.125rem 1.25rem;
 }
 
-/* Hover answers with the border and a shallow lift — enough to read as
-   "this is a control", not enough to make a row of four bounce. */
+/* The flat aesthetic answers hover with the border, not by taking off. */
 .stat-card:hover {
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-2px);
 }
-
-.stat-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.625rem;
-  /* Clears the chevron on narrow tiles. */
-  padding-right: 1rem;
-}
-
-.stat-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-md);
-  flex-shrink: 0;
-  /* Both fall back to the brand accent when a tile declares no colour. */
-  color: var(--stat-accent, var(--primary-600));
-  background-color: var(--stat-accent-bg, var(--primary-50));
-  transition: transform var(--speed) var(--ease);
-}
-
-.stat-card:hover .stat-icon {
-  transform: scale(1.08);
-}
-
-/**
- * The accent is set per tile with data-accent, so the palette stays in the
- * stylesheet and the markup only names a meaning: money is success, a
- * warning is a warning. Anything unlabelled inherits the brand colour.
- */
-.stat-card[data-accent='success'] { --stat-accent: var(--success-500); --stat-accent-bg: var(--success-50); }
-.stat-card[data-accent='warning'] { --stat-accent: var(--warning-500); --stat-accent-bg: var(--warning-50); }
-.stat-card[data-accent='danger']  { --stat-accent: var(--danger-500);  --stat-accent-bg: var(--danger-50); }
-.stat-card[data-accent='info']    { --stat-accent: var(--info-500);    --stat-accent-bg: var(--info-50); }
 
 /* Anchor targets clear the sticky topbar instead of hiding behind it. */
 [id] {
@@ -571,342 +666,35 @@ a.stat-card:focus-visible::after {
   }
 }
 
-/* Tabular figures so a row of tiles doesn't jitter as counts roll up. */
 .stat-value {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
-  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
 }
 
 .stat-label {
   font-size: 0.8125rem;
-  font-weight: 600;
   color: var(--text-muted);
-  line-height: 1.25;
 }
 
-/* ============================================================
-   Dashboard widgets (see /js/widgets.js)
-
-   The KPI row answers "how are we doing"; these answer "what needs me
-   now". Every one is built from an endpoint the page already had access
-   to, and every row in them is a link into the screen where the work
-   actually happens — a dashboard that can only be read is a poster.
-   ============================================================ */
-
-.widget-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1rem;
-  align-items: start;
-}
-
-@media (min-width: 1080px) {
-  .widget-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  /* A panel that needs the whole row takes it outright. */
-  .widget--wide {
-    grid-column: 1 / -1;
-  }
-}
-
-.widget {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-  padding: 1.125rem 1.25rem 1.25rem;
-}
-
-.widget-head {
-  display: flex;
+/* ---------- Responsive ---------- */
+/**
+ * Below this width the sidebar becomes a drawer that slides in over the
+ * page. The previous wrapping chip bar worked, but with seven nav items it
+ * ate most of a phone screen before any content appeared.
+ */
+.nav-toggle {
+  display: none;
   align-items: center;
-  gap: 0.625rem;
-}
-
-.widget-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin: 0;
-}
-
-.widget-title svg {
-  color: var(--text-faint);
-  flex-shrink: 0;
-}
-
-.widget-link {
-  margin-left: auto;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.125rem;
-  transition: color var(--speed-fast) ease;
-}
-
-.widget-link:hover {
-  color: var(--primary-600);
-  text-decoration: none;
-}
-
-.widget-link svg {
-  transition: transform var(--speed) var(--ease);
-}
-
-.widget-link:hover svg {
-  transform: translateX(2px);
-}
-
-.widget-empty {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 0;
-  font-size: 0.875rem;
-  color: var(--text-faint);
-}
-
-/* "Nothing to show" and "could not load" are different news. */
-.widget-empty.is-error {
-  color: var(--warning-500);
-}
-
-.widget-empty svg {
-  flex-shrink: 0;
-}
-
-/* ---------- Pipeline: where every open order currently sits ---------- */
-
-.pipeline {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
-  gap: 0.5rem;
-}
-
-.pipeline-stage {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  padding: 0.75rem 0.75rem 0.6875rem;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background-color: var(--bg);
-  color: var(--text);
-  /* The tone lives on the top edge, so four stages read as one strip of
-     progress rather than four differently coloured cards. */
-  border-top: 2px solid var(--stage-tone, var(--border-strong));
-  transition: background-color var(--speed-fast) ease, border-color var(--speed-fast) ease,
-    transform var(--speed-fast) var(--ease);
-}
-
-.pipeline-stage:hover {
   background-color: var(--surface);
-  border-color: var(--border-strong);
-  border-top-color: var(--stage-tone, var(--border-strong));
-  color: var(--text);
-  text-decoration: none;
-  transform: translateY(-1px);
-}
-
-.pipeline-stage[data-tone='warning'] { --stage-tone: var(--warning-500); }
-.pipeline-stage[data-tone='info']    { --stage-tone: var(--info-500); }
-.pipeline-stage[data-tone='success'] { --stage-tone: var(--success-500); }
-.pipeline-stage[data-tone='muted']   { --stage-tone: var(--border-strong); }
-
-.pipeline-count {
-  font-size: 1.25rem;
-  font-weight: 800;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-
-.pipeline-name {
-  font-size: 0.75rem;
-  font-weight: 600;
   color: var(--text-muted);
-  line-height: 1.25;
-}
-
-/* ---------- Sparkline: revenue per day over the last week ---------- */
-
-.spark {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.375rem;
-  height: 92px;
-}
-
-.spark-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.375rem;
-  height: 100%;
-  min-width: 0;
-}
-
-.spark-bar {
-  width: 100%;
-  border-radius: var(--radius-sm) var(--radius-sm) 2px 2px;
-  background-color: var(--primary-500);
-  opacity: 0.32;
-  /* Grows from the axis on load; the height itself is set inline. */
-  transform-origin: bottom;
-  animation: spark-grow 0.55s var(--ease) backwards;
-  transition: opacity var(--speed-fast) ease;
-}
-
-.spark-col:hover .spark-bar {
-  opacity: 0.62;
-}
-
-/* Today is the bar the reader is looking for. */
-.spark-col[data-today] .spark-bar {
-  opacity: 1;
-}
-
-.spark-day {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--text-faint);
-  white-space: nowrap;
-}
-
-.spark-col[data-today] .spark-day {
-  color: var(--primary-600);
-}
-
-@keyframes spark-grow {
-  from { transform: scaleY(0); }
-}
-
-.spark-total {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  font-size: 1.375rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-
-.spark-total small {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0;
-}
-
-/* ---------- Row lists: inventory alerts, recent activity, bench queue ---------- */
-
-.mini-list {
-  display: flex;
-  flex-direction: column;
-  /* Negative margin lets each row's hover run the full panel width. */
-  margin: 0 -0.5rem;
-}
-
-.mini-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5625rem 0.5rem;
-  border-radius: var(--radius-md);
-  color: var(--text);
-  transition: background-color var(--speed-fast) ease;
-}
-
-.mini-row + .mini-row {
-  border-top: 1px solid var(--border);
-}
-
-.mini-row:hover {
-  background-color: var(--bg);
-  color: var(--text);
-  text-decoration: none;
-  /* The divider would cut through the hover tint of the row below it. */
-  border-top-color: transparent;
-}
-
-.mini-main {
-  min-width: 0;
-  flex: 1;
-}
-
-.mini-name {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1.35;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mini-meta {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  line-height: 1.35;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mini-trail {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  text-align: right;
+  cursor: pointer;
   flex-shrink: 0;
-}
-
-.mini-amount {
-  font-size: 0.875rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.mini-time {
-  font-size: 0.75rem;
-  color: var(--text-faint);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Stock remaining, as a proportion of the level it should be restocked at. */
-.stock-bar {
-  width: 56px;
-  height: 5px;
-  border-radius: 999px;
-  background-color: var(--border);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.stock-bar span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background-color: var(--warning-500);
-}
-
-/* Nothing left means nothing to draw, so the label carries the severity
-   rather than the bar faking a fill it does not have. */
-.mini-meta.is-critical {
-  color: var(--danger-500);
-  font-weight: 600;
 }
 
 /* ---------- Command palette ---------- */
@@ -1059,12 +847,6 @@ a.stat-card:focus-visible::after {
   color: var(--text);
 }
 
-/* The button is a flex row, so the glyph shrinks to nothing the moment the
-   row runs out of room — which is exactly what the phone rule below causes. */
-.cmdk-trigger svg {
-  flex-shrink: 0;
-}
-
 /* On phones the label and hint go; the glyph alone opens it. */
 @media (max-width: 720px) {
   .cmdk-trigger span,
@@ -1073,7 +855,105 @@ a.stat-card:focus-visible::after {
   }
 }
 
+/* Desktop counterpart to .nav-toggle: collapses the sidebar to a rail. */
+.rail-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color var(--speed-fast) ease, border-color var(--speed-fast) ease,
+    color var(--speed-fast) ease;
+}
+
+.rail-toggle:hover {
+  background-color: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* On phones the drawer toggle owns this job instead. */
 @media (max-width: 860px) {
+  .rail-toggle {
+    display: none;
+  }
+}
+
+.nav-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 60;
+}
+
+@media (max-width: 860px) {
+  .dash-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .dash-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(280px, 84vw);
+    z-index: 70;
+    transform: translateX(-100%);
+    transition: transform var(--speed) var(--ease);
+    overflow-y: auto;
+  }
+
+  .dash-sidebar.is-open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .nav-scrim.is-open {
+    display: block;
+  }
+
+  .dash-nav a {
+    padding: 0.625rem 0.875rem;
+  }
+
+  .dash-nav .nav-soon {
+    display: none;
+  }
+
+  .dash-sidebar-footer {
+    border-top: 1px solid #1f2937;
+    padding-top: 0.875rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .dash-user {
+    padding: 0.375rem 0.625rem;
+  }
+
+  .dash-user-role {
+    display: block; 
+  }
+
+  .btn-logout {
+    width: auto;
+    padding: 0.5rem 0.875rem;
+  }
+
   .dash-topbar,
   .dash-content {
     padding-left: 1rem;

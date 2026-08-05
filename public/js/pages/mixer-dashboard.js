@@ -1,8 +1,7 @@
-/** Mixer dashboard extras: live production counts and the current bench. */
+/** Mixer dashboard extras: live production counts. */
 import { api } from '/js/api.js';
 import { statSkeleton } from '/js/skeleton.js';
 import { countUp } from '/js/count-up.js';
-import { mount, mixBench } from '/js/widgets.js';
 
 async function loadStats() {
   const clearSkeleton = statSkeleton();
@@ -18,13 +17,4 @@ async function loadStats() {
   }
 }
 
-/** The jobs themselves, not just how many — this is the day's actual work. */
-function loadBench() {
-  mount('[data-widget="bench"]', async () => {
-    const { data } = await api('/api/mixing/requests?status=active&limit=6');
-    return mixBench(data.requests);
-  });
-}
-
 loadStats();
-loadBench();
