@@ -12,26 +12,6 @@
 </head>
 <body>
   <div class="dash-layout">
-    <aside class="dash-sidebar">
-      <a href="/admin" class="brand" data-brand-link>
-        <img src="/images/logo.png" alt="" class="brand-logo" />
-        <span>Flavor &amp; Color</span>
-      </a>
-
-      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
-
-      <div class="dash-sidebar-footer">
-        <div class="dash-user">
-          <span class="dash-user-avatar" data-user-initials></span>
-          <div>
-            <div class="dash-user-name" data-user-name></div>
-            <div class="dash-user-role" data-user-role></div>
-          </div>
-        </div>
-        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
-      </div>
-    </aside>
-
     <div class="dash-main">
       <header class="dash-topbar">
         <h1>Admin Console</h1>
@@ -45,26 +25,45 @@
         </section>
 
         <section class="stat-grid" aria-label="Business overview">
-          <a class="card stat-card" href="/admin/reports" title="Open the sales report">
+          <a class="card stat-card" data-accent="success" href="/admin/reports" title="Open the sales report">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="banknote" data-icon-size="17"></span>
+              <span class="stat-label">Revenue This Month</span>
+            </div>
             <div class="stat-value" data-stat="revenueThisMonth">—</div>
-            <div class="stat-label">Revenue This Month</div>
             <div class="stat-meta" data-meta="revenueThisMonth"></div>
           </a>
           <a class="card stat-card" href="/orders" title="View all orders">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="package" data-icon-size="17"></span>
+              <span class="stat-label">Total Orders</span>
+            </div>
             <div class="stat-value" data-stat="totalOrders">—</div>
-            <div class="stat-label">Total Orders</div>
             <div class="stat-meta" data-meta="totalOrders"></div>
           </a>
-          <a class="card stat-card" href="/admin/users" title="Manage users and roles">
+          <a class="card stat-card" data-accent="info" href="/admin/users" title="Manage users and roles">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="users" data-icon-size="17"></span>
+              <span class="stat-label">Registered Users</span>
+            </div>
             <div class="stat-value" data-stat="registeredUsers">—</div>
-            <div class="stat-label">Registered Users</div>
             <div class="stat-meta" data-meta="registeredUsers"></div>
           </a>
-          <a class="card stat-card" href="/admin/products?stock=alert" title="View low and out-of-stock products">
+          <a class="card stat-card" data-accent="warning" href="/admin/products?stock=alert" title="View low and out-of-stock products">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="alert-triangle" data-icon-size="17"></span>
+              <span class="stat-label">Low / Out of Stock</span>
+            </div>
             <div class="stat-value" data-stat="stockAlerts">—</div>
-            <div class="stat-label">Low / Out of Stock</div>
             <div class="stat-meta" data-meta="stockAlerts"></div>
           </a>
+        </section>
+
+        <section class="widget-grid" aria-label="Operations">
+          <div class="card widget" data-widget="revenue"></div>
+          <div class="card widget" data-widget="pipeline"></div>
+          <div class="card widget" data-widget="alerts"></div>
+          <div class="card widget" data-widget="recent"></div>
         </section>
 
         <section class="card">

@@ -8,10 +8,13 @@
  *
  * Two rules shape it:
  *
- * 1. Destinations come from the same per-role nav config the sidebar uses,
+ * 1. Destinations come from the same per-role config the dock is built from,
  *    so the palette can never surface a page the server would refuse. It is
  *    a faster route to what you already have, never a way to discover more.
- * 2. Actions delegate to the real controls in the sidebar rather than
+ *    That includes the dock's filtered views, which is where the palette
+ *    earns its keep: "ready" reaches Orders — Ready for Pickup in one line,
+ *    where the dock needs a click and then a choice.
+ * 2. Actions delegate to the real controls in the dock rather than
  *    reimplementing them, so toggling the theme from here and toggling it
  *    from the button can't drift apart.
  *
@@ -21,7 +24,7 @@
  */
 import { icon } from '/js/icons.js';
 import { escapeHtml } from '/js/format.js';
-import { navItemsFor } from '/js/nav.js';
+import { dockDestinations } from '/js/nav.js';
 
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 
@@ -35,7 +38,6 @@ const els = {};
 /** Actions delegate to the controls already in the shell — see rule 2. */
 function actionItems() {
   const dark = document.documentElement.dataset.theme === 'dark';
-  const collapsed = document.documentElement.dataset.rail === '1';
 
   return [
     {
@@ -44,13 +46,6 @@ function actionItems() {
       keywords: 'theme dark light appearance',
       icon: dark ? 'sun' : 'moon',
       run: () => document.querySelector('.theme-toggle')?.click(),
-    },
-    {
-      group: 'Actions',
-      label: collapsed ? 'Expand sidebar' : 'Collapse sidebar',
-      keywords: 'sidebar rail collapse expand navigation',
-      icon: 'panel-left',
-      run: () => document.querySelector('.rail-toggle')?.click(),
     },
     {
       group: 'Actions',
@@ -63,7 +58,7 @@ function actionItems() {
 }
 
 function buildItems(role) {
-  const destinations = navItemsFor(role).map((item) => ({
+  const destinations = dockDestinations(role).map((item) => ({
     group: 'Go to',
     label: item.label,
     keywords: item.href,
@@ -142,8 +137,8 @@ const modalIsOpen = () => Boolean(document.querySelector('.modal-backdrop:not([h
 function open() {
   if (isOpen() || modalIsOpen()) return;
   previouslyFocused = document.activeElement;
-  // Rebuilt on open so the action labels reflect the current theme and
-  // sidebar state rather than whatever they were at page load.
+  // Rebuilt on open so the action labels reflect the current theme rather
+  // than whatever it was at page load.
   items = buildItems(els.backdrop.dataset.role);
   els.input.value = '';
   matches = items;

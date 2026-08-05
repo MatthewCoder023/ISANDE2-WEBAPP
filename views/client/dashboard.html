@@ -12,26 +12,6 @@
 </head>
 <body>
   <div class="dash-layout">
-    <aside class="dash-sidebar">
-      <a href="/client" class="brand" data-brand-link>
-        <img src="/images/logo.png" alt="" class="brand-logo" />
-        <span>Flavor &amp; Color</span>
-      </a>
-
-      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
-
-      <div class="dash-sidebar-footer">
-        <div class="dash-user">
-          <span class="dash-user-avatar" data-user-initials></span>
-          <div>
-            <div class="dash-user-name" data-user-name></div>
-            <div class="dash-user-role" data-user-role></div>
-          </div>
-        </div>
-        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
-      </div>
-    </aside>
-
     <div class="dash-main">
       <header class="dash-topbar">
         <h1>Customer Dashboard</h1>
@@ -45,21 +25,34 @@
         </section>
 
         <section class="stat-grid" aria-label="Account overview">
-          <a class="card stat-card" href="/client/orders?status=active" title="View your active orders">
+          <a class="card stat-card" data-accent="info" href="/client/orders?status=active" title="View your active orders">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="package" data-icon-size="17"></span>
+              <span class="stat-label">Active Orders</span>
+            </div>
             <div class="stat-value" data-stat="activeOrders">—</div>
-            <div class="stat-label">Active Orders</div>
             <div class="stat-meta" data-meta="activeOrders"></div>
           </a>
-          <a class="card stat-card" href="/client/orders?status=completed" title="View your completed orders">
+          <a class="card stat-card" data-accent="success" href="/client/orders?status=completed" title="View your completed orders">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="check-check" data-icon-size="17"></span>
+              <span class="stat-label">Completed Orders</span>
+            </div>
             <div class="stat-value" data-stat="completedOrders">—</div>
-            <div class="stat-label">Completed Orders</div>
             <div class="stat-meta" data-meta="completedOrders"></div>
           </a>
-          <a class="card stat-card" href="/client/colors#my-mixes" title="View your custom mix requests">
+          <a class="card stat-card" data-accent="warning" href="/client/colors#my-mixes" title="View your custom mix requests">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="flask-conical" data-icon-size="17"></span>
+              <span class="stat-label">Active Custom Mixes</span>
+            </div>
             <div class="stat-value" data-stat="activeMixes">—</div>
-            <div class="stat-label">Active Custom Mixes</div>
             <div class="stat-meta" data-meta="activeMixes"></div>
           </a>
+        </section>
+
+        <section class="widget-grid" aria-label="Your recent orders">
+          <div class="card widget widget--wide" data-widget="recent"></div>
         </section>
 
         <section class="card banner-card">

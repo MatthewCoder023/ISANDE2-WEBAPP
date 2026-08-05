@@ -10,6 +10,7 @@
  * what genuinely happened instead of manufacturing a figure.
  */
 import { escapeHtml } from '/js/format.js';
+import { icon } from '/js/icons.js';
 
 /** Rounds toward a whole percent, treating a hair either side of 0 as flat. */
 function direction(percent) {
@@ -18,7 +19,12 @@ function direction(percent) {
   return 'flat';
 }
 
-const ARROW = { up: '↑', down: '↓', flat: '' };
+/**
+ * From the icon set rather than the arrow characters this used to print:
+ * "↑" renders in whatever fallback font the system picks, which on Windows
+ * is visibly not Inter and sits at the wrong weight beside the figure.
+ */
+const ARROW = { up: icon('arrow-up', 12), down: icon('arrow-down', 12), flat: '' };
 
 /**
  * @param {number} current

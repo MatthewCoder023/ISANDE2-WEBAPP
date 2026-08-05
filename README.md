@@ -234,10 +234,16 @@ before completion. Completed/cancelled requests form the production log.
 | `/transactions` | Cashier + Admin — payment log |
 | `/dashboard` | Redirects any logged-in user to their dashboard |
 
-The sidebar on every authenticated page is rendered from a single per-role
-nav config (`public/js/nav.js`) — pages shared by cashier and admin adapt
-automatically. This is display-only; the page routes above are enforced
-server-side.
+Navigation on every authenticated page is a floating dock at the bottom of
+the screen (`public/js/dock.js`), rendered from a single per-role config
+(`public/js/nav.js`) that the command palette shares — pages shared by
+cashier and admin adapt automatically. Tiles group by module; a tile with
+more than one view opens a menu of them, and the filtered entries are
+ordinary query-string links the list pages already understand.
+
+Every dock href is checked against that role's allow-list before it renders,
+so the dock can only ever offer pages the role already has. This is still
+display-only: the page routes above are enforced server-side.
 
 ## Roadmap
 

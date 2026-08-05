@@ -7,6 +7,7 @@ import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
 import { escapeHtml, formatPrice, formatDateTime } from '/js/format.js';
 import { setBusy } from '/js/form-utils.js';
+import { icon } from '/js/icons.js';
 import { STATUS_BADGES, PAYMENT_LABELS, buildTimeline } from '/js/orders-ui.js';
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
@@ -28,7 +29,7 @@ function renderTimeline(order) {
     .map(
       (step) => `
       <li class="timeline-step ${STATE_CLASSES[step.state] || ''}">
-        <span class="timeline-dot">${step.state === 'done' || step.state === 'cancelled' ? '✓' : ''}</span>
+        <span class="timeline-dot">${step.state === 'done' || step.state === 'cancelled' ? icon('check', 12) : ''}</span>
         <div class="timeline-label">${escapeHtml(step.label)}</div>
         <div class="timeline-desc">${escapeHtml(step.description)}</div>
         ${step.at ? `<div class="timeline-time">${formatDateTime(step.at)}</div>` : ''}

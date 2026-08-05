@@ -12,26 +12,6 @@
 </head>
 <body>
   <div class="dash-layout">
-    <aside class="dash-sidebar">
-      <a href="/cashier" class="brand" data-brand-link>
-        <img src="/images/logo.png" alt="" class="brand-logo" />
-        <span>Flavor &amp; Color</span>
-      </a>
-
-      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
-
-      <div class="dash-sidebar-footer">
-        <div class="dash-user">
-          <span class="dash-user-avatar" data-user-initials></span>
-          <div>
-            <div class="dash-user-name" data-user-name></div>
-            <div class="dash-user-role" data-user-role></div>
-          </div>
-        </div>
-        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
-      </div>
-    </aside>
-
     <div class="dash-main">
       <header class="dash-topbar">
         <h1>Sales Desk</h1>
@@ -45,26 +25,44 @@
         </section>
 
         <section class="stat-grid" aria-label="Sales overview">
-          <a class="card stat-card" href="/transactions" title="View today's transactions">
+          <a class="card stat-card" data-accent="success" href="/transactions" title="View today's transactions">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="banknote" data-icon-size="17"></span>
+              <span class="stat-label">Sales Today</span>
+            </div>
             <div class="stat-value" data-stat="salesToday">—</div>
-            <div class="stat-label">Sales Today</div>
             <div class="stat-meta" data-meta="salesToday"></div>
           </a>
-          <a class="card stat-card" href="/orders?status=pending_verification" title="Review payments awaiting verification">
+          <a class="card stat-card" data-accent="warning" href="/orders?status=pending_verification" title="Review payments awaiting verification">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="shield" data-icon-size="17"></span>
+              <span class="stat-label">Awaiting Verification</span>
+            </div>
             <div class="stat-value" data-stat="awaitingVerification">—</div>
-            <div class="stat-label">Awaiting Verification</div>
             <div class="stat-meta" data-meta="awaitingVerification"></div>
           </a>
-          <a class="card stat-card" href="/orders?status=ready" title="View orders ready for pickup">
+          <a class="card stat-card" data-accent="info" href="/orders?status=ready" title="View orders ready for pickup">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="package" data-icon-size="17"></span>
+              <span class="stat-label">Ready for Pickup</span>
+            </div>
             <div class="stat-value" data-stat="readyOrders">—</div>
-            <div class="stat-label">Ready for Pickup</div>
             <div class="stat-meta" data-meta="readyOrders"></div>
           </a>
           <a class="card stat-card" href="/transactions" title="View all transactions">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="credit-card" data-icon-size="17"></span>
+              <span class="stat-label">Transactions Today</span>
+            </div>
             <div class="stat-value" data-stat="transactionsToday">—</div>
-            <div class="stat-label">Transactions Today</div>
             <div class="stat-meta" data-meta="transactionsToday"></div>
           </a>
+        </section>
+
+        <section class="widget-grid" aria-label="Today's work">
+          <div class="card widget widget--wide" data-widget="pipeline"></div>
+          <div class="card widget" data-widget="recent"></div>
+          <div class="card widget" data-widget="alerts"></div>
         </section>
 
         <section class="card">

@@ -25,6 +25,21 @@
   text-decoration: none;
 }
 
+/* The same ring as .form-input:focus, so keyboard focus looks like one
+   idea across controls instead of per-component improvisation. */
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--primary-100);
+}
+
+/* A flex row shrinks its glyph before its text; icons must never collapse. */
+.btn svg,
+.btn [data-icon] svg {
+  flex-shrink: 0;
+  width: var(--icon-md);
+  height: var(--icon-md);
+}
+
 .btn:active {
   transform: translateY(0) scale(0.97);
 }
@@ -273,18 +288,27 @@
 }
 
 /* ---------- Cards ---------- */
+/**
+ * Depth comes from the border first and the shadow second — a page of cards
+ * each casting a real shadow reads as clutter, not hierarchy. The hover
+ * lift below is deliberately not on .card: a card you cannot click should
+ * not move when the pointer crosses it, so only the interactive ones
+ * (.stat-card, .widget rows, .choice-card) opt in.
+ */
 .card {
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 1.25rem;
-  transition: box-shadow var(--speed) var(--ease), transform var(--speed) var(--ease);
+  transition: box-shadow var(--speed) var(--ease), border-color var(--speed-fast) ease,
+    transform var(--speed) var(--ease);
 }
 
 .card-title {
   font-size: 1.0625rem;
   font-weight: 700;
+  letter-spacing: -0.015em;
   margin-bottom: 0.25rem;
 }
 
@@ -436,7 +460,11 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
-  background-color: var(--bg);
+  /* Tinted rather than opaque: a sticky header sliding over rows should
+     read as the same glass as the topbar above it. */
+  background-color: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
@@ -1069,6 +1097,24 @@ tr:hover .swatch,
   vertical-align: 1.5px;
 }
 
+/**
+ * Standalone status dot — the badge's dot without the badge, for rows that
+ * already carry their status in words and only need the colour.
+ */
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: var(--text-faint);
+}
+
+.status-success { background-color: var(--success-500); }
+.status-warning { background-color: var(--warning-500); }
+.status-danger  { background-color: var(--danger-500); }
+.status-info    { background-color: var(--info-500); }
+
 /* ---------- Numeric table columns ---------- */
 .table th.num,
 .table td.num {
@@ -1168,7 +1214,10 @@ tr:hover .swatch,
   display: flex;
   flex-direction: column;
   background-color: var(--surface);
-  border-radius: var(--radius-lg);
+  /* A dialog floats furthest from the page, so it takes the softest corner
+     in the ladder and a real border to hold its edge on a dark backdrop. */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   animation: modal-pop-in 0.35s var(--ease);
   outline: none; /* the dialog receives programmatic focus on open */
@@ -1189,20 +1238,35 @@ tr:hover .swatch,
 
 .modal-title {
   font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
 }
 
 .modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
   background: none;
   border: none;
+  border-radius: var(--radius-md);
   font-size: 1.375rem;
   line-height: 1;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 0.25rem;
+  transition: background-color var(--speed-fast) ease, color var(--speed-fast) ease;
 }
 
 .modal-close:hover {
+  background-color: var(--bg);
   color: var(--text);
+}
+
+.modal-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-100);
 }
 
 .modal-body {

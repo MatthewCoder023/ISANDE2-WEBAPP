@@ -12,26 +12,6 @@
 </head>
 <body>
   <div class="dash-layout">
-    <aside class="dash-sidebar">
-      <a href="/mixer" class="brand" data-brand-link>
-        <img src="/images/logo.png" alt="" class="brand-logo" />
-        <span>Flavor &amp; Color</span>
-      </a>
-
-      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
-
-      <div class="dash-sidebar-footer">
-        <div class="dash-user">
-          <span class="dash-user-avatar" data-user-initials></span>
-          <div>
-            <div class="dash-user-name" data-user-name></div>
-            <div class="dash-user-role" data-user-role></div>
-          </div>
-        </div>
-        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
-      </div>
-    </aside>
-
     <div class="dash-main">
       <header class="dash-topbar">
         <h1>Mixing Station</h1>
@@ -45,26 +25,42 @@
         </section>
 
         <section class="stat-grid" aria-label="Production overview">
-          <a class="card stat-card" href="/mixing?status=queued" title="View the queued mixes">
+          <a class="card stat-card" data-accent="warning" href="/mixing?status=queued" title="View the queued mixes">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="clipboard-list" data-icon-size="17"></span>
+              <span class="stat-label">Queued Mixes</span>
+            </div>
             <div class="stat-value" data-stat="queued">—</div>
-            <div class="stat-label">Queued Mixes</div>
             <div class="stat-meta" data-meta="queued"></div>
           </a>
-          <a class="card stat-card" href="/mixing?status=mixing" title="View mixes on the bench">
+          <a class="card stat-card" data-accent="info" href="/mixing?status=mixing" title="View mixes on the bench">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="flask-conical" data-icon-size="17"></span>
+              <span class="stat-label">On the Bench</span>
+            </div>
             <div class="stat-value" data-stat="mixing">—</div>
-            <div class="stat-label">On the Bench</div>
             <div class="stat-meta" data-meta="mixing"></div>
           </a>
-          <a class="card stat-card" href="/mixing/log" title="Open the production log">
+          <a class="card stat-card" data-accent="success" href="/mixing/log" title="Open the production log">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="check-check" data-icon-size="17"></span>
+              <span class="stat-label">Completed Today</span>
+            </div>
             <div class="stat-value" data-stat="completedToday">—</div>
-            <div class="stat-label">Completed Today</div>
             <div class="stat-meta" data-meta="completedToday"></div>
           </a>
           <a class="card stat-card" href="/mixing/formulas" title="Browse saved colour formulas">
+            <div class="stat-head">
+              <span class="stat-icon" data-icon="droplets" data-icon-size="17"></span>
+              <span class="stat-label">Saved Formulas</span>
+            </div>
             <div class="stat-value" data-stat="formulas">—</div>
-            <div class="stat-label">Saved Formulas</div>
             <div class="stat-meta" data-meta="formulas"></div>
           </a>
+        </section>
+
+        <section class="widget-grid" aria-label="Production">
+          <div class="card widget widget--wide" data-widget="bench"></div>
         </section>
 
         <section class="card">
