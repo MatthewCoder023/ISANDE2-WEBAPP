@@ -53,17 +53,29 @@ const NAV_CONFIG = {
   ],
 };
 
+/**
+ * The destinations one role may reach. Shared with the command palette so
+ * it can only ever offer pages that role's sidebar already offers — the
+ * palette must never become a way to discover a page the server refuses.
+ */
+export function navItemsFor(role) {
+  return (NAV_CONFIG[role] || []).filter((item) => !item.soon);
+}
+
 export function renderNav(container, role) {
   const items = NAV_CONFIG[role] || [];
   const currentPath = window.location.pathname;
 
+  // The label is wrapped so the collapsed rail can hide it and leave the
+  // icon; `title` then carries the name for the tooltip in that state.
   container.innerHTML = items
     .map((item) => {
+      const label = `<span class="nav-label">${item.label}</span>`;
       if (item.soon) {
-        return `<a href="#" aria-disabled="true">${icon(item.icon)} ${item.label} <span class="nav-soon">Soon</span></a>`;
+        return `<a href="#" aria-disabled="true" title="${item.label}">${icon(item.icon)} ${label} <span class="nav-soon">Soon</span></a>`;
       }
       const active = item.href === currentPath ? ' class="is-active"' : '';
-      return `<a href="${item.href}"${active}>${icon(item.icon)} ${item.label}</a>`;
+      return `<a href="${item.href}"${active} title="${item.label}">${icon(item.icon)} ${label}</a>`;
     })
     .join('');
 }
