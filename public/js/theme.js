@@ -1,23 +1,33 @@
 /**
- * Applies the color theme BEFORE first paint so pages never flash the
- * wrong mode. Loaded as a classic (render-blocking) script in <head> —
- * an external file, so the production CSP stays untouched.
+ * Applies saved display preferences BEFORE first paint, so pages never
+ * flash the wrong mode or a sidebar that immediately collapses. Loaded as
+ * a classic (render-blocking) script in <head> — an external file, so the
+ * production CSP stays untouched.
  *
- * Precedence: saved choice > operating-system preference > light.
+ * Theme precedence: saved choice > operating-system preference > light.
  * The invoice page intentionally omits this script (print documents
- * stay light).
+ * stay light, and have no sidebar).
  */
 (function () {
-  var stored = null;
-  try {
-    stored = localStorage.getItem('fc_theme');
-  } catch (err) {
-    /* storage unavailable — fall back to the system preference */
-  }
+  var read = function (key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (err) {
+      return null; /* private mode — fall back to defaults */
+    }
+  };
+
+  var stored = read('fc_theme');
   var theme =
     stored ||
     (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'dark'
       : 'light');
   document.documentElement.dataset.theme = theme;
+
+  // Stamped on the root rather than the layout because this runs before
+  // <body> exists; the CSS keys the rail off the root attribute.
+  if (read('fc_rail') === '1') {
+    document.documentElement.dataset.rail = '1';
+  }
 })();
