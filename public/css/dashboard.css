@@ -154,7 +154,10 @@
   :root[data-rail='1'] .dash-sidebar {
     padding-left: 0.625rem;
     padding-right: 0.625rem;
-    overflow: hidden;
+    /* Only the horizontal axis: the shorthand would also cancel the
+       sidebar's own overflow-y, and a rail still has to scroll when the
+       nav is taller than the viewport. */
+    overflow-x: hidden;
   }
 
   /* Everything that is words rather than a glyph steps aside. */
