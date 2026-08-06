@@ -5,13 +5,6 @@
  */
 import { icon } from '/js/icons.js';
 
-export const DASHBOARD_PATHS = {
-  client: '/client',
-  paint_mixer: '/mixer',
-  cashier: '/cashier',
-  admin: '/admin',
-};
-
 export const ROLE_BADGE_CLASS = {
   client: 'badge-primary',
   paint_mixer: 'badge-warning',

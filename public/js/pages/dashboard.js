@@ -9,7 +9,7 @@
 import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
 import { getCurrentUser } from '/js/session.js';
-import { renderNav, DASHBOARD_PATHS, ROLE_BADGE_CLASS } from '/js/nav.js';
+import { renderNav, ROLE_BADGE_CLASS } from '/js/nav.js';
 import { hydrateIcons, icon } from '/js/icons.js';
 import { hydrateIllustrations } from '/js/illustrations.js';
 import { syncReadyMixes } from '/js/cart.js';
@@ -64,7 +64,7 @@ function setupBackButton(userRole) {
   button.setAttribute('aria-label', 'Go back to the previous page');
   button.innerHTML = `${icon('arrow-left', 16)}`;
 
-  const fallbackPath = DASHBOARD_PATHS[userRole] || '/';
+  const fallbackPath = '/dashboard';
   button.addEventListener('click', () => {
     if (window.history.length > 1) {
       window.history.back();
@@ -213,7 +213,7 @@ async function init() {
   setupCommandPalette(user.role);
 
   document.querySelectorAll('[data-brand-link]').forEach((el) => {
-    el.setAttribute('href', DASHBOARD_PATHS[user.role] || '/');
+    el.setAttribute('href', '/dashboard');
   });
 
   document.querySelectorAll('[data-user-name]').forEach((el) => {
