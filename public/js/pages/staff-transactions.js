@@ -54,7 +54,7 @@ function renderTable(transactions) {
         <td class="num">${formatPrice(t.amountTendered)}</td>
         <td class="num">${formatPrice(t.change)}</td>
         <td>${t.receivedBy ? escapeHtml(t.receivedBy.fullName) : '—'}</td>
-        <td><a class="btn btn-outline btn-sm" href="/invoice?order=${encodeURIComponent(t.order)}" target="_blank" rel="noopener">Invoice</a></td>
+        <td><a class="btn btn-outline btn-sm" href="/invoice?order=${encodeURIComponent(t.order)}" target="_blank" rel="noopener">View Sales Invoice</a></td>
       </tr>`
     )
     .join('');
