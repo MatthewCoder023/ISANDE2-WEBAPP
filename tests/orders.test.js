@@ -84,6 +84,17 @@ describe('order visibility', () => {
     expect(ids).not.toContain(others.orderId);
   });
 
+  it('lets staff download invoices for any customer order', async () => {
+    const product = await createProduct();
+    const orderRes = await agents.client.post('/api/orders').send({
+      items: [{ productId: product.id, quantity: 1 }],
+    });
+
+    const res = await agents.admin.get(`/api/orders/${orderRes.body.data.order.id}/invoice.pdf`);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('application/pdf');
+  });
+
   async function seedAnotherClientOrder() {
     const { createUser, loginAgent } = require('./helpers');
     await createUser({ email: 'other-client@test.com' });

@@ -67,7 +67,7 @@ function actionButtons(order) {
   const button = (action, label, primary = false) =>
     `<button class="btn ${primary ? 'btn-primary' : 'btn-outline'} btn-sm" data-action="${action}" data-id="${order.id}">${label}</button>`;
 
-  const buttons = [button('view', 'View')];
+  const buttons = [button('view', 'View'), button('invoice', 'Invoice')];
   switch (order.status) {
     case 'pending_payment':
       buttons.push(button('complete', 'Take Payment', true), button('cancel', 'Cancel'));
@@ -274,6 +274,10 @@ tbody.addEventListener('click', async (event) => {
       } catch (error) {
         showToast(error.message, 'error');
       }
+      break;
+    }
+    case 'invoice': {
+      window.location.assign(`/invoice?order=${order.id}`);
       break;
     }
     case 'review':
