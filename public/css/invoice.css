@@ -24,16 +24,6 @@
   padding: 2.25rem;
 }
 
-/* Brand accent: a thin gradient rule across the top of the sheet. */
-.invoice-sheet::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, #4f46e5, #7c3aed, #f59e0b);
-}
 
 /* Faint logo watermark — an <img> so browsers include it when printing. */
 .invoice-watermark {

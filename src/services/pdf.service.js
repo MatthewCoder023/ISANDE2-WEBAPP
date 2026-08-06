@@ -64,14 +64,6 @@ const dateTime = (value) =>
     minute: '2-digit',
   });
 
-/** Brand rule across the head of the page, mirroring the on-screen sheet. */
-function drawAccentBar(doc) {
-  const { width } = doc.page;
-  const gradient = doc.linearGradient(0, 0, width, 0);
-  gradient.stop(0, '#4f46e5').stop(0.5, '#7c3aed').stop(1, '#f59e0b');
-  doc.rect(0, 0, width, 6).fill(gradient);
-}
-
 function drawHeader(doc, settings, order) {
   const top = 46;
 
@@ -273,7 +265,6 @@ async function renderInvoice(order, transaction, { appUrl } = {}) {
     doc.on('error', reject);
   });
 
-  drawAccentBar(doc);
   drawHeader(doc, settings, order);
   drawMeta(doc, order, transaction);
   const afterItems = drawItems(doc, order);
