@@ -344,8 +344,56 @@ function renderInventory(data) {
 /** Current window, as query params. Either trailing days or explicit dates. */
 let windowParams = new URLSearchParams({ days: '30' });
 
+const periodSelect = document.querySelector('#period-select');
+const customRange = document.querySelector('#custom-range');
+const rangeFrom = document.querySelector('#range-from');
+const rangeTo = document.querySelector('#range-to');
+
+const isDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value || '');
+
+/**
+ * Reads the window off the URL, so a link to a report opens the range it
+ * advertises rather than the default month. Explicit dates win over a
+ * trailing window; anything malformed is ignored and the default stands,
+ * because a stale link should still show a working report.
+ *
+ * Written out rather than using applyUrlFilters: the period control also
+ * offers "custom", which the helper would happily accept and then send to
+ * an API that has no such window.
+ */
+function windowFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const from = params.get('from');
+  const to = params.get('to');
+
+  if (isDate(from) && isDate(to) && from <= to) {
+    periodSelect.value = 'custom';
+    customRange.hidden = false;
+    rangeFrom.value = from;
+    rangeTo.value = to;
+    return new URLSearchParams({ from, to });
+  }
+
+  const days = params.get('days');
+  const offered = [...periodSelect.options].some((option) => option.value === days);
+  if (days && offered && days !== 'custom') {
+    periodSelect.value = days;
+    return new URLSearchParams({ days });
+  }
+
+  return new URLSearchParams({ days: '30' });
+}
+
 async function loadReports(params = windowParams) {
   windowParams = params;
+
+  /**
+   * Keep the address bar on the window being shown, so copying the URL
+   * shares this report and not the default one. Replaced rather than
+   * pushed: changing the dropdown is not a place to come back to.
+   */
+  window.history.replaceState(null, '', `${window.location.pathname}?${params}`);
+
   const clearSkeleton = statSkeleton('[data-kpi]');
   tableSkeleton(document.querySelector('#top-products-tbody'), 3, 4);
   tableSkeleton(document.querySelector('#methods-tbody'), 3, 3);
@@ -367,9 +415,7 @@ async function loadReports(params = windowParams) {
   }
 }
 
-const customRange = document.querySelector('#custom-range');
-
-document.querySelector('#period-select').addEventListener('change', (event) => {
+periodSelect.addEventListener('change', (event) => {
   const isCustom = event.target.value === 'custom';
   customRange.hidden = !isCustom;
   // Wait for Apply on a custom range — reloading per keystroke is noise.
@@ -377,8 +423,8 @@ document.querySelector('#period-select').addEventListener('change', (event) => {
 });
 
 document.querySelector('#apply-range').addEventListener('click', () => {
-  const from = document.querySelector('#range-from').value;
-  const to = document.querySelector('#range-to').value;
+  const from = rangeFrom.value;
+  const to = rangeTo.value;
   if (!from || !to) {
     showToast('Pick both a start and an end date.', 'warning');
     return;
@@ -395,4 +441,4 @@ document.querySelector('#export-report').addEventListener('click', () => {
   window.location.assign(`/api/reports/sales/export?${windowParams}`);
 });
 
-loadReports();
+loadReports(windowFromUrl());

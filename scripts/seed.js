@@ -17,7 +17,9 @@ const { PRODUCT_CATEGORIES: CAT } = require('../src/constants/products');
 
 const SEED_USERS = [
   {
-    firstName: 'System',
+    // A person, not a job title: the dashboards greet users by first name,
+    // and "Welcome, System!" is nobody.
+    firstName: 'Alma',
     lastName: 'Administrator',
     email: 'admin@flavorandcolor.com',
     password: 'Admin@1234',
@@ -70,6 +72,19 @@ async function seed() {
   for (const data of SEED_USERS) {
     const exists = await User.findOne({ email: data.email });
     if (exists) {
+      /**
+       * The admin account used to be named "System Administrator", which
+       * left the dashboard greeting people with "Welcome, System!".
+       * Databases seeded before that fix are corrected in place — only the
+       * legacy name, so an account someone has deliberately renamed since
+       * is left alone.
+       */
+      if (exists.firstName === 'System' && data.firstName !== 'System') {
+        exists.firstName = data.firstName;
+        await exists.save();
+        console.log(`rename ${data.email} -> ${data.firstName} ${exists.lastName}`);
+        continue;
+      }
       console.log(`skip   ${data.email} (already exists)`);
       continue;
     }
