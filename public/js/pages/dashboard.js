@@ -9,7 +9,8 @@
 import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
 import { getCurrentUser } from '/js/session.js';
-import { renderNav, DASHBOARD_PATHS, ROLE_BADGE_CLASS } from '/js/nav.js';
+import { renderNav, pathLabel, DASHBOARD_PATHS, ROLE_BADGE_CLASS } from '/js/nav.js';
+import { recordVisit, backTarget, goBack, isHome, clearTrail } from '/js/navigation.js';
 import { hydrateIcons, icon } from '/js/icons.js';
 import { hydrateIllustrations } from '/js/illustrations.js';
 import { syncReadyMixes } from '/js/cart.js';
@@ -52,38 +53,47 @@ function setupThemeToggle() {
 }
 
 /**
- * Sets up the back button in the topbar with role-based fallback path.
+ * Back steps through the app's own trail of pages rather than the browser's
+ * history — see navigation.js for why that distinction matters.
  */
-function setupBackButton(userRole) {
-  const topbar = document.querySelector('.dash-topbar');
-  if (!topbar || topbar.querySelector('.back-button')) return;
-
+function backButton(userRole) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'back-button';
-  button.setAttribute('aria-label', 'Go back to the previous page');
-  button.innerHTML = `${icon('arrow-left', 16)}`;
+  button.innerHTML = icon('arrow-left', 16);
 
-  const fallbackPath = DASHBOARD_PATHS[userRole] || '/';
-  button.addEventListener('click', () => {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.assign(fallbackPath);
-    }
-  });
+  // Naming the destination beats a bare "Go back": it says where the arrow
+  // leads before anyone has to commit to finding out.
+  const { path } = backTarget(userRole);
+  const name = pathLabel(path.split('?')[0], userRole);
+  button.title = name ? `Back to ${name}` : 'Back to the previous page';
+  button.setAttribute('aria-label', button.title);
+
+  button.addEventListener('click', () => goBack(userRole));
+  return button;
+}
+
+/**
+ * Groups the page title with its Back button. The group is built on every
+ * page, Back or no Back, because it is also what keeps a long title from
+ * shoving the search and bell off a narrow screen.
+ */
+function setupTopbarTitle(userRole) {
+  const topbar = document.querySelector('.dash-topbar');
+  if (!topbar || topbar.querySelector('.dash-topbar-title')) return;
 
   const title = topbar.querySelector('h1');
-  if (title) {
-    const titleGroup = document.createElement('div');
-    titleGroup.className = 'dash-topbar-title';
-    titleGroup.appendChild(button);
+  if (!title) return;
 
-    topbar.replaceChild(titleGroup, title);
-    titleGroup.appendChild(title);
-  } else {
-    topbar.prepend(button);
-  }
+  const titleGroup = document.createElement('div');
+  titleGroup.className = 'dash-topbar-title';
+  topbar.replaceChild(titleGroup, title);
+
+  // Home is where Back leads, so on a role's own dashboard there is nothing
+  // for it to do — and reaching past the app for a destination is precisely
+  // how it used to land people on the sign-in page.
+  if (!isHome(userRole)) titleGroup.appendChild(backButton(userRole));
+  titleGroup.appendChild(title);
 }
 
 /**
@@ -193,13 +203,17 @@ async function init() {
   try {
     user = await getCurrentUser();
   } catch {
-    // Session expired mid-visit: send the user back to the landing page.
+    // Session expired mid-visit: the trail belongs to that session, so it
+    // goes with it rather than surviving into whoever signs in next.
+    clearTrail();
     window.location.assign('/');
     return;
   }
 
-  // Set up back button after user is fetched for role-based fallback
-  setupBackButton(user.role);
+  // Only now, with the session confirmed, does this page count as somewhere
+  // Back may return to.
+  recordVisit();
+  setupTopbarTitle(user.role);
 
   const navContainer = document.querySelector('[data-nav]');
   if (navContainer) renderNav(navContainer, user.role);
@@ -212,8 +226,15 @@ async function init() {
   // only ever offer destinations this role already has.
   setupCommandPalette(user.role);
 
+  /**
+   * The logo is the Home control on every page. The markup points it at
+   * /dashboard, which the server forwards to whichever dashboard the signed-in
+   * user owns — so it leads home even before this runs, and never to the
+   * public landing page, which would read as having been signed out.
+   */
   document.querySelectorAll('[data-brand-link]').forEach((el) => {
-    el.setAttribute('href', DASHBOARD_PATHS[user.role] || '/');
+    el.setAttribute('href', DASHBOARD_PATHS[user.role] || '/dashboard');
+    el.setAttribute('title', 'Go to your dashboard');
   });
 
   document.querySelectorAll('[data-user-name]').forEach((el) => {
@@ -270,6 +291,9 @@ async function init() {
     logoutButton.addEventListener('click', async () => {
       try {
         await api('/api/auth/logout', { method: 'POST' });
+        // Signing out is the one exit to the public side, and it takes the
+        // trail with it — the next person to sign in starts from nothing.
+        clearTrail();
         window.location.assign('/');
       } catch (error) {
         showToast(error.message, 'error');

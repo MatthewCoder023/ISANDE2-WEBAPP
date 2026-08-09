@@ -62,6 +62,35 @@ export function navItemsFor(role) {
   return (NAV_CONFIG[role] || []).filter((item) => !item.soon);
 }
 
+/**
+ * Pages that are destinations but not nav entries — you reach them from
+ * somewhere else, so they have no sidebar link to borrow a name from.
+ */
+const EXTRA_LABELS = {
+  '/client/checkout': 'Cart and Checkout',
+  '/client/track': 'Track Order',
+  '/invoice': 'Invoice',
+  '/dashboard': 'Dashboard',
+};
+
+/**
+ * What to call a page in prose — used by the Back button so it can name
+ * where it leads. Reads the role's own nav first, because one path can go
+ * by two names: /mixing is the mixer's "Mixing Queue" and the admin's
+ * "Paint Mixing". Returns null when nothing knows the page, leaving the
+ * caller to fall back to generic wording.
+ */
+export function pathLabel(path, role) {
+  const own = (NAV_CONFIG[role] || []).find((item) => item.href === path);
+  if (own) return own.label;
+
+  for (const items of Object.values(NAV_CONFIG)) {
+    const match = items.find((item) => item.href === path);
+    if (match) return match.label;
+  }
+  return EXTRA_LABELS[path] || null;
+}
+
 export function renderNav(container, role) {
   const items = NAV_CONFIG[role] || [];
   const currentPath = window.location.pathname;

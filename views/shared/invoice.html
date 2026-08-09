@@ -12,7 +12,16 @@
 <body>
   <main class="invoice-page">
     <div class="invoice-actions">
-      <button type="button" class="btn btn-outline" id="back-btn">Back</button>
+      <span class="invoice-nav">
+        <!-- The one page with no sidebar still gets the logo, and it leads
+             where it does everywhere else: this reader's own dashboard. -->
+        <a href="/dashboard" class="invoice-home" title="Go to your dashboard">
+          <img src="/images/logo.png" alt="Flavor &amp; Color — go to your dashboard" />
+        </a>
+        <button type="button" class="btn btn-outline" id="back-btn">
+          <span data-icon="arrow-left"></span> Back
+        </button>
+      </span>
       <span style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
         <button type="button" class="btn btn-outline" id="print-btn">Print</button>
         <a class="btn btn-primary" id="download-pdf" href="#" download>

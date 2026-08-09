@@ -311,6 +311,8 @@
  * with a floor so it cannot vanish either.
  */
 .dash-topbar h1 {
+  font-size: 1.25rem;
+  margin: 0;
   min-width: 5rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -342,10 +344,6 @@
     color var(--speed-fast) ease, transform var(--speed-fast) var(--ease);
 }
 
-.back-button.is-hidden {
-  display: none;
-}
-
 .back-button:hover {
   background-color: var(--surface-strong);
   border-color: var(--border-strong);
@@ -360,11 +358,6 @@
 
 .back-button svg {
   flex-shrink: 0;
-}
-
-.dash-topbar h1 {
-  font-size: 1.25rem;
-  margin: 0;
 }
 
 /* ---------- Notification bell (see /js/notifications.js) ---------- */

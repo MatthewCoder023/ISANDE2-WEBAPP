@@ -7,6 +7,7 @@ import { api } from '/js/api.js';
 import { showToast, showFlashToast } from '/js/toast.js';
 import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
 import { addPasswordToggle } from '/js/password-ui.js';
+import { clearTrail } from '/js/navigation.js';
 
 const form = document.querySelector('#login-form');
 addPasswordToggle(form.password);
@@ -26,6 +27,9 @@ form.addEventListener('submit', async (event) => {
         password: form.password.value,
       },
     });
+    // A new session starts with no history behind it, so nothing from
+    // before the sign-in can ever be a Back destination.
+    clearTrail();
     window.location.assign(data.redirectTo);
   } catch (error) {
     if (error.errors) showFieldErrors(form, error.errors);

@@ -14,7 +14,7 @@
 <body>
   <div class="dash-layout">
     <aside class="dash-sidebar">
-      <a href="/client" class="brand" data-brand-link>
+      <a href="/dashboard" class="brand" data-brand-link>
         <img src="/images/logo.png" alt="" class="brand-logo" />
         <span>Flavor &amp; Color</span>
       </a>
@@ -86,6 +86,12 @@
             <input type="file" id="photo-input" accept="image/*" class="visually-hidden" />
 
             <div class="photo-preview" id="photo-preview">
+              <div class="photo-preview-head">
+                <span class="photo-preview-name" id="photo-name">Your photo</span>
+                <button type="button" class="btn btn-outline btn-sm" id="remove-photo-btn">
+                  <span data-icon="x" data-icon-size="15"></span> Remove photo
+                </button>
+              </div>
               <div class="photo-img-wrap" style="position: relative;">
                 <img id="photo-img" alt="Uploaded inspiration" />
                 <div class="photo-pick-marker" id="photo-pick-marker"></div>

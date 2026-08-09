@@ -154,6 +154,9 @@ const photoInput = document.querySelector('#photo-input');
 const photoImg = document.querySelector('#photo-img');
 const paletteRow = document.querySelector('#palette-row');
 const pickMarker = document.querySelector('#photo-pick-marker');
+const photoPreview = document.querySelector('#photo-preview');
+const photoName = document.querySelector('#photo-name');
+const removeButton = document.querySelector('#remove-photo-btn');
 
 uploadZone.addEventListener('click', () => photoInput.click());
 uploadZone.addEventListener('keydown', (event) => {
@@ -183,23 +186,57 @@ photoInput.addEventListener('change', () => {
 function loadPhoto(file) {
   if (!file.type.startsWith('image/')) {
     showToast('Please choose an image file.', 'warning');
+    // Clearing the input matters even on the rejected path: the browser
+    // fires `change` only when the selection differs from what is already
+    // held, so leaving a rejected file in place makes picking that same
+    // file again do nothing at all.
+    photoInput.value = '';
     return;
   }
 
   pickMarker.style.display = 'none';
+  photoName.textContent = file.name;
 
   const reader = new FileReader();
   reader.onload = () => {
     photoImg.onload = () => {
       const palette = extractPalette(photoImg, 6);
       renderPalette(palette);
-      document.querySelector('#photo-preview').classList.add('is-visible');
+      photoPreview.classList.add('is-visible');
       if (palette.length > 0) selectPaletteColor(palette[0]);
     };
     photoImg.src = reader.result;
   };
   reader.readAsDataURL(file);
+
+  // Released now that the reader holds the data, so re-picking the same
+  // file after a Remove still counts as a change.
+  photoInput.value = '';
 }
+
+/**
+ * Puts the card back to its empty upload state.
+ *
+ * Everything the photo produced goes with it — the image itself, the
+ * palette it suggested, and the marker showing where a colour was sampled —
+ * so nothing on screen still refers to a photo that is no longer there.
+ * The chosen colour stays: it may have come from the wheel or a hex the
+ * customer typed, and discarding their colour is not what "remove photo"
+ * offers to do.
+ */
+function removePhoto() {
+  photoPreview.classList.remove('is-visible');
+  photoImg.removeAttribute('src');
+  photoName.textContent = 'Your photo';
+  paletteRow.innerHTML = '';
+  pickMarker.style.display = 'none';
+  photoInput.value = '';
+
+  showToast('Photo removed.', 'info');
+  uploadZone.focus(); // where the next photo comes from, and now the only control left
+}
+
+removeButton.addEventListener('click', removePhoto);
 
 function renderPalette(palette) {
   paletteRow.innerHTML = palette

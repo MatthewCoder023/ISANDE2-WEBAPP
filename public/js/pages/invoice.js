@@ -6,8 +6,11 @@
 import { api } from '/js/api.js';
 import { escapeHtml, formatPrice, formatDateTime } from '/js/format.js';
 import { PAYMENT_LABELS } from '/js/orders-ui.js';
-// This page stands alone (no dashboard shell), so it hydrates its own icons.
+// This page stands alone (no dashboard shell), so it hydrates its own icons
+// and wires its own Back button rather than inheriting either.
 import { hydrateIcons } from '/js/icons.js';
+import { getCurrentUser } from '/js/session.js';
+import { recordVisit, goBack } from '/js/navigation.js';
 
 const STATUS_LABELS = {
   pending_payment: 'Pending Payment',
@@ -21,7 +24,18 @@ const STATUS_LABELS = {
 
 const orderId = new URLSearchParams(window.location.search).get('order');
 
-document.querySelector('#back-btn').addEventListener('click', () => history.back());
+recordVisit();
+
+/**
+ * An invoice is often opened straight from an email, where history.back()
+ * had nothing to go back to and left the reader stranded. Back now walks
+ * the app's own trail, falling back to whichever order list this reader
+ * owns.
+ */
+document.querySelector('#back-btn').addEventListener('click', async () => {
+  const user = await getCurrentUser().catch(() => null);
+  goBack(user?.role);
+});
 document.querySelector('#print-btn').addEventListener('click', () => window.print());
 
 // The server-rendered file carries a verification code and QR; the print

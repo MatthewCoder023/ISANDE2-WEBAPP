@@ -126,6 +126,26 @@
   display: block;
 }
 
+/* The photo's own controls sit with the photo, above it, so Remove is
+   obvious the moment there is something to remove — and gone again the
+   moment there is not. */
+.photo-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.625rem;
+}
+
+.photo-preview-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .photo-preview img {
   display: block;
   width: 100%;
