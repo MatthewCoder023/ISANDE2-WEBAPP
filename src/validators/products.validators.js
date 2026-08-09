@@ -92,27 +92,34 @@ const updateProductRules = [
     .toBoolean(),
 ];
 
+/**
+ * Corrections only.
+ *
+ * Restocking used to live here too. It moved to purchase orders, where an
+ * increase in stock is backed by a supplier, a document and a delivery —
+ * this endpoint no longer accepts it, so there is exactly one way for stock
+ * to arrive and it leaves a paper trail.
+ *
+ * What remains is the case a purchase order cannot express: cans damaged in
+ * the stockroom, a physical count disagreeing with the system. Those are
+ * signed corrections and always need a reason.
+ */
 const stockAdjustmentRules = [
   body('type')
-    .isIn([MOVEMENT_TYPES.RESTOCK, MOVEMENT_TYPES.ADJUSTMENT])
-    .withMessage('Type must be "restock" or "adjustment".'),
+    .optional()
+    .isIn([MOVEMENT_TYPES.ADJUSTMENT])
+    .withMessage('Stock can only be corrected here. Use a purchase order to bring in new stock.'),
   body('quantity')
     .isInt().withMessage('Quantity must be a whole number.')
     .toInt()
-    .custom((value, { req }) => {
-      if (req.body.type === MOVEMENT_TYPES.RESTOCK && value < 1) {
-        throw new Error('Restock quantity must be at least 1.');
-      }
-      if (req.body.type === MOVEMENT_TYPES.ADJUSTMENT && value === 0) {
-        throw new Error('Adjustment quantity cannot be zero.');
-      }
+    .custom((value) => {
+      if (value === 0) throw new Error('Adjustment quantity cannot be zero.');
       return true;
     }),
-  // Adjustments change counts outside normal operations — always explain why.
+  // Corrections change counts outside normal operations — always explain why.
   body('reason')
-    .if(body('type').equals(MOVEMENT_TYPES.ADJUSTMENT))
     .trim()
-    .notEmpty().withMessage('Please provide a reason for the adjustment.'),
+    .notEmpty().withMessage('Please provide a reason for the correction.'),
   body('reason')
     .optional({ values: 'falsy' })
     .trim()

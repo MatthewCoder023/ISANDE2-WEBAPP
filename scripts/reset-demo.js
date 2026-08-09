@@ -27,6 +27,8 @@ const COLLECTIONS = [
   'mixrequests',
   'colorformulas',
   'products',
+  'purchaseorders',
+  'suppliers',
   'users',
   'settings',
   'sessions',

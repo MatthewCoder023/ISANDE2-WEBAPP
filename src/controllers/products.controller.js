@@ -214,9 +214,14 @@ const getById = asyncHandler(async (req, res) => {
 /** POST /api/products — admin only. */
 const create = asyncHandler(async (req, res) => {
   const { name, sku, description, category, finish, size, color, price, stock } = req.body;
-  const initialQuantity = stock?.quantity ?? 0;
   const settings = await Setting.get();
 
+  /**
+   * A new product is a catalogue entry, not a delivery. It starts empty and
+   * fills up when a purchase order is received, so that every unit on the
+   * shelf can be traced to the order that bought it — a starting quantity
+   * typed in here would be stock from nowhere.
+   */
   const product = await Product.create({
     name,
     sku: sku || (await Product.generateSku(category)),
@@ -227,26 +232,14 @@ const create = asyncHandler(async (req, res) => {
     color: { name: color?.name || '', hex: color?.hex || '' },
     price,
     stock: {
-      quantity: initialQuantity,
+      quantity: 0,
       lowStockThreshold: stock?.lowStockThreshold ?? settings.defaultLowStockThreshold,
     },
   });
 
-  // Starting quantity enters the audit trail like any other stock change.
-  if (initialQuantity > 0) {
-    await StockMovement.create({
-      product: product._id,
-      type: MOVEMENT_TYPES.INITIAL,
-      quantity: initialQuantity,
-      quantityAfter: initialQuantity,
-      reason: 'Initial stock at product creation',
-      performedBy: req.user._id,
-    });
-  }
-
   res.status(201).json({
     success: true,
-    message: 'Product created successfully.',
+    message: 'Product added to the catalogue. Raise a purchase order to bring in stock.',
     data: { product: product.toJSON() },
   });
 });

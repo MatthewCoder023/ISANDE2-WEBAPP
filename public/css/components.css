@@ -1087,6 +1087,37 @@ tr:hover .swatch,
 .status-danger  { background-color: var(--danger-500); }
 .status-info    { background-color: var(--info-500); }
 
+/* Line-item totals under a builder table. */
+.po-total-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--border);
+  font-size: 1.0625rem;
+}
+
+.po-total-row strong {
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Row actions ---------- */
+
+/**
+ * Two or three small buttons in a table's last column. Wraps rather than
+ * stretching the row, and stays on one line wherever there is room.
+ */
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 /* ---------- Numeric table columns ---------- */
 .table th.num,
 .table td.num {
@@ -1191,6 +1222,16 @@ tr:hover .swatch,
   animation: modal-pop-in 0.35s var(--ease);
   outline: none; /* the dialog receives programmatic focus on open */
 }
+
+/**
+ * A wider modal, for the few dialogs that carry a table rather than a form.
+ * Still bounded by the viewport, so it never becomes the reason a small
+ * screen has to scroll sideways.
+ */
+.modal-lg {
+  max-width: min(860px, 100%);
+}
+
 
 .modal--sm {
   max-width: 400px;

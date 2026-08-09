@@ -20,6 +20,8 @@ router.use('/mixing', mixingRoutes);
 router.use('/formulas', formulasRoutes);
 router.use('/users', usersRoutes);
 router.use('/customers', require('./customers.routes'));
+router.use('/suppliers', require('./suppliers.routes'));
+router.use('/purchase-orders', require('./purchase-orders.routes'));
 router.use('/settings', settingsRoutes);
 router.use('/reports', reportsRoutes);
 router.use('/notifications', notificationsRoutes);

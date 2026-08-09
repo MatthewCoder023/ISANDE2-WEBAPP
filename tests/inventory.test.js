@@ -10,7 +10,12 @@ beforeAll(async () => {
 afterAll(teardown);
 
 describe('product catalog', () => {
-  it('creates a product with an auto-generated SKU and an initial movement', async () => {
+  /**
+   * A new product is a catalogue entry, not a delivery. Stock arrives by
+   * receiving a purchase order, so a quantity posted here is ignored rather
+   * than quietly becoming stock that came from nowhere.
+   */
+  it('creates a product with an auto-generated SKU and no stock', async () => {
     const res = await agents.admin.post('/api/products').send({
       name: 'Coral Dream',
       category: 'interior',
@@ -24,14 +29,11 @@ describe('product catalog', () => {
     expect(res.status).toBe(201);
     const product = res.body.data.product;
     expect(product.sku).toMatch(/^FC-INT-\d{4}$/);
+    expect(product.stock.quantity).toBe(0);
+    expect(product.stock.lowStockThreshold).toBe(3);
 
     const movements = await agents.admin.get(`/api/products/${product.id}/movements`);
-    expect(movements.body.data.movements).toHaveLength(1);
-    expect(movements.body.data.movements[0]).toMatchObject({
-      type: 'initial',
-      quantity: 10,
-      quantityAfter: 10,
-    });
+    expect(movements.body.data.movements).toHaveLength(0);
   });
 
   it('never lets an update touch sku or stock quantity', async () => {
@@ -67,21 +69,39 @@ describe('product catalog', () => {
 });
 
 describe('inventory integrity', () => {
-  it('applies restocks and adjustments through the audit trail', async () => {
+  it('applies signed corrections through the audit trail', async () => {
     const product = await createProduct({ stock: { quantity: 5, lowStockThreshold: 2 } });
 
-    const restock = await agents.admin
+    const up = await agents.admin
       .post(`/api/products/${product.id}/stock`)
-      .send({ type: 'restock', quantity: 7, reason: 'Delivery' });
-    expect(restock.body.data.product.stock.quantity).toBe(12);
+      .send({ quantity: 7, reason: 'Stock count correction' });
+    expect(up.body.data.product.stock.quantity).toBe(12);
 
-    const adjust = await agents.admin
+    const down = await agents.admin
       .post(`/api/products/${product.id}/stock`)
-      .send({ type: 'adjustment', quantity: -2, reason: 'Damaged cans' });
-    expect(adjust.body.data.product.stock.quantity).toBe(10);
+      .send({ quantity: -2, reason: 'Damaged cans' });
+    expect(down.body.data.product.stock.quantity).toBe(10);
 
     const history = await agents.admin.get(`/api/products/${product.id}/movements`);
-    expect(history.body.data.movements.map((m) => m.type)).toEqual(['adjustment', 'restock']);
+    expect(history.body.data.movements.map((m) => m.type)).toEqual(['adjustment', 'adjustment']);
+  });
+
+  /**
+   * Replenishment moved to purchase orders, where an increase is backed by a
+   * supplier and a document. This endpoint must not remain a way around that.
+   */
+  it('refuses to book a restock, pointing at purchase orders instead', async () => {
+    const product = await createProduct({ stock: { quantity: 5, lowStockThreshold: 2 } });
+
+    const res = await agents.admin
+      .post(`/api/products/${product.id}/stock`)
+      .send({ type: 'restock', quantity: 7, reason: 'Delivery' });
+
+    expect(res.status).toBe(422);
+    expect(JSON.stringify(res.body)).toMatch(/purchase order/i);
+
+    const check = await agents.admin.get(`/api/products/${product.id}`);
+    expect(check.body.data.product.stock.quantity).toBe(5);
   });
 
   it('refuses adjustments that would drive stock negative', async () => {

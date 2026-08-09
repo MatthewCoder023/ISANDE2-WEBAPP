@@ -59,6 +59,7 @@ const PARENT_PATHS = {
   '/client/track': '/client/orders',
   '/mixing/formulas': '/mixing',
   '/mixing/log': '/mixing',
+  '/admin/suppliers': '/admin/purchase-orders',
 };
 
 const here = () => window.location.pathname + window.location.search;

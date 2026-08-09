@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Purchase Orders — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <link rel="stylesheet" href="/css/products.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/dashboard" class="brand" data-brand-link>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Purchase Orders</h1>
+        <span class="badge badge-danger" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <nav class="page-tabs" aria-label="Procurement sections">
+          <a href="/admin/purchase-orders" class="is-active">Purchase Orders</a>
+          <a href="/admin/suppliers">Suppliers</a>
+        </nav>
+
+        <section class="stat-grid" aria-label="Procurement overview">
+          <div class="card stat-card">
+            <div class="stat-value" data-stat="openOrders">—</div>
+            <div class="stat-label">Open Orders</div>
+            <div class="stat-meta">Draft or awaiting delivery</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-value" data-stat="outstandingValue">—</div>
+            <div class="stat-label">Outstanding Value</div>
+            <div class="stat-meta">Committed but not yet received</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-value" data-stat="receivedOrders">—</div>
+            <div class="stat-label">Received Orders</div>
+            <div class="stat-meta">Booked into inventory</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="toolbar">
+            <input type="search" id="search-input" class="form-input toolbar-search"
+                   placeholder="Search PO number or supplier…" aria-label="Search purchase orders" />
+            <select id="status-filter" class="form-input form-select" aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option value="open">Open (draft + ordered)</option>
+              <option value="draft">Draft</option>
+              <option value="ordered">Ordered</option>
+              <option value="received">Received</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <button type="button" id="new-po-btn" class="btn btn-primary">
+              <span data-icon="plus"></span> New Purchase Order
+            </button>
+          </div>
+        </section>
+
+        <section class="card card--flush">
+          <div class="table-wrap">
+            <table class="table" aria-label="Purchase orders">
+              <thead>
+                <tr>
+                  <th scope="col">PO Number</th>
+                  <th scope="col">Supplier</th>
+                  <th scope="col">Date</th>
+                  <th scope="col">Items</th>
+                  <th scope="col" class="num">Total</th>
+                  <th scope="col">Status</th>
+                  <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="po-tbody"></tbody>
+            </table>
+          </div>
+
+          <div id="empty-state" class="empty-state" hidden>
+            <div class="empty-state-icon" data-illustration="no-orders"></div>
+            <p>No purchase orders yet. Raise one to bring stock in from a supplier.</p>
+          </div>
+
+          <div id="pagination" class="pagination"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Build / review a purchase order -->
+  <div class="modal-backdrop" id="po-modal" hidden>
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="po-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="po-modal-title">New Purchase Order</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <form id="po-form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="po-supplier">Supplier</label>
+              <select class="form-input form-select" id="po-supplier" name="supplierId" required>
+                <option value="">Choose a supplier…</option>
+              </select>
+              <p class="form-error" data-error-for="supplierId"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="po-expected">Expected delivery <span class="text-muted">(optional)</span></label>
+              <input class="form-input" type="date" id="po-expected" name="expectedDate" />
+            </div>
+          </div>
+
+          <fieldset class="form-group" style="border: 0; padding: 0; margin: 0;">
+            <legend class="form-label" style="padding: 0;">Items</legend>
+            <div class="table-wrap">
+              <table class="table" aria-label="Purchase order lines">
+                <thead>
+                  <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col" class="num">In stock</th>
+                    <th scope="col" class="num">Unit cost</th>
+                    <th scope="col" class="num">Qty</th>
+                    <th scope="col" class="num">Subtotal</th>
+                    <th scope="col"><span class="visually-hidden">Remove</span></th>
+                  </tr>
+                </thead>
+                <tbody id="po-lines"></tbody>
+              </table>
+            </div>
+            <p class="form-error" data-error-for="items"></p>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+              <select class="form-input form-select" id="po-add-product" style="flex: 1 1 260px;"
+                      aria-label="Product to add">
+                <option value="">Add a product…</option>
+              </select>
+              <button type="button" class="btn btn-outline" id="po-add-line">Add to order</button>
+            </div>
+            <p class="form-hint">
+              Low-stock products are listed first. Unit cost starts from the catalogue price —
+              change it to what the supplier actually charges.
+            </p>
+          </fieldset>
+
+          <div class="form-group">
+            <label class="form-label" for="po-notes">Notes <span class="text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="po-notes" name="notes" maxlength="500"
+                   placeholder="e.g. Deliver to the rear entrance before noon" />
+          </div>
+
+          <div class="po-total-row">
+            <span>Order total</span>
+            <strong id="po-total">₱0.00</strong>
+          </div>
+        </form>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn-outline" id="po-save-draft">Save as Draft</button>
+        <button type="submit" form="po-form" class="btn btn-primary" id="po-place-btn">Place Order</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Purchase order detail -->
+  <div class="modal-backdrop" id="po-detail-modal" hidden>
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="po-detail-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="po-detail-title">Purchase Order</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body" id="po-detail-body"></div>
+      <footer class="modal-footer" id="po-detail-actions"></footer>
+    </div>
+  </div>
+
+  <!-- Confirm received quantities -->
+  <div class="modal-backdrop" id="receive-modal" hidden>
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="receive-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="receive-title">Confirm Delivery</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <p class="card-subtitle" style="margin-bottom: 1rem;">
+          Enter what actually arrived. Inventory is updated from these numbers, not from the
+          quantities ordered, so a short delivery leaves the shelf count honest.
+        </p>
+        <form id="receive-form" novalidate>
+          <div class="table-wrap">
+            <table class="table" aria-label="Received quantities">
+              <thead>
+                <tr>
+                  <th scope="col">Product</th>
+                  <th scope="col" class="num">Ordered</th>
+                  <th scope="col" class="num">Received</th>
+                </tr>
+              </thead>
+              <tbody id="receive-lines"></tbody>
+            </table>
+          </div>
+        </form>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" form="receive-form" class="btn btn-primary" id="receive-btn">
+          Receive and Update Inventory
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="confirm-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="confirm-title">Are you sure?</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="modal-body"><p id="confirm-message"></p></div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirm-btn">Confirm</button>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/admin-purchase-orders.js"></script>
+</body>
+</html>

@@ -3,14 +3,23 @@ const StockMovement = require('../models/StockMovement');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const inventoryService = require('../services/inventory.service');
+const { MOVEMENT_TYPES } = require('../constants/products');
 
-/** POST /api/products/:id/stock — admin only. */
+/**
+ * POST /api/products/:id/stock — admin only, corrections only.
+ *
+ * Deliveries come in through purchase orders, which carry a supplier and a
+ * document. What is left for this endpoint is the discrepancy a purchase
+ * order cannot describe: damage, loss, or a physical count that disagrees
+ * with the system. The type is forced rather than taken from the request,
+ * so no caller can quietly book a restock through the back door.
+ */
 const adjustStock = asyncHandler(async (req, res) => {
-  const { type, quantity, reason } = req.body;
+  const { quantity, reason } = req.body;
 
   const { product, movement } = await inventoryService.adjustStock({
     productId: req.params.id,
-    type,
+    type: MOVEMENT_TYPES.ADJUSTMENT,
     quantity,
     reason,
     userId: req.user._id,
@@ -18,7 +27,7 @@ const adjustStock = asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    message: 'Stock updated successfully.',
+    message: 'Stock corrected.',
     data: { product: product.toJSON(), movement: movement.toJSON() },
   });
 });

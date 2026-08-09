@@ -27,7 +27,7 @@ npm run reset-demo     # wipe everything & reseed (never runs in production)
 
 ## Testing
 
-`npm test` runs 106 Jest + Supertest tests in 9 suites against an in-memory
+`npm test` runs 131 Jest + Supertest tests in 10 suites against an in-memory
 MongoDB (`mongodb-memory-server`) — no local database or running server
 needed. The suites in `tests/` guard the system's core invariants:
 
@@ -50,6 +50,10 @@ needed. The suites in `tests/` guard the system's core invariants:
   verification code's tamper check, and staff-only access to XLSX exports
 - **notifications** — delivery on real domain events, unread counts, and
   that one user can never read another's
+- **purchasing** — that raising a purchase order moves no stock, that
+  receiving books in the delivered quantity rather than the ordered one, that
+  an order cannot be received twice, and that one receipt serves cashier and
+  admin byte for byte
 
 CI runs the same suite on Node 24 for every push (`.github/workflows`).
 
@@ -81,7 +85,8 @@ CI runs the same suite on Node 24 for every push (`.github/workflows`).
 │   ├── routes/             # API + protected page routes
 │   ├── services/           # Domain logic that owns an invariant:
 │   │                       #   inventory (stock), order (state), document,
-│   │                       #   pdf, xlsx, mail, notification, mix-fulfillment
+│   │                       #   purchase-order (procurement), pdf, xlsx,
+│   │                       #   mail, notification, mix-fulfillment
 │   ├── utils/              # ApiError, asyncHandler
 │   └── validators/         # express-validator rule sets
 ├── public/                 # Presentation layer: static pages & assets
@@ -127,13 +132,43 @@ CI runs the same suite on Node 24 for every push (`.github/workflows`).
 | POST | /api/products | Admin | Create product (SKU auto-generated if omitted) |
 | PATCH | /api/products/:id | Admin | Update product / restore archived (`sku` and `stock.quantity` immutable here) |
 | DELETE | /api/products/:id | Admin | Archive product (soft delete) |
-| POST | /api/products/:id/stock | Admin | Adjust stock (restock/adjustment) — atomic, audit-logged, cannot go negative |
+| POST | /api/products/:id/stock | Admin | Correct stock (signed, reason required) — restock moved to purchase orders |
 | GET | /api/products/:id/movements | Admin | Paginated stock movement history |
 
 **Inventory integrity**: stock quantity is never written directly. All changes
 go through `src/services/inventory.service.js`, which performs a guarded
 atomic `$inc` and records a `StockMovement` (type, signed delta, resulting
 quantity, reason, who) — so current stock always reconciles with its history.
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | /api/suppliers | Admin | Supplier directory with order counts and spend |
+| POST | /api/suppliers | Admin | Add a supplier |
+| PATCH | /api/suppliers/:id | Admin | Edit, or restore an archived one |
+| DELETE | /api/suppliers/:id | Admin | Archive (never deleted — purchase orders point here) |
+| GET | /api/purchase-orders | Admin | List (status/supplier/search filters, pagination) |
+| GET | /api/purchase-orders/stats | Admin | Open orders, outstanding value, received count |
+| GET | /api/purchase-orders/:id | Admin | Detail with lines and status history |
+| GET | /api/purchase-orders/:id/document.pdf | Admin | The order as a sendable document |
+| POST | /api/purchase-orders | Admin | Raise an order (priced server-side; moves no stock) |
+| POST | /api/purchase-orders/:id/order | Admin | draft → ordered |
+| POST | /api/purchase-orders/:id/receive | Admin | Book the delivery in — the only path that adds stock |
+| POST | /api/purchase-orders/:id/cancel | Admin | Abandon before delivery |
+
+**Procurement**: stock arrives one way. An admin raises a purchase order
+against a supplier, and lines are priced from the live catalogue — names,
+SKUs and totals are computed server-side, with unit cost supplied because it
+is what the supplier quoted and the catalogue does not know it. Raising the
+order moves nothing: ordering is a promise. Receiving is the event, and it
+books in the quantity that **actually arrived**, so a short delivery leaves
+the shelf count honest. Each received line becomes a `restock` movement
+naming its PO; a line that received nothing produces no movement at all.
+
+Manual stock adjustment survives for the case a purchase order cannot
+describe — damage, loss, a physical count that disagrees — and is signed and
+always requires a reason. `restock` is no longer accepted there, so no
+increase can bypass a supplier and a document. New products are created with
+no stock for the same reason.
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
@@ -202,6 +237,7 @@ printed copy can be told apart from an edited one.
 | GET | /api/customers | Cashier/Admin | Customer records with order counts, spend, last order |
 | GET | /api/transactions/export | Cashier/Admin | Payment log as CSV (honors method/search filters) |
 | GET | /api/transactions/export.xlsx | Cashier/Admin | The same log as a password-protected workbook |
+| GET | /api/transactions/:id/receipt.pdf | Cashier/Admin | The sale's official receipt |
 | GET | /api/products/export | Admin | Full inventory as CSV |
 | GET | /api/notifications | Authenticated | Own notifications, newest first |
 | GET | /api/notifications/unread-count | Authenticated | Badge count for the topbar bell |
@@ -267,6 +303,8 @@ before completion. Completed/cancelled requests form the production log.
 | `/cashier` | Cashier only |
 | `/admin` | Admin only |
 | `/admin/products` | Admin only — product & inventory management |
+| `/admin/purchase-orders` | Admin only — raise, review, and receive purchase orders |
+| `/admin/suppliers` | Admin only — supplier directory |
 | `/admin/users` | Admin only — user & employee management |
 | `/admin/reports` | Admin only — sales & inventory reports |
 | `/admin/settings` | Admin only — system configuration |
@@ -310,6 +348,10 @@ server-side.
       PDFs with a verification code and QR, order-level CSV export at
       invoice parity, password-protected XLSX for staff, transactional
       email, and in-app notifications behind a topbar bell
+- [x] **Phase 11 — Procurement & receipts**: suppliers and purchase orders
+      as the single path for stock arriving, with received-quantity booking
+      and a sendable PO document; plus an official receipt per completed
+      sale, reachable identically by cashier and admin
 - [x] **Phase 10 — Interface**: dark mode, skeleton loading, a command
       palette, a collapsible sidebar rail, dashboard widgets for all four
       roles, and an in-app navigation trail so Back always means the

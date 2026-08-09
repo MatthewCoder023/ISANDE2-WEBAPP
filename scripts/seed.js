@@ -12,6 +12,7 @@ const User = require('../src/models/User');
 const Product = require('../src/models/Product');
 const ColorFormula = require('../src/models/ColorFormula');
 const MixRequest = require('../src/models/MixRequest');
+const Supplier = require('../src/models/Supplier');
 const { ROLES } = require('../src/constants/roles');
 const { PRODUCT_CATEGORIES: CAT } = require('../src/constants/products');
 
@@ -102,10 +103,56 @@ async function seed() {
     console.log(`create ${data.sku} ${data.name} (qty ${data.stock.quantity})`);
   }
 
+  await seedSuppliers();
   await seedMixing();
 
   console.log('\nSeeding complete. Change these passwords before any real deployment.');
   await mongoose.disconnect();
+}
+
+/**
+ * A few suppliers so the purchase order module has somewhere to send an
+ * order on a fresh install. No purchase orders are seeded: a PO that was
+ * never actually raised would put stock on the shelf from nowhere, which is
+ * the exact thing the module exists to prevent.
+ */
+async function seedSuppliers() {
+  const suppliers = [
+    {
+      name: 'Vernici Supply Co.',
+      contactPerson: 'Rene Cruz',
+      email: 'sales@vernicisupply.example',
+      phone: '0917 555 0110',
+      address: '18 Industrial Ave, Valenzuela City',
+      paymentTerms: '30 days',
+    },
+    {
+      name: 'Pigment House Manila',
+      contactPerson: 'Divina Santos',
+      email: 'orders@pigmenthouse.example',
+      phone: '0917 555 0220',
+      address: '7 Bagumbayan St, Quezon City',
+      paymentTerms: 'COD',
+    },
+    {
+      name: 'Hardware Depot Inc.',
+      contactPerson: 'Ariel Manalo',
+      email: 'purchasing@hardwaredepot.example',
+      phone: '0917 555 0330',
+      address: '221 Commonwealth Ave, Quezon City',
+      paymentTerms: '15 days',
+    },
+  ];
+
+  for (const data of suppliers) {
+    const exists = await Supplier.findOne({ name: data.name });
+    if (exists) {
+      console.log(`skip   supplier ${data.name} (already exists)`);
+      continue;
+    }
+    await Supplier.create(data);
+    console.log(`create supplier ${data.name}`);
+  }
 }
 
 /** Sample formulas + a couple of queued requests so the bench has work. */

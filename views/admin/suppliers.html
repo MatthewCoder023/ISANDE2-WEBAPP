@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Suppliers — Flavor &amp; Color</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <link rel="stylesheet" href="/css/products.css" />
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <a href="/dashboard" class="brand" data-brand-link>
+        <img src="/images/logo.png" alt="" class="brand-logo" />
+        <span>Flavor &amp; Color</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="Main navigation" data-nav></nav>
+
+      <div class="dash-sidebar-footer">
+        <div class="dash-user">
+          <span class="dash-user-avatar" data-user-initials></span>
+          <div>
+            <div class="dash-user-name" data-user-name></div>
+            <div class="dash-user-role" data-user-role></div>
+          </div>
+        </div>
+        <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Suppliers</h1>
+        <span class="badge badge-danger" data-user-role></span>
+      </header>
+
+      <main class="dash-content">
+        <nav class="page-tabs" aria-label="Procurement sections">
+          <a href="/admin/purchase-orders">Purchase Orders</a>
+          <a href="/admin/suppliers" class="is-active">Suppliers</a>
+        </nav>
+
+        <section class="card">
+          <div class="toolbar">
+            <input type="search" id="search-input" class="form-input toolbar-search"
+                   placeholder="Search name, contact or email…" aria-label="Search suppliers" />
+            <select id="status-filter" class="form-input form-select" aria-label="Filter by status">
+              <option value="active">Active</option>
+              <option value="inactive">Archived</option>
+              <option value="all">All suppliers</option>
+            </select>
+            <button type="button" id="add-supplier-btn" class="btn btn-primary">
+              <span data-icon="plus"></span> Add Supplier
+            </button>
+          </div>
+        </section>
+
+        <section class="card card--flush">
+          <div class="table-wrap">
+            <table class="table" aria-label="Suppliers">
+              <thead>
+                <tr>
+                  <th scope="col">Supplier</th>
+                  <th scope="col">Contact</th>
+                  <th scope="col">Terms</th>
+                  <th scope="col" class="num">Orders</th>
+                  <th scope="col" class="num">Purchase Value</th>
+                  <th scope="col">Status</th>
+                  <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="suppliers-tbody"></tbody>
+            </table>
+          </div>
+
+          <div id="empty-state" class="empty-state" hidden>
+            <div class="empty-state-icon" data-illustration="no-results"></div>
+            <p>No suppliers yet. Add one so purchase orders have somewhere to go.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="supplier-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="supplier-modal-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="supplier-modal-title">Add Supplier</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+      </header>
+      <div class="modal-body">
+        <form id="supplier-form" novalidate>
+          <input type="hidden" name="supplierId" />
+
+          <div class="form-group">
+            <label class="form-label" for="s-name">Supplier name</label>
+            <input class="form-input" type="text" id="s-name" name="name" maxlength="100" required />
+            <p class="form-error" data-error-for="name"></p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="s-contact">Contact person <span class="text-muted">(optional)</span></label>
+              <input class="form-input" type="text" id="s-contact" name="contactPerson" maxlength="100" />
+              <p class="form-error" data-error-for="contactPerson"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="s-phone">Phone <span class="text-muted">(optional)</span></label>
+              <input class="form-input" type="text" id="s-phone" name="phone" maxlength="30" />
+              <p class="form-error" data-error-for="phone"></p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="s-email">Email <span class="text-muted">(optional)</span></label>
+            <input class="form-input" type="email" id="s-email" name="email" maxlength="120" />
+            <p class="form-error" data-error-for="email"></p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="s-address">Address <span class="text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="s-address" name="address" maxlength="200" />
+            <p class="form-error" data-error-for="address"></p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="s-terms">Payment terms <span class="text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="s-terms" name="paymentTerms" maxlength="80"
+                   placeholder="e.g. 30 days, COD" />
+            <p class="form-error" data-error-for="paymentTerms"></p>
+          </div>
+        </form>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" form="supplier-form" class="btn btn-primary" id="supplier-save-btn">Save Supplier</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="confirm-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <header class="modal-header">
+        <h2 class="modal-title" id="confirm-title">Are you sure?</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+      </header>
+      <div class="modal-body"><p id="confirm-message"></p></div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirm-btn">Archive</button>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+  <script type="module" src="/js/pages/admin-suppliers.js"></script>
+</body>
+</html>

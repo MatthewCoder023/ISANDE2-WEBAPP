@@ -147,7 +147,7 @@ function renderTable(products) {
               <div class="row-menu-list" role="menu"
                    aria-label="Actions for ${escapeHtml(p.name)}" hidden>
                 <button role="menuitem" data-action="edit" data-id="${p.id}">Edit details</button>
-                <button role="menuitem" data-action="stock" data-id="${p.id}">Adjust stock</button>
+                <button role="menuitem" data-action="stock" data-id="${p.id}">Correct stock</button>
                 ${archiveItem}
               </div>
             </div>
@@ -190,10 +190,11 @@ function openProductModal(product = null) {
   document.querySelector('#product-modal-title').textContent = product
     ? 'Edit Product'
     : 'Add Product';
-  // SKU is immutable and quantity changes must go through the stock
-  // endpoint, so both are locked when editing.
+  // SKU is immutable once assigned. Quantity is not on this form at all any
+  // more: stock arrives by receiving a purchase order, which is the only
+  // place a number can be traced back to a supplier and a delivery.
   productForm.sku.disabled = Boolean(product);
-  document.querySelector('#quantity-group').hidden = Boolean(product);
+  document.querySelector('#new-product-stock-hint').hidden = Boolean(product);
   document.querySelector('#edit-stock-hint').hidden = !product;
 
   if (product) {
@@ -237,9 +238,8 @@ productForm.addEventListener('submit', async (event) => {
     },
   };
 
-  if (!productId) {
-    if (productForm.sku.value.trim()) body.sku = productForm.sku.value.trim();
-    body.stock.quantity = parseInt(productForm.elements['stock.quantity'].value, 10) || 0;
+  if (!productId && productForm.sku.value.trim()) {
+    body.sku = productForm.sku.value.trim();
   }
 
   try {
@@ -303,8 +303,9 @@ stockForm.addEventListener('submit', async (event) => {
   try {
     const { message, data } = await api(`/api/products/${stockProductId}/stock`, {
       method: 'POST',
+      // No type: the endpoint only records corrections now, and deciding
+      // that server-side means the client cannot ask for anything else.
       body: {
-        type: stockForm.type.value,
         quantity: parseInt(stockForm.quantity.value, 10),
         reason: stockForm.reason.value,
       },

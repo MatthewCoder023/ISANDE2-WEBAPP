@@ -36,6 +36,7 @@ const NAV_CONFIG = {
   admin: [
     { href: '/admin', icon: 'home', label: 'Dashboard' },
     { href: '/admin/products', icon: 'palette', label: 'Products & Inventory' },
+    { href: '/admin/purchase-orders', icon: 'clipboard-list', label: 'Purchase Orders' },
     { href: '/pos', icon: 'shopping-cart', label: 'Point of Sale' },
     { href: '/orders', icon: 'package', label: 'Orders' },
     { href: '/transactions', icon: 'credit-card', label: 'Transactions' },
@@ -64,6 +65,7 @@ const EXTRA_LABELS = {
   '/client/track': 'Track Order',
   '/invoice': 'Sales Invoice',
   '/dashboard': 'Dashboard',
+  '/admin/suppliers': 'Suppliers',
 };
 
 /**

@@ -1,8 +1,10 @@
 const Transaction = require('../models/Transaction');
+const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { buildWorkbook, sendXlsx } = require('../services/xlsx.service');
+const { renderReceipt } = require('../services/pdf.service');
 const { PAYMENT_METHODS } = require('../constants/orders');
 
 /** Whitelisted sorts; anything else falls back to newest-first. */
@@ -119,4 +121,34 @@ const exportXlsx = asyncHandler(async (req, res) => {
   sendXlsx(res, 'transactions', buffer);
 });
 
-module.exports = { list, exportCsv, exportXlsx };
+/**
+ * GET /api/transactions/:id/receipt.pdf — the receipt for a completed sale.
+ *
+ * Rendered from the transaction and its order, both of which are settled
+ * facts by the time a receipt exists. Admin and cashier reach this same
+ * endpoint and get the same bytes: there is no per-role variant to drift,
+ * and nothing cached that could disagree with the record.
+ */
+const receiptPdf = asyncHandler(async (req, res) => {
+  const transaction = await Transaction.findById(req.params.id)
+    .populate('receivedBy', 'firstName lastName')
+    .populate('order');
+
+  if (!transaction) throw new ApiError(404, 'Transaction not found.');
+  if (!transaction.order) {
+    throw new ApiError(404, 'The order behind this transaction is no longer available.');
+  }
+
+  await transaction.ensureReceiptNumber();
+
+  const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+  const pdf = await renderReceipt(transaction.order, transaction, { appUrl });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  // Inline so the browser opens it for reading; the viewer's own Save button
+  // is the download path, and the filename carries through either way.
+  res.setHeader('Content-Disposition', `inline; filename="receipt-${transaction.receiptNumber}.pdf"`);
+  res.send(pdf);
+});
+
+module.exports = { list, exportCsv, exportXlsx, receiptPdf };

@@ -37,6 +37,13 @@ router.get('/mixing/log', requirePageAuth(ROLES.PAINT_MIXER, ROLES.ADMIN), sendV
 router.get('/cashier', requirePageAuth(ROLES.CASHIER), sendView('cashier/dashboard.html'));
 router.get('/admin', requirePageAuth(ROLES.ADMIN), sendView('admin/dashboard.html'));
 router.get('/admin/products', requirePageAuth(ROLES.ADMIN), sendView('admin/products.html'));
+// Procurement: two tabs of one area, the way production pages are grouped.
+router.get(
+  '/admin/purchase-orders',
+  requirePageAuth(ROLES.ADMIN),
+  sendView('admin/purchase-orders.html')
+);
+router.get('/admin/suppliers', requirePageAuth(ROLES.ADMIN), sendView('admin/suppliers.html'));
 router.get('/admin/users', requirePageAuth(ROLES.ADMIN), sendView('admin/users.html'));
 router.get('/admin/reports', requirePageAuth(ROLES.ADMIN), sendView('admin/reports.html'));
 router.get('/admin/settings', requirePageAuth(ROLES.ADMIN), sendView('admin/settings.html'));
