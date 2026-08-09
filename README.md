@@ -315,10 +315,30 @@ server-side.
       roles, and an in-app navigation trail so Back always means the
       previous page
 
+### Uploaded payment proofs
+
+Proofs are the only uploaded files. They are written to `UPLOAD_DIR`
+(default `./uploads`, gitignored), never served statically, and reachable
+only through the authenticated proof route.
+
+The order stores a filename; whether that file is still on disk is a
+separate fact, and the two drift apart. Two things keep them together:
+
+- The proof route checks the file exists and returns a clear 404 if it does
+  not, so staff are told the evidence is gone rather than that the app broke.
+- An hourly sweep (`order.service.sweepOrphanedProofs`, wired in
+  `server.js`) deletes proof files no order references. Files newer than the
+  24-hour grace window are never touched — a proof is on disk before the
+  order naming it is saved, and sweeping that gap would destroy a payment
+  record mid-request. `npm run prune-proofs -- --dry-run` reports the same
+  reconciliation without deleting anything.
+
+**Before deploying anywhere with an ephemeral filesystem** — Render,
+Railway, Fly, Heroku — point `UPLOAD_DIR` at a mounted volume that
+survives a restart, or move to object storage. Otherwise every verified
+order loses the evidence behind it on the next deploy.
+
 ### Known before deployment
 
-- `uploads/` is on the local filesystem. On an ephemeral host the payment
-  proofs behind verified orders vanish on restart — this needs persistent
-  storage or object storage before going live.
 - `DOCUMENT_SECRET` is not in `.env.example`, so a fresh clone signs
   invoice verification codes with an undefined secret.

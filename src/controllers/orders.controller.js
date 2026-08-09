@@ -11,7 +11,7 @@ const orderService = require('../services/order.service');
 const { renderInvoice } = require('../services/pdf.service');
 const { verifyCode, documentCode } = require('../services/document.service');
 const { toSectionedCsv, sendCsv } = require('../utils/csv');
-const { PROOFS_DIR } = require('../middleware/upload');
+const { PROOFS_DIR } = require('../config/uploads');
 const { ROLES } = require('../constants/roles');
 const { ORDER_STATUS, ORDER_TYPES } = require('../constants/orders');
 
@@ -369,7 +369,22 @@ const getProof = asyncHandler(async (req, res) => {
   if (!order.payment.proof.filename) {
     throw new ApiError(404, 'No proof of payment on this order.');
   }
-  res.sendFile(path.join(PROOFS_DIR, order.payment.proof.filename));
+
+  /**
+   * The order records a filename; whether the file is still on disk is a
+   * separate fact. They come apart when uploads outlive their storage —
+   * a host that wipes the filesystem on restart, a volume that was never
+   * mounted. Saying so plainly beats an unhandled ENOENT, and tells staff
+   * the evidence is gone rather than that the app is broken.
+   */
+  const filePath = path.join(PROOFS_DIR, order.payment.proof.filename);
+  try {
+    await fs.promises.access(filePath, fs.constants.R_OK);
+  } catch {
+    throw new ApiError(404, 'The proof image for this order is no longer available.');
+  }
+
+  res.sendFile(filePath);
 });
 
 /** POST /api/orders/:id/verify-payment — staff approves the proof. */

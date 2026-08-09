@@ -1,6 +1,17 @@
 const fs = require('fs');
+const path = require('path');
 const { setup, teardown, seedRoleAgents, createProduct, createUser, loginAgent } = require('./helpers');
-const { PROOFS_DIR } = require('../src/middleware/upload');
+const { PROOFS_DIR } = require('../src/config/uploads');
+const { sweepOrphanedProofs } = require('../src/services/order.service');
+const Order = require('../src/models/Order');
+
+/**
+ * The stored filename is deliberately absent from API responses — it is a
+ * server-side storage detail — so these tests read it where it actually
+ * lives.
+ */
+const storedProofName = async (orderId) =>
+  (await Order.findById(orderId).select('payment.proof.filename')).payment.proof.filename;
 
 let app;
 let agents;
@@ -181,6 +192,21 @@ describe('GCash proof verification', () => {
     expect(fs.readdirSync(PROOFS_DIR).length).toBe(before);
   });
 
+  it('says so plainly when the stored proof file has gone missing', async () => {
+    const order = await placeOrder();
+    await agents.client
+      .post(`/api/orders/${order.id}/proof`)
+      .attach('proof', PNG_BUFFER, { filename: 'receipt.png', contentType: 'image/png' });
+
+    // Exactly what an ephemeral filesystem does between deploys: the order
+    // still names its proof, but the image behind it is gone.
+    fs.unlinkSync(path.join(PROOFS_DIR, await storedProofName(order.id)));
+
+    const res = await agents.cashier.get(`/api/orders/${order.id}/proof`);
+    expect(res.status).toBe(404);
+    expect(res.body.message).toMatch(/no longer available/i);
+  });
+
   it('blocks client cancellation once payment is in motion', async () => {
     const order = await placeOrder();
     await agents.client
@@ -219,5 +245,57 @@ describe('order notifications', () => {
     await agents.cashier.post(`/api/orders/${order.id}/ready`);
     expect(outbox.at(-1).subject).toContain('Ready for pickup');
     expect(outbox.at(-1).text).toContain(`/client/track?order=${order.id}`);
+  });
+});
+
+/**
+ * Proof files and the orders that name them are two separate facts, and
+ * they drift apart. The sweep is what brings them back together — but only
+ * ever in the safe direction.
+ */
+describe('orphaned proof sweep', () => {
+  const ageFile = (name, hours) => {
+    const when = new Date(Date.now() - hours * 60 * 60 * 1000);
+    fs.utimesSync(path.join(PROOFS_DIR, name), when, when);
+  };
+
+  it('deletes an old file no order refers to', async () => {
+    fs.writeFileSync(path.join(PROOFS_DIR, 'stray.png'), PNG_BUFFER);
+    ageFile('stray.png', 48);
+
+    const deleted = await sweepOrphanedProofs();
+
+    expect(deleted).toBeGreaterThanOrEqual(1);
+    expect(fs.existsSync(path.join(PROOFS_DIR, 'stray.png'))).toBe(false);
+  });
+
+  /**
+   * The race the grace period exists for: multer writes the file before the
+   * order naming it is saved, so for a moment a perfectly good proof is
+   * indistinguishable from an orphan. Sweeping it would destroy a payment
+   * record mid-request.
+   */
+  it('leaves a just-written file alone, even though nothing references it yet', async () => {
+    fs.writeFileSync(path.join(PROOFS_DIR, 'in-flight.png'), PNG_BUFFER);
+
+    await sweepOrphanedProofs();
+
+    expect(fs.existsSync(path.join(PROOFS_DIR, 'in-flight.png'))).toBe(true);
+    fs.unlinkSync(path.join(PROOFS_DIR, 'in-flight.png'));
+  });
+
+  it('never touches a file an order still refers to, however old', async () => {
+    const order = await placeOrder();
+    await agents.client
+      .post(`/api/orders/${order.id}/proof`)
+      .attach('proof', PNG_BUFFER, { filename: 'receipt.png', contentType: 'image/png' });
+
+    const stored = await storedProofName(order.id);
+    ageFile(stored, 24 * 365); // a year old, and still evidence
+
+    await sweepOrphanedProofs();
+
+    expect(fs.existsSync(path.join(PROOFS_DIR, stored))).toBe(true);
+    expect((await agents.cashier.get(`/api/orders/${order.id}/proof`)).status).toBe(200);
   });
 });

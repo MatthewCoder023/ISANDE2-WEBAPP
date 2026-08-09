@@ -1,16 +1,13 @@
 const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
 const ApiError = require('../utils/ApiError');
+const { PROOFS_DIR } = require('../config/uploads');
 
 /**
- * Proof-of-payment uploads. Files land in uploads/proofs (gitignored,
- * outside public/) and are only ever served through the authenticated
- * proof endpoint — payment screenshots are private.
+ * Proof-of-payment uploads. The directory itself is configured in
+ * config/uploads.js; everything here is about what may be written into it.
  */
-const PROOFS_DIR = path.join(__dirname, '..', '..', 'uploads', 'proofs');
-fs.mkdirSync(PROOFS_DIR, { recursive: true });
 
 const ALLOWED_TYPES = {
   'image/jpeg': '.jpg',
@@ -76,4 +73,4 @@ function verifyProofImage(req, res, next) {
   });
 }
 
-module.exports = { uploadProof, verifyProofImage, PROOFS_DIR };
+module.exports = { uploadProof, verifyProofImage };

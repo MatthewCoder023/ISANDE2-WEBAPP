@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "seed": "node scripts/seed.js",
     "reset-demo": "node scripts/reset-demo.js",
-    "test": "NODE_ENV=test jest --runInBand"
+    "test": "NODE_ENV=test jest --runInBand",
+    "prune-proofs": "node scripts/prune-proofs.js"
   },
   "jest": {
     "testEnvironment": "node",

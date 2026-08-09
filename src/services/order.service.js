@@ -14,10 +14,9 @@ const {
   CANCELLABLE_STATUSES,
 } = require('../constants/orders');
 const { MOVEMENT_TYPES } = require('../constants/products');
+const { PROOFS_DIR } = require('../config/uploads');
 
 const round2 = (n) => Math.round(n * 100) / 100;
-
-const PROOFS_DIR = path.join(__dirname, '..', '..', 'uploads', 'proofs');
 
 /**
  * Applies a status change and records it in the order's history —
@@ -411,6 +410,67 @@ async function expireStaleOrders() {
   return cancelled;
 }
 
+/**
+ * A proof file is written to disk before the order that names it is saved,
+ * and only two paths ever delete one — a rejected upload, and a replaced
+ * proof. Anything else (an order removed, a database restored from a
+ * backup, a wiped dev database) strands the file forever. Payment
+ * screenshots are personal data, so keeping them past the order they belong
+ * to is a liability rather than caution.
+ */
+const ORPHAN_GRACE_HOURS = 24;
+
+/**
+ * Deletes proof files no order refers to.
+ *
+ * The grace period is what makes this safe to run against a live app: for
+ * the moment between multer writing the file and the order being saved, a
+ * perfectly good proof looks exactly like an orphan. Nothing recent is ever
+ * touched, so that window can never be swept out from under a request.
+ *
+ * Returns the number deleted. A failure to read the directory or query the
+ * orders means we cannot tell what is orphaned, so nothing is removed.
+ */
+async function sweepOrphanedProofs({ graceHours = ORPHAN_GRACE_HOURS } = {}) {
+  let files;
+  try {
+    files = await fs.promises.readdir(PROOFS_DIR);
+  } catch {
+    return 0; // no directory yet, or unreadable — nothing safe to do
+  }
+  if (files.length === 0) return 0;
+
+  const referenced = new Set(
+    (await Order.find({ 'payment.proof.filename': { $ne: '' } }).select('payment.proof.filename'))
+      .map((order) => order.payment?.proof?.filename)
+      .filter(Boolean)
+  );
+
+  const cutoff = Date.now() - graceHours * 60 * 60 * 1000;
+  let deleted = 0;
+
+  for (const name of files) {
+    if (referenced.has(name)) continue;
+    // Only ever the kind of file this app writes. Anything else in the
+    // directory belongs to someone else and is not ours to delete.
+    if (!/\.(jpe?g|png|webp)$/i.test(name)) continue;
+
+    const filePath = path.join(PROOFS_DIR, name);
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const { mtimeMs } = await fs.promises.stat(filePath);
+      if (mtimeMs >= cutoff) continue; // still inside the upload window
+      // eslint-disable-next-line no-await-in-loop
+      await fs.promises.unlink(filePath);
+      deleted += 1;
+    } catch {
+      // Already gone, or not ours to remove; the next sweep will retry.
+    }
+  }
+
+  return deleted;
+}
+
 /** One-step POS sale: create + pay + complete. */
 async function walkInSale({ requestedItems, customerName, payment, cashierId }) {
   // Validate payment against the priced total BEFORE touching stock,
@@ -444,6 +504,8 @@ module.exports = {
   cancelOrder,
   expireStaleOrders,
   STALE_PAYMENT_HOURS,
+  sweepOrphanedProofs,
+  ORPHAN_GRACE_HOURS,
   walkInSale,
   PROOFS_DIR,
 };
