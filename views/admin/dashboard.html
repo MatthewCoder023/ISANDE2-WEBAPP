@@ -65,6 +65,13 @@
             <div class="stat-label">Low / Out of Stock</div>
             <div class="stat-meta" data-meta="stockAlerts"></div>
           </a>
+          <!-- Sits beside the stock alerts on purpose: what is running out and
+               what is already on its way are the same question. -->
+          <a class="card stat-card" href="/admin/purchase-orders?status=open" title="View open purchase orders">
+            <div class="stat-value" data-stat="openPurchaseOrders">—</div>
+            <div class="stat-label">Open Purchase Orders</div>
+            <div class="stat-meta" data-meta="openPurchaseOrders"></div>
+          </a>
         </section>
 
         <section class="widget-grid" aria-label="Operations">

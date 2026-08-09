@@ -65,6 +65,30 @@ async function loadOrderStats() {
   }
 }
 
+/**
+ * How much stock is on its way. The meta line carries the money rather than
+ * a trend: a count of open orders has no meaningful previous period, but
+ * "what have we committed and not yet received" is a real question, and it
+ * is the one the number beside it prompts.
+ */
+async function loadPurchaseOrderStats() {
+  try {
+    const { data } = await api('/api/purchase-orders/stats');
+    set('openPurchaseOrders', data.stats.openOrders);
+
+    // Zero open orders is worth stating plainly next to the stock alerts —
+    // it means nothing is on the way to fix them.
+    setMeta(
+      'openPurchaseOrders',
+      data.stats.openOrders === 0
+        ? '<span>nothing on order</span>'
+        : `<span>${formatPrice(data.stats.outstandingValue)}</span><span>committed</span>`
+    );
+  } catch {
+    // Card keeps its placeholder.
+  }
+}
+
 async function loadUserStats() {
   try {
     const { data } = await api('/api/users/stats');
@@ -108,7 +132,12 @@ async function init() {
   // The tiles are what the reader looks at first, so they are awaited; the
   // panels below fill in behind them rather than holding up the count-ups.
   loadWidgets();
-  await Promise.allSettled([loadProductStats(), loadOrderStats(), loadUserStats()]);
+  await Promise.allSettled([
+    loadProductStats(),
+    loadOrderStats(),
+    loadUserStats(),
+    loadPurchaseOrderStats(),
+  ]);
   clearSkeleton();
 }
 
