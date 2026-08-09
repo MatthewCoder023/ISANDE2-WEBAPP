@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/css/auth.css" />
 </head>
 <!--
-  Public on purpose: whoever is holding a printed invoice needs to be able
+  Public on purpose: whoever is holding a printed sales invoice needs to be able
   to check it, and they may well not have an account. The code is an HMAC,
   so this reveals nothing to anyone guessing.
 -->
@@ -22,7 +22,7 @@
         <a href="/" aria-label="Back to home"><img src="/images/logo.png" alt="Flavor &amp; Color logo" class="auth-logo" /></a>
         <div>
           <h1 class="auth-title">Verify a document</h1>
-          <p class="auth-subtitle">Check an invoice against our records</p>
+          <p class="auth-subtitle">Check a sales invoice against our records</p>
         </div>
       </div>
 
@@ -36,7 +36,7 @@
         <div class="form-group">
           <label class="form-label" for="code">Verification code</label>
           <input class="form-input" type="text" id="code" name="code"
-                 placeholder="Printed at the foot of the invoice" spellcheck="false"
+                 placeholder="Printed at the foot of the sales invoice" spellcheck="false"
                  style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase;" required />
         </div>
 

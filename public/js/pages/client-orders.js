@@ -1,6 +1,6 @@
 /**
  * Customer order history: track each order's progress, open its
- * invoice, pay pending ones, cancel while still awaiting payment.
+ * sales invoice, pay pending ones, cancel while still awaiting payment.
  */
 import { api } from '/js/api.js';
 import { tableSkeleton } from '/js/skeleton.js';
@@ -71,7 +71,7 @@ function renderTable(orders) {
           <td>
             <div class="cell-actions">
               <a class="btn btn-outline btn-sm" href="/client/track?order=${o.id}">Track</a>
-              <a class="btn btn-outline btn-sm" href="/invoice?order=${o.id}">Invoice</a>
+              <a class="btn btn-outline btn-sm" href="/invoice?order=${o.id}">View Sales Invoice</a>
               ${payButton}
               ${reorderButton}
               ${cancelButton}

@@ -15,7 +15,18 @@
  * The trail lives in sessionStorage, so it is per tab and disappears when
  * the tab does. Two tabs never share a notion of "the previous page".
  */
-import { DASHBOARD_PATHS } from '/js/nav.js';
+/**
+ * Home per role, mirroring src/constants/roles.js. The server's /dashboard
+ * route forwards to these, and that redirect is what links in the markup
+ * use — but knowing whether the page you are *on* is a dashboard needs the
+ * concrete paths, since /dashboard is never where anyone actually lands.
+ */
+export const DASHBOARD_PATHS = {
+  client: '/client',
+  paint_mixer: '/mixer',
+  cashier: '/cashier',
+  admin: '/admin',
+};
 
 const TRAIL_KEY = 'fc_trail';
 

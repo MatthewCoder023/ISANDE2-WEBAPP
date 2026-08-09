@@ -9,8 +9,15 @@
 import { api } from '/js/api.js';
 import { showToast } from '/js/toast.js';
 import { getCurrentUser } from '/js/session.js';
-import { renderNav, pathLabel, DASHBOARD_PATHS, ROLE_BADGE_CLASS } from '/js/nav.js';
-import { recordVisit, backTarget, goBack, isHome, clearTrail } from '/js/navigation.js';
+import { renderNav, pathLabel, ROLE_BADGE_CLASS } from '/js/nav.js';
+import {
+  recordVisit,
+  backTarget,
+  goBack,
+  isHome,
+  clearTrail,
+  DASHBOARD_PATHS,
+} from '/js/navigation.js';
 import { hydrateIcons, icon } from '/js/icons.js';
 import { hydrateIllustrations } from '/js/illustrations.js';
 import { syncReadyMixes } from '/js/cart.js';

@@ -11,7 +11,7 @@ import { escapeHtml, formatPrice, formatDateTime, debounce } from '/js/format.js
 import { renderPagination } from '/js/pagination.js';
 import { initModal } from '/js/modal.js';
 import { showFieldErrors, clearFieldErrors, setBusy } from '/js/form-utils.js';
-import { STATUS_BADGES, TYPE_LABELS, renderOrderDetail } from '/js/orders-ui.js';
+import { STATUS_BADGES, TYPE_LABELS } from '/js/orders-ui.js';
 import { applyUrlFilters } from '/js/url-filters.js';
 import { initTableSort } from '/js/table-sort.js';
 
@@ -67,7 +67,7 @@ function actionButtons(order) {
   const button = (action, label, primary = false) =>
     `<button class="btn ${primary ? 'btn-primary' : 'btn-outline'} btn-sm" data-action="${action}" data-id="${order.id}">${label}</button>`;
 
-  const buttons = [button('view', 'View')];
+  const buttons = [button('invoice', 'View Sales Invoice')];
   switch (order.status) {
     case 'pending_payment':
       buttons.push(button('complete', 'Take Payment', true), button('cancel', 'Cancel'));
@@ -266,14 +266,8 @@ tbody.addEventListener('click', async (event) => {
   if (!order) return;
 
   switch (button.dataset.action) {
-    case 'view': {
-      try {
-        const { data } = await api(`/api/orders/${order.id}`);
-        renderOrderDetail(document.querySelector('#detail-body'), data.order, data.transaction);
-        detailModal.open();
-      } catch (error) {
-        showToast(error.message, 'error');
-      }
+    case 'invoice': {
+      window.location.assign(`/invoice?order=${order.id}`);
       break;
     }
     case 'review':

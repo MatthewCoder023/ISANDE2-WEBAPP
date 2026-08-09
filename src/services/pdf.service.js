@@ -8,9 +8,9 @@ const { documentCode } = require('./document.service');
 const { ORDER_STATUS } = require('../constants/orders');
 
 /**
- * Server-rendered invoice PDF.
+ * Server-rendered sales invoice PDF.
  *
- * The on-screen invoice stays the browser-print path; this produces the
+ * The on-screen sales invoice stays the browser-print path; this produces the
  * same document as a real file, for emailing, archiving and handing over.
  * The layout is authored here rather than rendered from the HTML because
  * a headless browser would add hundreds of megabytes to the deployment —
@@ -64,14 +64,6 @@ const dateTime = (value) =>
     minute: '2-digit',
   });
 
-/** Brand rule across the head of the page, mirroring the on-screen sheet. */
-function drawAccentBar(doc) {
-  const { width } = doc.page;
-  const gradient = doc.linearGradient(0, 0, width, 0);
-  gradient.stop(0, '#4f46e5').stop(0.5, '#7c3aed').stop(1, '#f59e0b');
-  doc.rect(0, 0, width, 6).fill(gradient);
-}
-
 function drawHeader(doc, settings, order) {
   const top = 46;
 
@@ -97,7 +89,7 @@ function drawHeader(doc, settings, order) {
     .font('Helvetica-Bold')
     .fontSize(18)
     .fillColor(INK)
-    .text('INVOICE', 340, top, { width: 205, align: 'right', characterSpacing: 1 });
+    .text('SALES INVOICE', 340, top, { width: 205, align: 'right', characterSpacing: 1 });
 
   doc
     .font('Helvetica')
@@ -237,7 +229,7 @@ function drawFooter(doc, order, settings) {
     .fillColor(MUTED)
     .text(
       `Thank you for choosing ${settings.shopName || 'Flavor & Color'}! ` +
-        'Keep this invoice for pickup and warranty purposes.',
+        'Keep this sales invoice for pickup and warranty purposes.',
       50,
       y + 8,
       { width: 495, lineBreak: false }
@@ -255,15 +247,15 @@ function drawFooter(doc, order, settings) {
 }
 
 /**
- * Renders the invoice and resolves with the finished PDF as a Buffer, so
+ * Renders the sales invoice and resolves with the finished PDF as a Buffer, so
  * the caller decides whether to stream it, attach it or store it.
  */
 async function renderInvoice(order, transaction, { appUrl } = {}) {
   const settings = await Setting.get();
   const doc = new PDFDocument({ size: 'A4', margin: 50, info: {
-    Title: `Invoice ${order.orderNumber}`,
+    Title: `Sales Invoice ${order.orderNumber}`,
     Author: settings.shopName || 'Flavor & Color',
-    Subject: `Invoice for order ${order.orderNumber}`,
+    Subject: `Sales Invoice for order ${order.orderNumber}`,
   } });
 
   const chunks = [];
@@ -273,7 +265,6 @@ async function renderInvoice(order, transaction, { appUrl } = {}) {
     doc.on('error', reject);
   });
 
-  drawAccentBar(doc);
   drawHeader(doc, settings, order);
   drawMeta(doc, order, transaction);
   const afterItems = drawItems(doc, order);
