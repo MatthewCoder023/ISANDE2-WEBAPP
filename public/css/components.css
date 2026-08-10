@@ -310,6 +310,17 @@
 .badge-danger  { background-color: var(--danger-50);  color: var(--danger-500); }
 .badge-info    { background-color: var(--info-50);    color: var(--info-500); }
 
+/**
+ * The role indicator ("Cashier / Secretary") sits in the topbar on every
+ * page, where the variant fills are pale enough — and in dark mode barely
+ * more than a tint — that it read as floating text. A hairline mixed from
+ * the badge's own colour defines the chip in all four role colours and both
+ * themes, without adding a second filled shape beside the search field.
+ */
+.badge[data-user-role] {
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+}
+
 /* ---------- Toasts ---------- */
 .toast-container {
   position: fixed;
