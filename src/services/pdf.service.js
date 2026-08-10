@@ -75,6 +75,7 @@ const dateTime = (value) =>
 function drawHeader(doc, settings, { title, reference, date }) {
   const top = 46;
 
+
   if (fs.existsSync(LOGO_PATH)) {
     doc.image(LOGO_PATH, 50, top, { fit: [46, 46] });
   }
@@ -539,6 +540,8 @@ async function renderPurchaseOrder(po, settings) {
     date: po.createdAt,
   });
 
+  doc.initForm();
+
   const top = 128;
   const label = (text, x) =>
     doc.font('Helvetica-Bold').fontSize(8).fillColor(MUTED).text(text.toUpperCase(), x, top, {
@@ -599,9 +602,27 @@ async function renderPurchaseOrder(po, settings) {
   }
   const signatureY = Math.max(y + 30, FOOTER_Y - 90);
   const signature = (caption, x) => {
-    doc.moveTo(x, signatureY).lineTo(x + 200, signatureY).lineWidth(0.5).strokeColor(INK).stroke();
-    doc.font('Helvetica').fontSize(8).fillColor(MUTED).text(caption, x, signatureY + 6, {
+    doc.font('Helvetica').fontSize(8).fillColor(MUTED).text(caption, x, signatureY - 14, {
       width: 200,
+    });
+
+    const signatureFieldY = signatureY + 8;
+    const nameFieldY = signatureFieldY + 46;
+    const fieldName = caption.toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+    doc.moveTo(x, signatureFieldY + 36).lineTo(x + 200, signatureFieldY + 36).lineWidth(0.5).strokeColor(INK).stroke();
+
+    doc.formText(`${fieldName}Signature`, x, signatureFieldY, 200, 36, {
+      border: true,
+      multiline: true,
+      font: 'Helvetica',
+      fontSize: 10,
+    });
+    doc.formText(`${fieldName}Name`, x, nameFieldY, 200, 22, {
+      border: true,
+      multiline: false,
+      font: 'Helvetica',
+      fontSize: 10,
     });
   };
   signature('Authorised by', 50);
