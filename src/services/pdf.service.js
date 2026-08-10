@@ -726,7 +726,8 @@ function drawReportTableSection(doc, section, y) {
   doc.moveTo(50, y).lineTo(545, y).lineWidth(1).strokeColor(INK).stroke();
   y += 10;
 
-  for (const row of rows) {
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    const row = rows[rowIndex];
     const cellHeights = row.map((value, index) => {
       const column = columns[index] || {};
       return doc.heightOfString(formatCellValue(value, column), {
@@ -742,19 +743,31 @@ function drawReportTableSection(doc, section, y) {
       y = 60;
     }
 
-    doc.font('Helvetica').fontSize(9).fillColor(INK);
+    const isFooterRow = section.footerRowCount && rowIndex >= rows.length - section.footerRowCount;
+    doc.font(isFooterRow ? 'Helvetica-Bold' : 'Helvetica').fontSize(isFooterRow ? 12 : 9).fillColor(INK);
     row.forEach((value, index) => {
       const column = columns[index] || {};
-      doc.text(formatCellValue(value, column), xPositions[index], y + 2, {
+      const align = isFooterRow && index === 0 ? 'right' : column.align === 'right' ? 'right' : 'left';
+      const textHeight = doc.heightOfString(formatCellValue(value, column), {
         width: resolvedWidths[index],
-        align: column.align === 'right' ? 'right' : 'left',
+        align,
+        lineBreak: true,
+      });
+      const textY = isFooterRow
+        ? y + 5
+        : y + Math.max((thisRowHeight - textHeight) / 2, 2);
+      doc.text(formatCellValue(value, column), xPositions[index], textY, {
+        width: resolvedWidths[index],
+        align,
         lineBreak: true,
         ellipsis: false,
       });
     });
 
     y += thisRowHeight;
-    doc.moveTo(50, y).lineTo(545, y).lineWidth(0.5).strokeColor(RULE).stroke();
+    if (!isFooterRow) {
+      doc.moveTo(50, y).lineTo(545, y).lineWidth(0.5).strokeColor(RULE).stroke();
+    }
     y += 2;
   }
 
@@ -782,7 +795,7 @@ async function renderReportPdf({ title, scope, metadata = [], sections = [], set
 
   let y = 128;
   if (scope || metadata.length) {
-    doc.font('Helvetica-Bold').fontSize(8).fillColor(MUTED).text('Report Details', 50, y, { characterSpacing: 0.6 });
+    doc.font('Helvetica-Bold').fontSize(8).fillColor(MUTED).text('Report Details'.toUpperCase(), 50, y, { characterSpacing: 0.6 });
     y += 14;
 
     if (scope) {
@@ -796,7 +809,7 @@ async function renderReportPdf({ title, scope, metadata = [], sections = [], set
       doc.font('Helvetica').fontSize(9).fillColor(INK).text(String(row.value), 200, y, { width: 300 });
       y += 14;
     });
-    y += 6;
+    y += 15;
   }
 
   for (const section of sections) {

@@ -206,7 +206,24 @@ const exportSales = asyncHandler(async (req, res) => {
   const window = { $gte: since, $lte: until };
   const settings = await Setting.get();
 
-  const [totalsAgg, byMethod, topProducts, byCategory] = await Promise.all([
+  const [
+    revenueByDay,
+    totalsAgg,
+    byMethod,
+    topProducts,
+    byCategory,
+    newCustomers,
+  ] = await Promise.all([
+    Transaction.aggregate([
+      { $match: { createdAt: window } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          revenue: { $sum: '$amount' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
     Transaction.aggregate([
       { $match: { createdAt: window } },
       { $group: { _id: null, revenue: { $sum: '$amount' }, transactions: { $sum: 1 } } },
@@ -251,11 +268,18 @@ const exportSales = asyncHandler(async (req, res) => {
       },
       { $sort: { revenue: -1 } },
     ]),
+    User.countDocuments({ role: ROLES.CLIENT, createdAt: window }),
   ]);
 
   const totals = totalsAgg[0] || { revenue: 0, transactions: 0 };
   const day = localDay;
   const filenameBase = `sales-${day(since)}-to-${day(until)}`;
+
+  const formatCurrencyValue = (value) =>
+    'Php ' + Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const paymentTotal = byMethod.reduce((sum, method) => sum + method.amount, 0);
+  const paymentCount = byMethod.reduce((sum, method) => sum + method.count, 0);
 
   const sections = [
     {
@@ -266,22 +290,29 @@ const exportSales = asyncHandler(async (req, res) => {
         { label: 'Value', width: 220, align: 'right' },
       ],
       rows: [
-        ['Revenue', 'Php ' + totals.revenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+        ['Revenue', formatCurrencyValue(totals.revenue)],
         ['Transactions', totals.transactions],
-        ['Average Sale', 'Php ' + (totals.transactions ? Math.round((totals.revenue / totals.transactions) * 100) / 100 : 0)
-          .toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+        ['Average Sale', formatCurrencyValue(totals.transactions ? Math.round((totals.revenue / totals.transactions) * 100) / 100 : 0)],
+        ['New Customers', newCustomers],
       ],
     },
     {
       title: 'By Payment Method',
       type: 'table',
+      footerRowCount: 1,
       columns: [
         { label: 'Method', width: 220, align: 'left' },
         { label: 'Payments', width: 90, align: 'right' },
         { label: 'Amount', width: 130, align: 'right' },
       ],
-      rows: byMethod.map((m) => [m._id, m.count, 'Php ' + 
-        m.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })]),
+      rows: [
+        ...byMethod.map((m) => [
+          m._id,
+          m.count,
+          formatCurrencyValue(m.amount),
+        ]),
+        ['', 'Total', formatCurrencyValue(paymentTotal)],
+      ],
     },
     {
       title: 'Top Products',
@@ -292,8 +323,12 @@ const exportSales = asyncHandler(async (req, res) => {
         { label: 'Units', width: 40, align: 'right' },
         { label: 'Revenue', width: 130, align: 'right' },
       ],
-      rows: topProducts.map((p) => [p.name, p.sku, p.unitsSold, 'Php ' + 
-        p.revenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })]),
+      rows: topProducts.map((p) => [
+        p.name,
+        p.sku,
+        p.unitsSold,
+        formatCurrencyValue(p.revenue),
+      ]),
     },
     {
       title: 'By Category',
@@ -303,8 +338,11 @@ const exportSales = asyncHandler(async (req, res) => {
         { label: 'Units', width: 90, align: 'right' },
         { label: 'Revenue', width: 130, align: 'right' },
       ],
-      rows: byCategory.map((c) => [c._id, c.unitsSold, 'Php ' + 
-        c.revenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })]),
+      rows: byCategory.map((c) => [
+        c._id,
+        c.unitsSold,
+        formatCurrencyValue(c.revenue),
+      ]),
     },
   ];
 
@@ -389,20 +427,33 @@ const exportInventory = asyncHandler(async (req, res) => {
       .lean(),
   ]);
 
+  const totals = byCategory.reduce(
+    (acc, category) => ({
+      skus: acc.skus + category.skus,
+      units: acc.units + category.units,
+      value: acc.value + category.value,
+    }),
+    { skus: 0, units: 0, value: 0 }
+  );
+
   const formatCurrency = (value) =>
     `Php ${Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const sections = [
     {
-      title: 'Inventory by Category',
+      title: 'Inventory Position (by Category)',
       type: 'table',
+      footerRowCount: 1,
       columns: [
-        { label: 'Category', width: 200, align: 'left' },
-        { label: 'SKUs', width: 60, align: 'right' },
-        { label: 'Units', width: 70, align: 'right' },
+        { label: 'Category', width: 215, align: 'left' },
+        { label: 'SKUs', width: 30, align: 'right', type: 'number' },
+        { label: 'Units', width: 70, align: 'right', type: 'number' },
         { label: 'Value', width: 95, align: 'right', type: 'currency' },
       ],
-      rows: byCategory.map((c) => [c._id || 'Other', String(c.skus), String(c.units), c.value]),
+      rows: [
+        ...byCategory.map((c) => [c._id || 'Other', c.skus, c.units, c.value]),
+        ['Total', totals.skus, totals.units, totals.value],
+      ],
     },
     {
       title: 'Items that need restocking',
