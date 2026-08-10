@@ -218,9 +218,23 @@
   white-space: nowrap;
 }
 
+/**
+ * Same hairline as the topbar role badge, so the two readings of the role
+ * look like one thing. It has to shrink-wrap the words rather than stay a
+ * full-width block, or the border would draw a box around the empty half of
+ * the footer; the ellipsis keeps a long role from widening the sidebar.
+ */
 .dash-user-role {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid rgba(156, 163, 175, 0.28);
+  border-radius: 999px;
   font-size: 0.75rem;
   color: #9ca3af;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .theme-toggle {
@@ -1307,7 +1321,9 @@ a.stat-card:focus-visible::after {
   }
 
   .dash-user-role {
-    display: block; 
+    /* Was `block` — harmless while this was plain text, but it would now
+       stretch the chip across the drawer footer. */
+    display: inline-block;
   }
 
   .btn-logout {
