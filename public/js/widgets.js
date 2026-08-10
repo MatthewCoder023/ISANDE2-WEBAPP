@@ -36,6 +36,15 @@ const failed = (message) =>
   `<p class="widget-empty is-error">${icon('alert-triangle', 15)}${escapeHtml(message)}</p>`;
 
 /**
+ * Nothing to show, and it is neither. "Nothing on order" is only good news
+ * if nothing is running low — and the panel that answers *that* sits right
+ * beside this one, so a tick here would be the dashboard congratulating
+ * itself on a question it has not asked.
+ */
+const note = (message) =>
+  `<p class="widget-empty">${icon('info', 15)}${escapeHtml(message)}</p>`;
+
+/**
  * Widgets fail quietly and separately. One endpoint being slow or down
  * should cost its own panel, never the dashboard — so each render is
  * wrapped and a failure leaves a plain line rather than a broken layout.
@@ -236,6 +245,67 @@ export function inventoryAlerts(allProducts, viewPath, limit = 5) {
     widgetHead('Inventory alerts', 'boxes', { label: 'Inventory', href: viewPath }) +
     `<div class="mini-list">${rows}</div>`
   );
+}
+
+/* ---------- Incoming stock ---------- */
+
+/** "tomorrow" / "in 4 days" / "overdue" — a date is less use than a distance. */
+function dueIn(value) {
+  if (!value) return 'no date given';
+
+  const days = Math.round((new Date(value) - Date.now()) / DAY);
+  if (days < 0) return 'overdue';
+  if (days === 0) return 'due today';
+  if (days === 1) return 'due tomorrow';
+  return `due in ${days} days`;
+}
+
+/**
+ * What is already on its way, read against the alerts panel beside it.
+ *
+ * Lines arrive aggregated per product from /api/purchase-orders/incoming —
+ * one paint can sit on two open orders, and the question is about the paint.
+ * That endpoint carries quantities and dates but no costs, which is what lets
+ * the cashier see this panel at all.
+ *
+ * Quantities are the ordered figures, which is all an open order knows.
+ * Nothing here has arrived yet, and none of it has touched stock.
+ *
+ * `viewPath` is optional: a cashier reads this panel but has no purchase
+ * order screen to open, so for them it renders as plain rows rather than
+ * links into a page the server would refuse.
+ */
+export function incomingStock(incomingLines, viewPath = null, limit = 5) {
+  const head = widgetHead(
+    'Incoming stock',
+    'truck',
+    viewPath ? { label: 'Purchase orders', href: viewPath } : null
+  );
+
+  if (incomingLines.length === 0) return head + note('Nothing on order.');
+
+  const rows = incomingLines
+    .slice(0, limit)
+    .map((line) => {
+      const from =
+        line.orders > 1
+          ? `${line.orders} orders · ${dueIn(line.expectedDate)}`
+          : `${line.supplierName} · ${dueIn(line.expectedDate)}`;
+      const late = line.expectedDate && new Date(line.expectedDate) < Date.now();
+
+      const body =
+        `<span class="mini-main"><span class="mini-name">${escapeHtml(line.name)}</span>` +
+        `<span class="mini-meta${late ? ' is-critical' : ''}">${escapeHtml(from)}</span></span>` +
+        `<span class="mini-trail"><span class="mini-amount">+${line.quantity}</span>` +
+        '<span class="mini-time">on order</span></span>';
+
+      return viewPath
+        ? `<a class="mini-row" href="${viewPath}?status=open">${body}</a>`
+        : `<div class="mini-row is-static">${body}</div>`;
+    })
+    .join('');
+
+  return head + `<div class="mini-list">${rows}</div>`;
 }
 
 /* ---------- Recent activity ---------- */

@@ -291,3 +291,63 @@ describe('sales receipts', () => {
     expect(res.status).toBe(403);
   });
 });
+
+/**
+ * The one procurement read a cashier gets. What matters is that it answers
+ * the counter's question without answering a question the counter has no
+ * business asking — namely what the shop pays its suppliers.
+ */
+describe('incoming stock', () => {
+  it('lets a cashier see what is on its way', async () => {
+    const { po } = await makePo({ quantity: 12, unitCost: 2900 });
+    await agents.admin.post(`/api/purchase-orders/${po.id}/order`);
+
+    const res = await agents.cashier.get('/api/purchase-orders/incoming');
+
+    expect(res.status).toBe(200);
+    const line = res.body.data.incoming.find((l) => l.sku === po.items[0].sku);
+    expect(line).toMatchObject({ quantity: 12, supplierName: po.supplierName });
+  });
+
+  it('carries no supplier costs, for either role', async () => {
+    const { po } = await makePo({ quantity: 4, unitCost: 1750 });
+    await agents.admin.post(`/api/purchase-orders/${po.id}/order`);
+
+    for (const agent of [agents.cashier, agents.admin]) {
+      // eslint-disable-next-line no-await-in-loop
+      const res = await agent.get('/api/purchase-orders/incoming');
+      const body = JSON.stringify(res.body);
+
+      // The line must actually be there, or the absences below prove nothing.
+      expect(res.body.data.incoming.find((l) => l.sku === po.items[0].sku)).toMatchObject({
+        quantity: 4,
+      });
+
+      expect(body).not.toMatch(/unitCost|lineTotal|subtotal|total/);
+      // The figure itself must not appear under any key.
+      expect(body).not.toContain('1750');
+    }
+  });
+
+  it('still keeps the full purchase order list away from the cashier', async () => {
+    expect((await agents.cashier.get('/api/purchase-orders')).status).toBe(403);
+    expect((await agents.cashier.get('/api/purchase-orders/stats')).status).toBe(403);
+  });
+
+  it.each([
+    ['paint mixer', 'paint_mixer'],
+    ['customer', 'client'],
+  ])('keeps the %s out of it', async (_label, key) => {
+    expect((await agents[key].get('/api/purchase-orders/incoming')).status).toBe(403);
+  });
+
+  it('leaves out orders that have already been received', async () => {
+    const { po } = await makePo({ quantity: 7 });
+    await agents.admin
+      .post(`/api/purchase-orders/${po.id}/receive`)
+      .send({ items: [{ sku: po.items[0].sku, quantityReceived: 7 }] });
+
+    const res = await agents.cashier.get('/api/purchase-orders/incoming');
+    expect(res.body.data.incoming.find((l) => l.sku === po.items[0].sku)).toBeUndefined();
+  });
+});

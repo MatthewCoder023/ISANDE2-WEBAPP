@@ -45,7 +45,24 @@ const receiveRules = [
     .toInt(),
 ];
 
-// Procurement is the admin's remit; no other role reaches these.
+/**
+ * The one procurement read a cashier gets, and it must be declared before
+ * the admin gate below — both because the gate would otherwise catch it, and
+ * because "/incoming" would otherwise be swallowed by the "/:id" route.
+ *
+ * It carries no costs or totals. Knowing a delivery is due on Thursday helps
+ * at the counter; knowing what the shop paid for it is not the counter's
+ * business, and keeping that out here is why this is a separate endpoint
+ * rather than a relaxed guard on the purchase order list.
+ */
+router.get(
+  '/incoming',
+  requireAuth,
+  requireRole(ROLES.CASHIER, ROLES.ADMIN),
+  purchaseOrdersController.incoming
+);
+
+// Everything else about procurement is the admin's remit.
 router.use(requireAuth, requireRole(ROLES.ADMIN));
 
 router.get('/', purchaseOrdersController.list);
