@@ -36,6 +36,15 @@ const failed = (message) =>
   `<p class="widget-empty is-error">${icon('alert-triangle', 15)}${escapeHtml(message)}</p>`;
 
 /**
+ * Nothing to show, and it is neither. "Nothing on order" is only good news
+ * if nothing is running low — and the panel that answers *that* sits right
+ * beside this one, so a tick here would be the dashboard congratulating
+ * itself on a question it has not asked.
+ */
+const note = (message) =>
+  `<p class="widget-empty">${icon('info', 15)}${escapeHtml(message)}</p>`;
+
+/**
  * Widgets fail quietly and separately. One endpoint being slow or down
  * should cost its own panel, never the dashboard — so each render is
  * wrapped and a failure leaves a plain line rather than a broken layout.
@@ -236,6 +245,97 @@ export function inventoryAlerts(allProducts, viewPath, limit = 5) {
     widgetHead('Inventory alerts', 'boxes', { label: 'Inventory', href: viewPath }) +
     `<div class="mini-list">${rows}</div>`
   );
+}
+
+/* ---------- Incoming stock ---------- */
+
+/** "tomorrow" / "in 4 days" / "overdue" — a date is less use than a distance. */
+function dueIn(value) {
+  if (!value) return 'no date given';
+
+  const days = Math.round((new Date(value) - Date.now()) / DAY);
+  if (days < 0) return 'overdue';
+  if (days === 0) return 'due today';
+  if (days === 1) return 'due tomorrow';
+  return `due in ${days} days`;
+}
+
+/**
+ * What is already on its way, read against the alerts panel beside it.
+ *
+ * Aggregated by product rather than listed per order, because the question
+ * this answers is "is more of *this paint* coming?" — and one paint can sit
+ * on two open orders. Soonest first: what lands next is what decides whether
+ * a low stock line needs acting on today.
+ *
+ * Quantities are the ordered figures, which is all an open order knows.
+ * Nothing here has arrived yet, and none of it has touched stock.
+ */
+export function incomingStock(purchaseOrders, viewPath = '/admin/purchase-orders', limit = 5) {
+  const head = widgetHead('Incoming stock', 'truck', {
+    label: 'Purchase orders',
+    href: viewPath,
+  });
+
+  const byProduct = new Map();
+  for (const po of purchaseOrders) {
+    for (const item of po.items || []) {
+      const existing = byProduct.get(item.sku);
+      if (existing) {
+        existing.quantity += item.quantityOrdered;
+        // Two orders for one paint: the earlier arrival is the one that
+        // answers "when does this stop being a problem".
+        if (!existing.expectedDate || (po.expectedDate && po.expectedDate < existing.expectedDate)) {
+          existing.expectedDate = po.expectedDate;
+          existing.supplierName = po.supplierName;
+        }
+        existing.orders += 1;
+      } else {
+        byProduct.set(item.sku, {
+          name: item.name,
+          sku: item.sku,
+          quantity: item.quantityOrdered,
+          supplierName: po.supplierName,
+          expectedDate: po.expectedDate,
+          orders: 1,
+        });
+      }
+    }
+  }
+
+  if (byProduct.size === 0) return head + note('Nothing on order.');
+
+  // Dated deliveries first and soonest at the top; undated ones fall to the
+  // bottom rather than pretending to be imminent.
+  const lines = [...byProduct.values()]
+    .sort((a, b) => {
+      if (!a.expectedDate && !b.expectedDate) return b.quantity - a.quantity;
+      if (!a.expectedDate) return 1;
+      if (!b.expectedDate) return -1;
+      return new Date(a.expectedDate) - new Date(b.expectedDate);
+    })
+    .slice(0, limit);
+
+  const rows = lines
+    .map((line) => {
+      const from =
+        line.orders > 1
+          ? `${line.orders} orders · ${dueIn(line.expectedDate)}`
+          : `${line.supplierName} · ${dueIn(line.expectedDate)}`;
+      const late = line.expectedDate && new Date(line.expectedDate) < Date.now();
+
+      return (
+        `<a class="mini-row" href="${viewPath}?status=open">` +
+        `<span class="mini-main"><span class="mini-name">${escapeHtml(line.name)}</span>` +
+        `<span class="mini-meta${late ? ' is-critical' : ''}">${escapeHtml(from)}</span></span>` +
+        `<span class="mini-trail"><span class="mini-amount">+${line.quantity}</span>` +
+        '<span class="mini-time">on order</span></span>' +
+        '</a>'
+      );
+    })
+    .join('');
+
+  return head + `<div class="mini-list">${rows}</div>`;
 }
 
 /* ---------- Recent activity ---------- */

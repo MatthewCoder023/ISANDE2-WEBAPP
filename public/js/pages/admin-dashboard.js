@@ -12,6 +12,7 @@ import {
   pipeline,
   weeklyRevenue,
   inventoryAlerts,
+  incomingStock,
   recentOrders,
 } from '/js/widgets.js';
 
@@ -119,6 +120,13 @@ function loadWidgets() {
     // paint is and the API cannot sort on that.
     const { data } = await api('/api/products?stock=alert&limit=50&sort=name');
     return inventoryAlerts(data.products, '/admin/products');
+  });
+
+  mount('[data-widget="incoming"]', async () => {
+    // Open orders only — a received one is stock on the shelf, not stock on
+    // its way, and the alerts panel beside this already counts it.
+    const { data } = await api('/api/purchase-orders?status=open&limit=50');
+    return incomingStock(data.purchaseOrders, '/admin/purchase-orders');
   });
 
   mount('[data-widget="recent"]', async () => {
