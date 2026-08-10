@@ -17,7 +17,7 @@ const { PO_STATUS_LABELS } = require('../constants/purchasing');
  * a headless browser would add hundreds of megabytes to the deployment —
  * the tradeoff is that this file and invoice.css must be kept in step.
  *
- * Currency prints as "PHP" rather than ₱: pdfkit's built-in fonts use
+ * Currency prints as "Php" rather than ₱: pdfkit's built-in fonts use
  * WinAnsi encoding, which has no peso glyph, and embedding a font would
  * tie the build to a machine that has one.
  */
@@ -54,7 +54,7 @@ const FOOTER_Y = 742;
 const VERIFY_MIN_HEIGHT = 110;
 
 const money = (value) =>
-  `PHP ${Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  `Php ${Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const dateTime = (value) =>
   new Date(value).toLocaleString('en-PH', {
@@ -147,15 +147,64 @@ function drawMeta(doc, order, transaction) {
  *
  * Returns the y position just under the totals.
  */
-function drawItems(doc, { items, subtotal, total }, labels = {}) {
-  const columns = { item: 50, price: 330, qty: 415, amount: 465 };
-  let y = 190;
+function drawRightAlignedValue(doc, text, x, y, width, fontName = 'Helvetica', fontSize = 10) {
+  const measuredWidth = doc.widthOfString(text, { lineBreak: false }) + 8;
+  const resolvedWidth = Math.max(width, Math.ceil(measuredWidth));
+
+  doc.font(fontName).fontSize(fontSize).text(text, x, y, {
+    width: resolvedWidth,
+    align: 'right',
+    lineBreak: false,
+    ellipsis: false,
+  });
+
+  return resolvedWidth;
+}
+
+function drawItems(doc, { items, subtotal, total }, labels = {}, startY = 190) {
+  const itemX = 50;
+  const rightEdge = 545;
+  const gap = 16;
+  const basePriceWidth = 75;
+  const baseQtyWidth = 35;
+  const baseAmountWidth = 80;
+
+  let y = startY;
+
+  const priceHeader = labels.unit || 'UNIT PRICE';
+  const priceTexts = items.map((item) => money(item.price));
+  const qtyTexts = items.map((item) => String(item.quantity));
+  const amountTexts = items.map((item) => money(item.lineTotal));
+  amountTexts.push(money(subtotal), money(total));
+  const totalLabels = ['Subtotal', labels.total || 'Total Due'];
+
+  const priceWidth = Math.max(
+    basePriceWidth,
+    Math.ceil(doc.widthOfString(priceHeader, { lineBreak: false })) + 8,
+    ...priceTexts.map((text) => Math.ceil(doc.widthOfString(text, { lineBreak: false })) + 8),
+    ...totalLabels.map((text) => Math.ceil(doc.widthOfString(text, { lineBreak: false })) + 8)
+  );
+  const qtyWidth = Math.max(
+    baseQtyWidth,
+    Math.ceil(doc.widthOfString('QTY', { lineBreak: false })) + 8,
+    ...qtyTexts.map((text) => Math.ceil(doc.widthOfString(text, { lineBreak: false })) + 8)
+  );
+  const amountWidth = Math.max(
+    baseAmountWidth,
+    Math.ceil(doc.widthOfString('AMOUNT', { lineBreak: false })) + 8,
+    ...amountTexts.map((text) => Math.ceil(doc.widthOfString(text, { lineBreak: false })) + 8)
+  );
+
+  const amountX = rightEdge - amountWidth;
+  const qtyX = amountX - gap - qtyWidth;
+  const priceX = qtyX - gap - priceWidth;
+  const itemWidth = priceX - 20 - itemX;
 
   doc.font('Helvetica-Bold').fontSize(8).fillColor(MUTED);
-  doc.text('ITEM', columns.item, y, { characterSpacing: 0.6 });
-  doc.text(labels.unit || 'UNIT PRICE', columns.price, y, { width: 75, align: 'right' });
-  doc.text('QTY', columns.qty, y, { width: 35, align: 'right' });
-  doc.text('AMOUNT', columns.amount, y, { width: 80, align: 'right' });
+  doc.text('ITEM', itemX, y, { characterSpacing: 0.6 });
+  doc.text(priceHeader, priceX, y, { width: priceWidth, align: 'right', lineBreak: false, ellipsis: false });
+  doc.text('QTY', qtyX, y, { width: qtyWidth, align: 'right', lineBreak: false, ellipsis: false });
+  doc.text('AMOUNT', amountX, y, { width: amountWidth, align: 'right', lineBreak: false, ellipsis: false });
 
   y += 14;
   doc.moveTo(50, y).lineTo(545, y).lineWidth(1).strokeColor(INK).stroke();
@@ -169,13 +218,13 @@ function drawItems(doc, { items, subtotal, total }, labels = {}) {
     }
 
     doc.font('Helvetica').fontSize(10).fillColor(INK);
-    doc.text(item.name, columns.item, y, { width: 260 });
-    doc.text(money(item.price), columns.price, y, { width: 75, align: 'right' });
-    doc.text(String(item.quantity), columns.qty, y, { width: 35, align: 'right' });
-    doc.text(money(item.lineTotal), columns.amount, y, { width: 80, align: 'right' });
+    doc.text(item.name, itemX, y, { width: itemWidth });
+    drawRightAlignedValue(doc, money(item.price), priceX, y, priceWidth);
+    drawRightAlignedValue(doc, String(item.quantity), qtyX, y, qtyWidth);
+    drawRightAlignedValue(doc, money(item.lineTotal), amountX, y, amountWidth);
 
     if (item.sku) {
-      doc.font('Helvetica').fontSize(8).fillColor(MUTED).text(item.sku, columns.item, y + 12);
+      doc.font('Helvetica').fontSize(8).fillColor(MUTED).text(item.sku, itemX, y + 12);
       y += 12;
     }
 
@@ -185,13 +234,23 @@ function drawItems(doc, { items, subtotal, total }, labels = {}) {
 
   y += 6;
   doc.font('Helvetica').fontSize(10).fillColor(MUTED);
-  doc.text('Subtotal', columns.price - 60, y, { width: 135, align: 'right' });
-  doc.fillColor(INK).text(money(subtotal), columns.amount, y, { width: 80, align: 'right' });
+  drawRightAlignedValue(doc, 'Subtotal', priceX, y, priceWidth);
+  doc.fillColor(INK).text(money(subtotal), amountX, y, {
+    width: amountWidth,
+    align: 'right',
+    lineBreak: false,
+    ellipsis: false,
+  });
 
   y += 20;
   doc.font('Helvetica-Bold').fontSize(12).fillColor(INK);
-  doc.text(labels.total || 'Total Due', columns.price - 60, y, { width: 135, align: 'right' });
-  doc.text(money(total), columns.amount, y, { width: 80, align: 'right' });
+  drawRightAlignedValue(doc, labels.total || 'Total Due', priceX, y, priceWidth, 'Helvetica-Bold', 12);
+  doc.text(money(total), amountX, y, {
+    width: amountWidth,
+    align: 'right',
+    lineBreak: false,
+    ellipsis: false,
+  });
 
   return y + 28;
 }
@@ -514,10 +573,13 @@ async function renderPurchaseOrder(po, settings) {
     doc.text(line, 320, top + 14 + index * 13, { width: 225 });
   });
 
+  const metaLines = Math.max(supplierLines.length, details.length);
+  const tableStartY = Math.max(190, top + 14 + metaLines * 13 + 18);
   let y = drawItems(
     doc,
     { items: poLines(po), subtotal: po.subtotal, total: po.total },
-    { unit: 'UNIT COST', total: 'Order Total' }
+    { unit: 'UNIT COST', total: 'Order Total' },
+    tableStartY
   );
 
   if (po.notes) {
