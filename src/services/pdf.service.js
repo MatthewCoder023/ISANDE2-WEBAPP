@@ -88,7 +88,7 @@ function drawHeader(doc, settings, { title, reference, date }) {
     .fillColor(INK)
     .font('Helvetica-Bold')
     .fontSize(16)
-    .text(settings.shopName || 'Flavor & Color', 106, top + 2);
+    .text(settings.shopName || 'Paint Shop', 106, top + 2);
 
   doc
     .font('Helvetica')
@@ -332,7 +332,7 @@ function drawFooter(doc, order, settings) {
     .fontSize(8)
     .fillColor(MUTED)
     .text(
-      `Thank you for choosing ${settings.shopName || 'Flavor & Color'}! ` +
+      `Thank you for choosing ${settings.shopName || 'our Paint Shop'}! ` +
         'Keep this sales invoice for pickup and warranty purposes.',
       50,
       y + 8,
@@ -358,7 +358,7 @@ async function renderInvoice(order, transaction, { appUrl } = {}) {
   const settings = await Setting.get();
   const doc = new PDFDocument({ size: 'A4', margin: 50, info: {
     Title: `Sales Invoice ${order.orderNumber}`,
-    Author: settings.shopName || 'Flavor & Color',
+    Author: settings.shopName || 'Paint Shop',
     Subject: `Sales Invoice for order ${order.orderNumber}`,
   } });
 
@@ -436,7 +436,7 @@ async function renderReceipt(order, transaction, { appUrl } = {}) {
     margin: 50,
     info: {
       Title: `Receipt ${transaction.receiptNumber}`,
-      Author: settings.shopName || 'Flavor & Color',
+      Author: settings.shopName || 'Paint Shop',
       Subject: `Official receipt for order ${order.orderNumber}`,
       /**
        * Pinned to when the payment happened, not to when this render ran.
@@ -532,7 +532,7 @@ async function renderPurchaseOrder(po, settings) {
     margin: 50,
     info: {
       Title: `Purchase Order ${po.poNumber}`,
-      Author: settings.shopName || 'Flavor & Color',
+      Author: settings.shopName || 'Paint Shop',
       Subject: `Purchase order to ${po.supplierName}`,
     },
   });
@@ -637,7 +637,7 @@ async function renderPurchaseOrder(po, settings) {
     .fontSize(8)
     .fillColor(MUTED)
     .text(
-      `${settings.shopName || 'Flavor & Color'} - purchase order ${po.poNumber}`,
+      `${settings.shopName || 'Paint Shop'} - Purchase Order ${po.poNumber}`,
       50,
       FOOTER_Y + 10,
       { width: 495, align: 'center' }
@@ -781,7 +781,7 @@ async function renderReportPdf({ title, scope, metadata = [], sections = [], set
     margin: 50,
     info: {
       Title: title,
-      Author: settings.shopName || 'Flavor & Color',
+      Author: settings.shopName || 'Paint Shop',
       Subject: scope,
     },
   });
@@ -853,7 +853,7 @@ async function renderReportPdf({ title, scope, metadata = [], sections = [], set
     .fontSize(8)
     .fillColor(MUTED)
     .text(
-      `${settings.shopName || 'Flavor & Color'} - ${capitalize(title)}`,
+      `${settings.shopName || 'Paint Shop'} - ${capitalize(title)}`,
       50,
       FOOTER_Y + 10,
       { width: 495, align: 'center' }
