@@ -46,8 +46,8 @@ needed. The suites in `tests/` guard the system's core invariants:
 - **mixing** — request lifecycle, formula reuse counting, archived-formula
   rejection, client scoping, and that a published custom paint never
   reaches another customer's catalogue
-- **documents** — invoice PDF and CSV parity with the on-screen order, the
-  verification code's tamper check, and staff-only access to XLSX exports
+- **documents** — invoice PDF parity with the on-screen order, the
+  verification code's tamper check, and staff-only document exports
 - **notifications** — delivery on real domain events, unread counts, and
   that one user can never read another's
 - **purchasing** — that raising a purchase order moves no stock, that
@@ -230,13 +230,12 @@ printed copy can be told apart from an edited one.
 | GET | /api/settings | Authenticated | System settings (GCash details power the order screen) |
 | PATCH | /api/settings | Admin | Update store info, payments, operations |
 | GET | /api/reports/sales?days= \| ?from=&to= | Admin | Revenue by day, KPIs, methods, top products, categories — a trailing window or explicit dates |
-| GET | /api/reports/sales/export | Admin | The window on screen, as a file |
+| GET | /api/reports/sales/export | Admin | The window on screen, as a PDF |
 | GET | /api/reports/inventory | Admin | Stock value by category, restock list |
 | PATCH | /api/auth/profile | Authenticated | Self-service name/phone (email immutable) |
 | POST | /api/auth/change-password | Authenticated | Change own password (current password required) |
 | GET | /api/customers | Cashier/Admin | Customer records with order counts, spend, last order |
-| GET | /api/transactions/export | Cashier/Admin | Payment log as CSV (honors method/search filters) |
-| GET | /api/transactions/export.xlsx | Cashier/Admin | The same log as a password-protected workbook |
+| GET | /api/transactions/export | Cashier/Admin | Payment log as a PDF document (honors method/search filters) |
 | GET | /api/transactions/:id/receipt.pdf | Cashier/Admin | The sale's official receipt |
 | GET | /api/products/export | Admin | Full inventory as CSV |
 | GET | /api/notifications | Authenticated | Own notifications, newest first |
@@ -345,9 +344,9 @@ server-side.
       reserved, priced product the customer can actually buy, scoped so it
       never leaks into anyone else's catalogue
 - [x] **Phase 9 — Documents & notifications**: server-rendered invoice
-      PDFs with a verification code and QR, order-level CSV export at
-      invoice parity, password-protected XLSX for staff, transactional
-      email, and in-app notifications behind a topbar bell
+      PDFs with a verification code and QR, order-level document exports
+      at invoice parity, transactional email, and in-app notifications
+      behind a topbar bell
 - [x] **Phase 11 — Procurement & receipts**: suppliers and purchase orders
       as the single path for stock arriving, with received-quantity booking
       and a sendable PO document; plus an official receipt per completed

@@ -95,8 +95,7 @@ used to prove a record exists.
 | Method | Path | Roles | Purpose |
 |---|---|---|---|
 | GET | `/` | cashier, admin | Payment log. Supports `method`, `search`, `sort` |
-| GET | `/export` | cashier, admin | Flat CSV for analysis |
-| GET | `/export.xlsx` | cashier, admin | Branded workbook with the sheet locked |
+| GET | `/export` | cashier, admin | Flat PDF for analysis |
 
 ## Notifications — `/api/notifications`
 
@@ -118,7 +117,7 @@ used to prove a record exists.
 | GET | `/settings` | any | Shop details and payment instructions |
 | PATCH | `/settings` | admin | Update shop configuration |
 | GET | `/reports/sales` | admin | Analytics. `days=N` or `from=&to=` (YYYY-MM-DD, read as local dates) |
-| GET | `/reports/sales/export` | admin | The same window as a sectioned CSV |
+| GET | `/reports/sales/export` | admin | The same window as a PDF |
 | GET | `/reports/inventory` | admin | Stock position and reorder list |
 
 ---

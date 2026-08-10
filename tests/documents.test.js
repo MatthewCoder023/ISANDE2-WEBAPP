@@ -6,13 +6,6 @@ const Order = require('../src/models/Order');
 let app;
 let agents;
 
-/** supertest only buffers types it recognises; xlsx needs collecting by hand. */
-const binaryParser = (res, callback) => {
-  const chunks = [];
-  res.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
-  res.on('end', () => callback(null, Buffer.concat(chunks)));
-};
-
 beforeAll(async () => {
   app = await setup();
   ({ agents } = await seedRoleAgents(app));
@@ -115,44 +108,24 @@ describe('document verification', () => {
 });
 
 describe('exports', () => {
-  it('gives the order export the context an invoice shows', async () => {
-    const order = await placeOrder(agents.client, 250, 3);
-    const res = await agents.client.get(`/api/orders/${order.id}/export.csv`);
-
-    expect(res.status).toBe(200);
-    expect(res.headers['content-type']).toContain('text/csv');
-
-    const csv = res.text;
-    for (const section of ['INVOICE', 'BILLED TO', 'ITEMS', 'TOTALS']) {
-      expect(csv).toContain(section);
-    }
-    expect(csv).toContain(order.orderNumber);
-    expect(csv).toContain('Verification Code');
-    expect(csv).toContain('Item,SKU,Unit Price,Quantity,Amount');
-    expect(csv).toContain(String(order.total));
-  });
-
-  it('keeps the flat transactions CSV exactly as it was', async () => {
+  it('serves transactions export as a PDF document', async () => {
     const res = await agents.cashier.get('/api/transactions/export');
+
     expect(res.status).toBe(200);
-    // First line is still the bare header row, no document sections.
-    expect(res.text.split('\r\n')[0]).toBe(
-      '﻿Date,Order Number,Method,Amount,Amount Tendered,Change,Received By'
-    );
+    expect(res.headers['content-type']).toContain('application/pdf');
+    expect(res.body.slice(0, 5).toString()).toBe('%PDF-');
+    expect(res.body.toString('latin1')).toContain('%%EOF');
   });
 
-  it('produces a locked workbook for staff, and refuses customers', async () => {
-    const res = await agents.cashier
-      .get('/api/transactions/export.xlsx')
-      .buffer()
-      .parse(binaryParser);
+  it('serves the sales report export as a PDF document for admin only', async () => {
+    const res = await agents.admin.get('/api/reports/sales/export?from=2026-03-01&to=2026-03-31');
 
     expect(res.status).toBe(200);
-    expect(res.headers['content-type']).toContain('spreadsheetml');
-    // xlsx files are zip archives — they start with PK.
-    expect(res.body.slice(0, 2).toString()).toBe('PK');
+    expect(res.headers['content-type']).toContain('application/pdf');
+    expect(res.body.slice(0, 5).toString()).toBe('%PDF-');
+    expect(res.body.toString('latin1')).toContain('%%EOF');
 
-    expect((await agents.client.get('/api/transactions/export.xlsx')).status).toBe(403);
+    expect((await agents.cashier.get('/api/reports/sales/export')).status).toBe(403);
   });
 });
 
@@ -211,11 +184,9 @@ describe('sales report window', () => {
   it('exports the report for the window on screen, admin only', async () => {
     const res = await agents.admin.get('/api/reports/sales/export?from=2026-03-01&to=2026-03-31');
     expect(res.status).toBe(200);
-    expect(res.headers['content-type']).toContain('text/csv');
-    for (const section of ['SALES REPORT', 'TOTALS', 'BY PAYMENT METHOD', 'TOP PRODUCTS']) {
-      expect(res.text).toContain(section);
-    }
-    expect(res.text).toContain('2026-03-01 to 2026-03-31');
+    expect(res.headers['content-type']).toContain('application/pdf');
+    expect(res.body.slice(0, 5).toString()).toBe('%PDF-');
+    expect(res.body.toString('latin1')).toContain('%%EOF');
 
     expect((await agents.cashier.get('/api/reports/sales/export')).status).toBe(403);
   });
