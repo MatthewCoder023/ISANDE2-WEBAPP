@@ -11,8 +11,7 @@ const router = express.Router();
 router.use(requireAuth, requireRole(ROLES.CASHIER, ROLES.ADMIN));
 
 router.get('/', transactionsController.list);
-router.get('/export', transactionsController.exportCsv);
-router.get('/export.xlsx', transactionsController.exportXlsx);
+router.get('/export', transactionsController.exportPdf);
 
 // The receipt for one sale. Same document for cashier and admin alike —
 // the role gate above is the only access rule either of them meets.

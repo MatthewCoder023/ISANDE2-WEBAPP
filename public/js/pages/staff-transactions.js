@@ -80,7 +80,6 @@ document.querySelector('#method-filter').addEventListener('change', (event) => {
   loadTransactions();
 });
 
-// CSV download honors the current filters; navigation keeps the session cookie.
 function exportParams() {
   const params = new URLSearchParams();
   if (state.search) params.set('search', state.search);
@@ -88,14 +87,8 @@ function exportParams() {
   return params;
 }
 
-// CSV stays the raw-data export; the workbook is branded and locked for
-// anything that gets passed on to someone else.
 document.querySelector('#export-btn').addEventListener('click', () => {
-  window.location.assign(`/api/transactions/export?${exportParams()}`);
-});
-
-document.querySelector('#export-xlsx-btn')?.addEventListener('click', () => {
-  window.location.assign(`/api/transactions/export.xlsx?${exportParams()}`);
+  window.open(`/api/transactions/export?${exportParams()}`, '_blank', 'noopener,noreferrer');
 });
 
 // Honour ?method= so a deep link opens the payments it refers to.

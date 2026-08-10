@@ -56,6 +56,10 @@ const VERIFY_MIN_HEIGHT = 110;
 const money = (value) =>
   `Php ${Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+const moneySpecial = (value) =>
+  `${Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+
 const dateTime = (value) =>
   new Date(value).toLocaleString('en-PH', {
     year: 'numeric',
@@ -643,4 +647,207 @@ async function renderPurchaseOrder(po, settings) {
   return finished;
 }
 
-module.exports = { renderInvoice, renderReceipt, renderPurchaseOrder };
+// All reports are now exported as PDFs. This renders the report's sections as tables, with a title and optional metadata above them.
+function drawReportTableSection(doc, section, y) {
+  const left = 50;
+  const rightEdge = 545;
+  const gap = 10;
+  const headerHeight = 14;
+  const rowHeight = 18;
+  const columns = section.columns || [];
+  const rows = section.rows || [];
+  const widths = columns.map((column) => column.width || 100);
+  const availableWidth = rightEdge - left;
+  const totalDefinedWidth = widths.reduce((sum, width) => sum + width, 0);
+  const columnGaps = gap * Math.max(columns.length - 1, 0);
+  let resolvedWidths;
+
+  if (totalDefinedWidth + columnGaps > availableWidth) {
+    const scale = Math.max(0.2, (availableWidth - columnGaps) / totalDefinedWidth);
+    resolvedWidths = widths.map((width) => Math.max(20, Math.floor(width * scale)));
+    const currentTotal = resolvedWidths.reduce((sum, width) => sum + width, 0);
+    const adjust = availableWidth - columnGaps - currentTotal;
+    if (adjust !== 0 && resolvedWidths.length > 0) {
+      resolvedWidths[resolvedWidths.length - 1] += adjust;
+    }
+  } else {
+    const remainingWidth = availableWidth - totalDefinedWidth - columnGaps;
+    resolvedWidths = widths.map((width, index) => (index === widths.length - 1 ? width + remainingWidth : width));
+  }
+
+  const xPositions = [];
+  let x = left;
+  resolvedWidths.forEach((width) => {
+    xPositions.push(x);
+    x += width + gap;
+  });
+
+  const formatCellValue = (value, column = {}) => {
+    if (column.type === 'currency') {
+      return money(value);
+    }
+    if (column.type === 'currencySpecial') {
+      return moneySpecial(value);
+    }
+    if (column.type === 'number') {
+      const numericValue = Number(value || 0);
+      return Number.isFinite(numericValue) ? numericValue.toLocaleString('en-PH') : String(value ?? '');
+    }
+    return String(value ?? '');
+  };
+
+  doc.font('Helvetica-Bold').fontSize(8).fillColor(MUTED);
+  const headerHeights = columns.map((column, index) =>
+    doc.heightOfString(String(column.label ?? ''), {
+      width: resolvedWidths[index],
+      align: column.align === 'right' ? 'right' : 'left',
+      lineBreak: true,
+    })
+  );
+  const renderedHeaderHeight = Math.max(headerHeight, Math.max(...headerHeights) + 4);
+
+  if (y + renderedHeaderHeight > FOOTER_Y - 60) {
+    doc.addPage();
+    y = 60;
+  }
+
+  columns.forEach((column, index) => {
+    const columnHeaderHeight = headerHeights[index];
+    const textY = y + renderedHeaderHeight - columnHeaderHeight - 2;
+    doc.text(column.label, xPositions[index], textY, {
+      width: resolvedWidths[index],
+      align: column.align === 'right' ? 'right' : 'left',
+      lineBreak: true,
+      ellipsis: false,
+    });
+  });
+
+  y += renderedHeaderHeight;
+  doc.moveTo(50, y).lineTo(545, y).lineWidth(1).strokeColor(INK).stroke();
+  y += 10;
+
+  for (const row of rows) {
+    const cellHeights = row.map((value, index) => {
+      const column = columns[index] || {};
+      return doc.heightOfString(formatCellValue(value, column), {
+        width: resolvedWidths[index],
+        align: column.align === 'right' ? 'right' : 'left',
+        lineBreak: true,
+      });
+    });
+    const thisRowHeight = Math.max(rowHeight, Math.max(...cellHeights) + 4);
+
+    if (y + thisRowHeight > FOOTER_Y - 60) {
+      doc.addPage();
+      y = 60;
+    }
+
+    doc.font('Helvetica').fontSize(9).fillColor(INK);
+    row.forEach((value, index) => {
+      const column = columns[index] || {};
+      doc.text(formatCellValue(value, column), xPositions[index], y + 2, {
+        width: resolvedWidths[index],
+        align: column.align === 'right' ? 'right' : 'left',
+        lineBreak: true,
+        ellipsis: false,
+      });
+    });
+
+    y += thisRowHeight;
+    doc.moveTo(50, y).lineTo(545, y).lineWidth(0.5).strokeColor(RULE).stroke();
+    y += 2;
+  }
+
+  return y + 12;
+}
+
+// All reports are now exported as PDFs. This renderer takes a title, scope, metadata and sections to render.
+async function renderReportPdf({ title, scope, metadata = [], sections = [], settings, fileName }) {
+  const doc = new PDFDocument({
+    size: 'A4',
+    margin: 50,
+    info: {
+      Title: title,
+      Author: settings.shopName || 'Flavor & Color',
+      Subject: scope,
+    },
+  });
+  const finished = toBuffer(doc);
+
+  drawHeader(doc, settings, {
+    title: title.toUpperCase(),
+    reference: fileName || scope,
+    date: new Date(),
+  });
+
+  let y = 128;
+  if (scope || metadata.length) {
+    doc.font('Helvetica-Bold').fontSize(8).fillColor(MUTED).text('Report Details', 50, y, { characterSpacing: 0.6 });
+    y += 14;
+
+    if (scope) {
+      doc.font('Helvetica').fontSize(9).fillColor(MUTED).text('Scope', 50, y, { width: 140 });
+      doc.font('Helvetica').fontSize(9).fillColor(INK).text(String(scope), 200, y, { width: 300 });
+      y += 14;
+    }
+
+    metadata.forEach((row) => {
+      doc.font('Helvetica').fontSize(9).fillColor(MUTED).text(row.label, 50, y, { width: 140 });
+      doc.font('Helvetica').fontSize(9).fillColor(INK).text(String(row.value), 200, y, { width: 300 });
+      y += 14;
+    });
+    y += 6;
+  }
+
+  for (const section of sections) {
+    if (section.pageBreakBefore) {
+      doc.addPage();
+      y = 60;
+    } else if (y > FOOTER_Y - 120) {
+      doc.addPage();
+      y = 60;
+    }
+
+    doc.font('Helvetica-Bold').fontSize(12).fillColor(INK).text(section.title, 50, y, { width: 495 });
+    y += 16;
+    doc.moveTo(50, y).lineTo(545, y).lineWidth(0.5).strokeColor(RULE).stroke();
+    y += 10;
+
+    if (section.type === 'table') {
+      y = drawReportTableSection(doc, section, y);
+      y += 12;
+      continue;
+    }
+
+    for (const row of section.rows || []) {
+      if (y > FOOTER_Y - 60) {
+        doc.addPage();
+        y = 60;
+      }
+
+      doc.font('Helvetica').fontSize(9).fillColor(MUTED).text(row.label, 50, y, { width: 180 });
+      doc.font('Helvetica').fontSize(9).fillColor(INK).text(String(row.value), 240, y, { width: 260 });
+      y += 14;
+    }
+
+    y += 16;
+  }
+
+  const capitalize = str => str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+
+  doc
+    .font('Helvetica')
+    .fontSize(8)
+    .fillColor(MUTED)
+    .text(
+      `${settings.shopName || 'Flavor & Color'} - ${capitalize(title)}`,
+      50,
+      FOOTER_Y + 10,
+      { width: 495, align: 'center' }
+    );
+
+  doc.end();
+  return finished;
+}
+
+module.exports = { renderInvoice, renderReceipt, renderPurchaseOrder, renderReportPdf };

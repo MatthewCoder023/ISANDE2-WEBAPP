@@ -365,7 +365,7 @@ function renderDetail(po) {
   const open = po.status === 'draft' || po.status === 'ordered';
   document.querySelector('#po-detail-actions').innerHTML = `
     <a class="btn btn-outline" href="/api/purchase-orders/${po.id}/document.pdf"
-       target="_blank" rel="noopener">Download PDF</a>
+       target="_blank" rel="noopener">Save Purchase Order as PDF</a>
     ${open ? `<button type="button" class="btn btn-outline" data-po-action="cancel" data-id="${po.id}">Cancel Order</button>` : ''}
     ${po.status === 'draft' ? `<button type="button" class="btn btn-outline" data-po-action="order" data-id="${po.id}">Mark as Ordered</button>` : ''}
     ${open ? `<button type="button" class="btn btn-primary" data-po-action="receive" data-id="${po.id}">Receive Delivery</button>` : ''}`;

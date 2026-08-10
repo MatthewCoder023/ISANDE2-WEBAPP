@@ -12,5 +12,6 @@ router.use(requireAuth, requireRole(ROLES.ADMIN));
 router.get('/sales', reportsController.sales);
 router.get('/sales/export', reportsController.exportSales);
 router.get('/inventory', reportsController.inventory);
+router.get('/inventory/export', reportsController.exportInventory);
 
 module.exports = router;

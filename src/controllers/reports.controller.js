@@ -5,8 +5,8 @@ const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 const { ROLES } = require('../constants/roles');
 const Setting = require('../models/Setting');
-const { toSectionedCsv, sendCsv } = require('../utils/csv');
 const { ORDER_STATUS } = require('../constants/orders');
+const { renderReportPdf } = require('../services/pdf.service');
 
 /**
  * Reads YYYY-MM-DD as a date on *this* calendar, not UTC.
@@ -255,47 +255,70 @@ const exportSales = asyncHandler(async (req, res) => {
 
   const totals = totalsAgg[0] || { revenue: 0, transactions: 0 };
   const day = localDay;
+  const filenameBase = `sales-${day(since)}-to-${day(until)}`;
 
-  const csv = toSectionedCsv([
-    {
-      title: 'Sales Report',
-      rows: [
-        ['Shop', settings.shopName],
-        ['Period', `${day(since)} to ${day(until)} (${days} days)`],
-        ['Generated', new Date().toISOString().slice(0, 16).replace('T', ' ')],
-      ],
-    },
+  const sections = [
     {
       title: 'Totals',
+      type: 'table',
+      columns: [
+        { label: 'Metric', width: 220, align: 'left' },
+        { label: 'Value', width: 220, align: 'right' },
+      ],
       rows: [
-        ['Revenue', totals.revenue],
+        ['Revenue', 'Php ' + totals.revenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })],
         ['Transactions', totals.transactions],
-        [
-          'Average Sale',
-          totals.transactions
-            ? Math.round((totals.revenue / totals.transactions) * 100) / 100
-            : 0,
-        ],
+        ['Average Sale', 'Php ' + (totals.transactions ? Math.round((totals.revenue / totals.transactions) * 100) / 100 : 0)
+          .toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })],
       ],
     },
     {
       title: 'By Payment Method',
-      headers: ['Method', 'Count', 'Amount'],
-      rows: byMethod.map((m) => [m._id, m.count, m.amount]),
+      type: 'table',
+      columns: [
+        { label: 'Method', width: 220, align: 'left' },
+        { label: 'Payments', width: 90, align: 'right' },
+        { label: 'Amount', width: 130, align: 'right' },
+      ],
+      rows: byMethod.map((m) => [m._id, m.count, 'Php ' + 
+        m.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })]),
     },
     {
       title: 'Top Products',
-      headers: ['Product', 'SKU', 'Units Sold', 'Revenue'],
-      rows: topProducts.map((p) => [p.name, p.sku, p.unitsSold, p.revenue]),
+      type: 'table',
+      columns: [
+        { label: 'Product', width: 175, align: 'left' },
+        { label: 'SKU', width: 115, align: 'left' },
+        { label: 'Units', width: 40, align: 'right' },
+        { label: 'Revenue', width: 130, align: 'right' },
+      ],
+      rows: topProducts.map((p) => [p.name, p.sku, p.unitsSold, 'Php ' + 
+        p.revenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })]),
     },
     {
       title: 'By Category',
-      headers: ['Category', 'Units Sold', 'Revenue'],
-      rows: byCategory.map((c) => [c._id, c.unitsSold, c.revenue]),
+      type: 'table',
+      columns: [
+        { label: 'Category', width: 230, align: 'left' },
+        { label: 'Units', width: 90, align: 'right' },
+        { label: 'Revenue', width: 130, align: 'right' },
+      ],
+      rows: byCategory.map((c) => [c._id, c.unitsSold, 'Php ' + 
+        c.revenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })]),
     },
-  ]);
+  ];
 
-  sendCsv(res, `sales-${day(since)}-to-${day(until)}`, csv);
+  const pdf = await renderReportPdf({
+    title: 'Sales Report',
+    scope: `From ${day(since)} to ${day(until)} (${days} days)`,
+    sections,
+    settings,
+    fileName: filenameBase,
+  });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${filenameBase}.pdf"`);
+  res.send(pdf);
 });
 
 /** GET /api/reports/inventory — stock position right now. */
@@ -337,4 +360,116 @@ const inventory = asyncHandler(async (req, res) => {
   res.json({ success: true, data: { byCategory, totals, lowStock } });
 });
 
-module.exports = { sales, exportSales, inventory };
+const exportInventory = asyncHandler(async (req, res) => {
+  const catalogue = { isActive: true, isCustom: { $ne: true } };
+  const settings = await Setting.get();
+
+  const [byCategory, lowStock, inventoryItems] = await Promise.all([
+    Product.aggregate([
+      { $match: catalogue },
+      {
+        $group: {
+          _id: '$category',
+          skus: { $sum: 1 },
+          units: { $sum: '$stock.quantity' },
+          value: { $sum: { $multiply: ['$price', '$stock.quantity'] } },
+        },
+      },
+      { $sort: { value: -1 } },
+    ]),
+    Product.find({
+      ...catalogue,
+      $expr: { $lte: ['$stock.quantity', '$stock.lowStockThreshold'] },
+    })
+      .sort('stock.quantity')
+      .limit(10),
+    Product.find(catalogue)
+      .sort('sku')
+      .select('sku name category color finish size price stock.quantity stock.lowStockThreshold isActive')
+      .lean(),
+  ]);
+
+  const formatCurrency = (value) =>
+    `Php ${Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const sections = [
+    {
+      title: 'Inventory by Category',
+      type: 'table',
+      columns: [
+        { label: 'Category', width: 200, align: 'left' },
+        { label: 'SKUs', width: 60, align: 'right' },
+        { label: 'Units', width: 70, align: 'right' },
+        { label: 'Value', width: 95, align: 'right', type: 'currency' },
+      ],
+      rows: byCategory.map((c) => [c._id || 'Other', String(c.skus), String(c.units), c.value]),
+    },
+    {
+      title: 'Items that need restocking',
+      type: 'table',
+      columns: [
+        { label: 'Item', width: 220, align: 'left' },
+        { label: 'SKU', width: 90, align: 'left' },
+        { label: 'On Hand', width: 70, align: 'right', type: 'number' },
+      { label: 'Low Stock Threshold', width: 70, align: 'right', type: 'number' },
+      ],
+      rows: lowStock.map((product) => [
+        product.name,
+        product.sku,
+        product.stock?.quantity ?? 0,
+        product.stock?.lowStockThreshold ?? 0,
+      ]),
+    },
+    {
+      title: 'Inventory Master List',
+      pageBreakBefore: true,
+      type: 'table',
+      columns: [
+        { label: 'Item name (SKU)', width: 110, align: 'left' },
+        { label: 'Category', width: 50, align: 'left' },
+        { label: 'Color (Hex value)', width: 60, align: 'left' },
+        { label: 'Finish', width: 55, align: 'left' },
+        { label: 'Size', width: 30, align: 'left' },
+        { label: 'Price (in PHP)', width: 55, align: 'right', type: 'currencySpecial' },
+        { label: 'Stock', width: 30, align: 'right', type: 'number' },
+        { label: 'Low Stock', width: 45, align: 'right', type: 'number' },
+        { label: 'Stock Value (in PHP)', width: 60, align: 'right', type: 'currencySpecial' },
+        { label: 'Status', width: 40, align: 'left' },
+      ],
+      rows: inventoryItems.map((product) => [
+        `${product.name}\n(${product.sku})`,
+        product.category || '—',
+        product.color?.name
+          ? `${product.color.name} (${product.color.hex || '—'})`
+          : '—',
+        product.finish || '—',
+        product.size || '—',
+        product.price || 0,
+        product.stock?.quantity ?? 0,
+        product.stock?.lowStockThreshold ?? 0,
+        (product.price || 0) * (product.stock?.quantity ?? 0),
+        product.isActive ? 'Active' : 'Archived',
+      ]),
+    },
+  ];
+
+  const now = new Date();
+  const timestamp = `${localDay(now)}-${String(now.getHours()).padStart(2, '0')}-${String(
+    now.getMinutes()
+  ).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
+  const filenameBase = `inventory-report-${timestamp}`;
+
+  const pdf = await renderReportPdf({
+    title: 'Inventory Report',
+    scope: 'Current stock position',
+    sections,
+    settings,
+    fileName: filenameBase,
+  });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${filenameBase}.pdf"`);
+  res.send(pdf);
+});
+
+module.exports = { sales, exportSales, inventory, exportInventory };

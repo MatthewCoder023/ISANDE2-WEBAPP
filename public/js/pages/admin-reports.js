@@ -438,7 +438,7 @@ document.querySelector('#apply-range').addEventListener('click', () => {
 
 // Exports whatever window is on screen, so the file matches the page.
 document.querySelector('#export-report').addEventListener('click', () => {
-  window.location.assign(`/api/reports/sales/export?${windowParams}`);
+  window.open(`/api/reports/sales/export?${windowParams}`, '_blank', 'noopener,noreferrer');
 });
 
 loadReports(windowFromUrl());

@@ -2,10 +2,9 @@ const Transaction = require('../models/Transaction');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegExp = require('../utils/escapeRegExp');
-const { toCsv, sendCsv } = require('../utils/csv');
-const { buildWorkbook, sendXlsx } = require('../services/xlsx.service');
-const { renderReceipt } = require('../services/pdf.service');
+const { renderReceipt, renderReportPdf } = require('../services/pdf.service');
 const { PAYMENT_METHODS } = require('../constants/orders');
+const Setting = require('../models/Setting');
 
 /** Whitelisted sorts; anything else falls back to newest-first. */
 const TRANSACTION_SORTS = {
@@ -51,42 +50,15 @@ const list = asyncHandler(async (req, res) => {
   });
 });
 
-/** GET /api/transactions/export — the payment log as a CSV download. */
-const exportCsv = asyncHandler(async (req, res) => {
-  const transactions = await Transaction.find(buildFilter(req.query))
-    .sort('-createdAt')
-    .limit(5000)
-    .populate('receivedBy', 'firstName lastName');
-
-  const rows = transactions.map((t) => [
-    t.createdAt.toISOString().replace('T', ' ').slice(0, 19),
-    t.orderNumber,
-    t.method,
-    t.amount,
-    t.amountTendered,
-    t.change,
-    t.receivedBy ? `${t.receivedBy.firstName} ${t.receivedBy.lastName}` : '',
-  ]);
-
-  const csv = toCsv(
-    ['Date', 'Order Number', 'Method', 'Amount', 'Amount Tendered', 'Change', 'Received By'],
-    rows
-  );
-  sendCsv(res, 'transactions', csv);
-});
-
-/**
- * GET /api/transactions/export.xlsx — the same rows as the CSV, but branded
- * and with the sheet locked so the figures aren't casually edited before
- * being passed on. The CSV endpoint is unchanged for raw analysis.
- */
-const exportXlsx = asyncHandler(async (req, res) => {
+/** GET /api/transactions/export — the payment log as a PDF download. */
+const exportPdf = asyncHandler(async (req, res) => {
   const filter = buildFilter(req.query);
   const transactions = await Transaction.find(filter)
     .sort('-createdAt')
     .limit(5000)
     .populate('receivedBy', 'firstName lastName');
 
+  const settings = await Setting.get();
   const describe = [
     req.query.method ? `method: ${req.query.method}` : '',
     req.query.search ? `search: ${req.query.search}` : '',
@@ -94,31 +66,40 @@ const exportXlsx = asyncHandler(async (req, res) => {
     .filter(Boolean)
     .join(', ');
 
-  const buffer = await buildWorkbook({
-    title: 'Transactions',
-    subtitle: describe || 'all payments',
-    headers: ['Date', 'Order Number', 'Method', 'Amount', 'Tendered', 'Change', 'Received By'],
-    columns: [
-      { width: 20 },
-      { width: 22 },
-      { width: 12 },
-      { width: 14, numFmt: '#,##0.00' },
-      { width: 14, numFmt: '#,##0.00' },
-      { width: 12, numFmt: '#,##0.00' },
-      { width: 24 },
+  const now = new Date();
+  const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
+  const filenameBase = `transaction-log-${timestamp}`;
+
+  const pdf = await renderReportPdf({
+    title: 'Transaction Log',
+    scope: describe || 'All Payments',
+    sections: [
+      {
+        title: 'Payments',
+        type: 'table',
+        columns: [
+          { label: 'Date', width: 115, align: 'left' },
+          { label: 'Order number', width: 105, align: 'left' },
+          { label: 'Method', width: 80, align: 'left' },
+          { label: 'Amount', width: 90, align: 'right', type: 'currency' },
+          { label: 'Received By', width: 105, align: 'left' },
+        ],
+        rows: transactions.map((t) => [
+          t.createdAt.toLocaleString('sv-SE', { timeZone: 'Asia/Manila' }).slice(0, 19),
+          t.orderNumber,
+          t.method,
+          t.amount,
+          t.receivedBy ? `${t.receivedBy.firstName} ${t.receivedBy.lastName}` : '—',
+        ]),
+      },
     ],
-    rows: transactions.map((t) => [
-      t.createdAt.toISOString().replace('T', ' ').slice(0, 19),
-      t.orderNumber,
-      t.method,
-      t.amount,
-      t.amountTendered,
-      t.change,
-      t.receivedBy ? `${t.receivedBy.firstName} ${t.receivedBy.lastName}` : '',
-    ]),
+    settings,
+    fileName: filenameBase,
   });
 
-  sendXlsx(res, 'transactions', buffer);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${filenameBase}.pdf"`);
+  res.send(pdf);
 });
 
 /**
@@ -151,4 +132,4 @@ const receiptPdf = asyncHandler(async (req, res) => {
   res.send(pdf);
 });
 
-module.exports = { list, exportCsv, exportXlsx, receiptPdf };
+module.exports = { list, exportPdf, receiptPdf };
