@@ -123,10 +123,11 @@ function loadWidgets() {
   });
 
   mount('[data-widget="incoming"]', async () => {
-    // Open orders only — a received one is stock on the shelf, not stock on
-    // its way, and the alerts panel beside this already counts it.
-    const { data } = await api('/api/purchase-orders?status=open&limit=50');
-    return incomingStock(data.purchaseOrders, '/admin/purchase-orders');
+    // Open orders only, aggregated per product server-side — a received order
+    // is stock on the shelf, not stock on its way, and the alerts panel
+    // beside this already counts it.
+    const { data } = await api('/api/purchase-orders/incoming');
+    return incomingStock(data.incoming, '/admin/purchase-orders');
   });
 
   mount('[data-widget="recent"]', async () => {

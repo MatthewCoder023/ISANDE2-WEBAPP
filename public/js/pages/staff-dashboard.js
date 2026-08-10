@@ -3,7 +3,7 @@ import { api } from '/js/api.js';
 import { formatPrice } from '/js/format.js';
 import { statSkeleton } from '/js/skeleton.js';
 import { countUp } from '/js/count-up.js';
-import { mount, pipeline, inventoryAlerts, recentOrders } from '/js/widgets.js';
+import { mount, pipeline, inventoryAlerts, incomingStock, recentOrders } from '/js/widgets.js';
 
 async function loadStats() {
   const clearSkeleton = statSkeleton();
@@ -45,6 +45,17 @@ function loadWidgets() {
     // paint is and the API cannot sort on that.
     const { data } = await api('/api/products?stock=alert&limit=50&sort=name');
     return inventoryAlerts(data.products, '/pos');
+  });
+
+  /**
+   * No viewPath: the cashier has no purchase order screen, so these are
+   * plain rows rather than links the server would refuse. The endpoint is
+   * the cost-free one — quantities and dates, nothing about what the shop
+   * pays its suppliers.
+   */
+  mount('[data-widget="incoming"]', async () => {
+    const { data } = await api('/api/purchase-orders/incoming');
+    return incomingStock(data.incoming);
   });
 }
 

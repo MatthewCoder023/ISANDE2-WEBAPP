@@ -75,6 +75,61 @@ const stats = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * GET /api/purchase-orders/incoming — what stock is on its way, for staff.
+ *
+ * Deliberately narrower than the purchase order itself. The counter needs to
+ * answer "we are out, but twelve are due Thursday"; it does not need to know
+ * what the shop pays its suppliers. So this returns quantities and dates and
+ * no money at all — the cost columns never leave the admin's own screens.
+ *
+ * Aggregated by product rather than by order, because one paint can sit on
+ * two open orders and the question is about the paint.
+ */
+const incoming = asyncHandler(async (req, res) => {
+  const purchaseOrders = await PurchaseOrder.find({ status: { $in: OPEN_PO_STATUSES } })
+    .select('poNumber supplierName expectedDate items.name items.sku items.quantityOrdered')
+    .limit(200);
+
+  const byProduct = new Map();
+  for (const po of purchaseOrders) {
+    for (const item of po.items) {
+      const line = byProduct.get(item.sku);
+      if (!line) {
+        byProduct.set(item.sku, {
+          name: item.name,
+          sku: item.sku,
+          quantity: item.quantityOrdered,
+          supplierName: po.supplierName,
+          expectedDate: po.expectedDate,
+          orders: 1,
+        });
+        continue;
+      }
+
+      line.quantity += item.quantityOrdered;
+      line.orders += 1;
+      // Two orders for one paint: the earlier arrival is the one that
+      // answers "when does this stop being a problem".
+      if (!line.expectedDate || (po.expectedDate && po.expectedDate < line.expectedDate)) {
+        line.expectedDate = po.expectedDate;
+        line.supplierName = po.supplierName;
+      }
+    }
+  }
+
+  // Dated deliveries first and soonest at the top; undated ones fall to the
+  // bottom rather than pretending to be imminent.
+  const incomingLines = [...byProduct.values()].sort((a, b) => {
+    if (!a.expectedDate && !b.expectedDate) return b.quantity - a.quantity;
+    if (!a.expectedDate) return 1;
+    if (!b.expectedDate) return -1;
+    return new Date(a.expectedDate) - new Date(b.expectedDate);
+  });
+
+  res.json({ success: true, data: { incoming: incomingLines } });
+});
+
 const detail = asyncHandler(async (req, res) => {
   const po = await loadPo(req.params.id);
   res.json({ success: true, data: { purchaseOrder: po.toJSON() } });
@@ -148,4 +203,14 @@ const documentPdf = asyncHandler(async (req, res) => {
   res.send(pdf);
 });
 
-module.exports = { list, stats, detail, create, markOrdered, receive, cancel, documentPdf };
+module.exports = {
+  list,
+  stats,
+  incoming,
+  detail,
+  create,
+  markOrdered,
+  receive,
+  cancel,
+  documentPdf,
+};

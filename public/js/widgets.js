@@ -263,60 +263,29 @@ function dueIn(value) {
 /**
  * What is already on its way, read against the alerts panel beside it.
  *
- * Aggregated by product rather than listed per order, because the question
- * this answers is "is more of *this paint* coming?" — and one paint can sit
- * on two open orders. Soonest first: what lands next is what decides whether
- * a low stock line needs acting on today.
+ * Lines arrive aggregated per product from /api/purchase-orders/incoming —
+ * one paint can sit on two open orders, and the question is about the paint.
+ * That endpoint carries quantities and dates but no costs, which is what lets
+ * the cashier see this panel at all.
  *
  * Quantities are the ordered figures, which is all an open order knows.
  * Nothing here has arrived yet, and none of it has touched stock.
+ *
+ * `viewPath` is optional: a cashier reads this panel but has no purchase
+ * order screen to open, so for them it renders as plain rows rather than
+ * links into a page the server would refuse.
  */
-export function incomingStock(purchaseOrders, viewPath = '/admin/purchase-orders', limit = 5) {
-  const head = widgetHead('Incoming stock', 'truck', {
-    label: 'Purchase orders',
-    href: viewPath,
-  });
+export function incomingStock(incomingLines, viewPath = null, limit = 5) {
+  const head = widgetHead(
+    'Incoming stock',
+    'truck',
+    viewPath ? { label: 'Purchase orders', href: viewPath } : null
+  );
 
-  const byProduct = new Map();
-  for (const po of purchaseOrders) {
-    for (const item of po.items || []) {
-      const existing = byProduct.get(item.sku);
-      if (existing) {
-        existing.quantity += item.quantityOrdered;
-        // Two orders for one paint: the earlier arrival is the one that
-        // answers "when does this stop being a problem".
-        if (!existing.expectedDate || (po.expectedDate && po.expectedDate < existing.expectedDate)) {
-          existing.expectedDate = po.expectedDate;
-          existing.supplierName = po.supplierName;
-        }
-        existing.orders += 1;
-      } else {
-        byProduct.set(item.sku, {
-          name: item.name,
-          sku: item.sku,
-          quantity: item.quantityOrdered,
-          supplierName: po.supplierName,
-          expectedDate: po.expectedDate,
-          orders: 1,
-        });
-      }
-    }
-  }
+  if (incomingLines.length === 0) return head + note('Nothing on order.');
 
-  if (byProduct.size === 0) return head + note('Nothing on order.');
-
-  // Dated deliveries first and soonest at the top; undated ones fall to the
-  // bottom rather than pretending to be imminent.
-  const lines = [...byProduct.values()]
-    .sort((a, b) => {
-      if (!a.expectedDate && !b.expectedDate) return b.quantity - a.quantity;
-      if (!a.expectedDate) return 1;
-      if (!b.expectedDate) return -1;
-      return new Date(a.expectedDate) - new Date(b.expectedDate);
-    })
-    .slice(0, limit);
-
-  const rows = lines
+  const rows = incomingLines
+    .slice(0, limit)
     .map((line) => {
       const from =
         line.orders > 1
@@ -324,14 +293,15 @@ export function incomingStock(purchaseOrders, viewPath = '/admin/purchase-orders
           : `${line.supplierName} · ${dueIn(line.expectedDate)}`;
       const late = line.expectedDate && new Date(line.expectedDate) < Date.now();
 
-      return (
-        `<a class="mini-row" href="${viewPath}?status=open">` +
+      const body =
         `<span class="mini-main"><span class="mini-name">${escapeHtml(line.name)}</span>` +
         `<span class="mini-meta${late ? ' is-critical' : ''}">${escapeHtml(from)}</span></span>` +
         `<span class="mini-trail"><span class="mini-amount">+${line.quantity}</span>` +
-        '<span class="mini-time">on order</span></span>' +
-        '</a>'
-      );
+        '<span class="mini-time">on order</span></span>';
+
+      return viewPath
+        ? `<a class="mini-row" href="${viewPath}?status=open">${body}</a>`
+        : `<div class="mini-row is-static">${body}</div>`;
     })
     .join('');
 

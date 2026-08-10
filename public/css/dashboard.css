@@ -960,6 +960,20 @@ a.stat-card:focus-visible::after {
   border-top: 1px solid var(--border);
 }
 
+/**
+ * A row that is information rather than a destination — the cashier's copy
+ * of the incoming stock panel, which has no purchase order screen behind it.
+ * It must not offer a hover state promising a click that does nothing.
+ */
+.mini-row.is-static {
+  cursor: default;
+}
+
+.mini-row.is-static:hover {
+  background-color: transparent;
+  border-top-color: var(--border);
+}
+
 .mini-row:hover {
   background-color: var(--bg);
   color: var(--text);
