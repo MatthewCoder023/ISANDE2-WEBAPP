@@ -81,7 +81,10 @@ function renderTable(users) {
   tbody.innerHTML = users
     .map((u) => {
       const isSelf = u.id === currentAdminId;
-      const roleBadge = `<span class="badge ${ROLE_BADGE_CLASS[u.role] || 'badge-info'}">${ROLE_LABELS[u.role] || escapeHtml(u.role)}</span>`;
+      // data-role-badge, not data-user-role: the latter is the shell's hook
+      // for "whoever is signed in", and dashboard.js would overwrite every
+      // row with the admin's own role. It only carries the border styling.
+      const roleBadge = `<span class="badge ${ROLE_BADGE_CLASS[u.role] || 'badge-info'}" data-role-badge>${ROLE_LABELS[u.role] || escapeHtml(u.role)}</span>`;
       const statusBadge = u.isActive
         ? '<span class="badge badge-dot badge-success">Active</span>'
         : '<span class="badge badge-dot badge-danger">Deactivated</span>';

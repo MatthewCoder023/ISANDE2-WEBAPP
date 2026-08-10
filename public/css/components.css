@@ -311,13 +311,17 @@
 .badge-info    { background-color: var(--info-50);    color: var(--info-500); }
 
 /**
- * The role indicator ("Cashier / Secretary") sits in the topbar on every
- * page, where the variant fills are pale enough — and in dark mode barely
- * more than a tint — that it read as floating text. A hairline mixed from
- * the badge's own colour defines the chip in all four role colours and both
- * themes, without adding a second filled shape beside the search field.
+ * Role badges — the topbar indicator ("Cashier / Secretary") and the Role
+ * column on Users & Roles. The variant fills are pale enough, and in dark
+ * mode barely more than a tint, that they read as floating text. A hairline
+ * mixed from the badge's own colour defines the chip in all four role
+ * colours and both themes, without adding a second filled shape.
+ *
+ * Deliberately not on .badge itself: status chips sit inside dense table
+ * rows where an outline on every one of them would read as a grid.
  */
-.badge[data-user-role] {
+.badge[data-user-role],
+.badge[data-role-badge] {
   border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
 }
 
