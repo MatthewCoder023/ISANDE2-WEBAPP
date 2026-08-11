@@ -27,7 +27,7 @@ npm run reset-demo     # wipe everything & reseed (never runs in production)
 
 ## Testing
 
-`npm test` runs 131 Jest + Supertest tests in 10 suites against an in-memory
+`npm test` runs 140 Jest + Supertest tests in 10 suites against an in-memory
 MongoDB (`mongodb-memory-server`) — no local database or running server
 needed. The suites in `tests/` guard the system's core invariants:
 
@@ -56,6 +56,12 @@ needed. The suites in `tests/` guard the system's core invariants:
   admin byte for byte
 
 CI runs the same suite on Node 24 for every push (`.github/workflows`).
+
+For a manual pass, [docs/TEST-SCENARIO.md](docs/TEST-SCENARIO.md) walks one
+sale through every role — a customer places it, a cashier verifies and
+fulfils it, a mixer makes a custom shade for it, and an administrator sees it
+in the books and restocks against it — with the expected result for each step
+and a table to record what actually happened.
 
 ### Seeded demo accounts
 
