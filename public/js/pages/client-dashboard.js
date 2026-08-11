@@ -2,7 +2,9 @@
 import { api } from '/js/api.js';
 import { statSkeleton } from '/js/skeleton.js';
 import { countUp } from '/js/count-up.js';
+import { getCurrentUser } from '/js/session.js';
 import { mount, recentOrders } from '/js/widgets.js';
+import { maybeStartClientTour, openClientTour } from '/js/client-tour.js';
 
 function fill(stats) {
   for (const [key, value] of Object.entries(stats)) {
@@ -41,5 +43,23 @@ function loadRecent() {
   });
 }
 
+/**
+ * The walkthrough, for a customer who has never been through it — in
+ * practice, the first screen after registering. getCurrentUser is the same
+ * memoized lookup the shell already made, so this costs no extra request.
+ */
+async function setupTour() {
+  document
+    .querySelector('[data-tour-replay]')
+    ?.addEventListener('click', () => openClientTour());
+
+  try {
+    maybeStartClientTour(await getCurrentUser());
+  } catch {
+    // No session: the shell is already redirecting to the login page.
+  }
+}
+
 loadStats();
 loadRecent();
+setupTour();

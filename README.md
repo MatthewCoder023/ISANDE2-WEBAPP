@@ -211,6 +211,16 @@ customer-facing tracker timeline.
 | GET | /api/orders/:id/export.csv | Owner or staff | The same order as data, line for line with the invoice |
 | GET | /api/orders/verify?code= | Public | Check a printed invoice against its recorded totals |
 
+**First-run walkthrough**: a five-step guide opens by itself on `/client` for
+a customer who has never been through it — in practice the first screen after
+registering. It covers browsing and the cart, Color Studio and custom mixes,
+the two ways to pay, and following an order to the counter. Skipping counts
+as seen. The flag lives on the account (`User.clientTourSeenAt`, set by
+`POST /api/auth/client-tour/complete`) rather than in the browser, so a
+second device does not replay it, and **How ordering works** on the dashboard
+reopens it any time. Customer module only: no staff role has a tour, and the
+endpoint refuses anyone who is not a customer.
+
 **Checkout flow**: Cart → `/client/checkout` (review, payment method,
 notes) → place order → `/client/track?order=` — one order screen that
 carries the timeline, the GCash instructions and proof upload, and links to

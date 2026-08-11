@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/css/base.css" />
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/dashboard.css" />
+  <link rel="stylesheet" href="/css/client-tour.css" />
 </head>
 <body>
   <div class="dash-layout">
@@ -42,6 +43,11 @@
         <section class="dash-welcome">
           <h2>Welcome back, <span data-user-first-name></span>!</h2>
           <p>Here's an overview of your account with Flavor &amp; Color.</p>
+          <!-- The walkthrough opens by itself on a first visit; this is how
+               anyone gets back to it afterwards. -->
+          <button type="button" class="tour-replay" data-tour-replay>
+            <span data-icon="info"></span> How ordering works
+          </button>
         </section>
 
         <section class="stat-grid" aria-label="Account overview">

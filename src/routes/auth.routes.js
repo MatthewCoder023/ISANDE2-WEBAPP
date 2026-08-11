@@ -2,7 +2,8 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 
 const authController = require('../controllers/auth.controller');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireRole } = require('../middleware/auth');
+const { ROLES } = require('../constants/roles');
 const validate = require('../middleware/validate');
 const {
   registerRules,
@@ -63,5 +64,8 @@ router.post('/logout', authController.logout);
 router.get('/me', requireAuth, authController.me);
 router.patch('/profile', requireAuth, updateProfileRules, validate, authController.updateProfile);
 router.post('/change-password', requireAuth, changePasswordLimiter, changePasswordRules, validate, authController.changePassword);
+// The walkthrough belongs to the customer module, so the flag that retires
+// it is a customer's to set — staff have no tour to have been through.
+router.post('/client-tour/complete', requireAuth, requireRole(ROLES.CLIENT), authController.completeClientTour);
 
 module.exports = router;

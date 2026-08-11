@@ -18,7 +18,14 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(', ');
 
-export function initModal(backdropEl) {
+/**
+ * @param backdropEl the .modal-backdrop element
+ * @param onClose optional: called after any close — the × , a
+ *        [data-modal-close] control, Escape, or a backdrop click. Lets a
+ *        caller treat "dismissed" and "finished" as the same event without
+ *        having to bind each of those routes itself.
+ */
+export function initModal(backdropEl, { onClose } = {}) {
   const dialog = backdropEl.querySelector('.modal');
   // Focusable fallback so screen readers announce the dialog on open.
   if (dialog && !dialog.hasAttribute('tabindex')) {
@@ -42,12 +49,17 @@ export function initModal(backdropEl) {
   }
 
   function close() {
+    // Guard against the double-fire an already-closed modal would cause:
+    // Escape while hidden, or a [data-modal-close] control clicked twice.
+    if (backdropEl.hidden) return;
+
     backdropEl.hidden = true;
     document.body.style.overflow = '';
     if (previouslyFocused && document.contains(previouslyFocused)) {
       previouslyFocused.focus();
     }
     previouslyFocused = null;
+    onClose?.();
   }
 
   backdropEl.addEventListener('click', (event) => {

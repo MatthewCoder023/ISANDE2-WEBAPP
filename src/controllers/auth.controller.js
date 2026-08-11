@@ -163,6 +163,25 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 /**
+ * POST /api/auth/client-tour/complete — records that this customer has been
+ * through the first-run walkthrough, whether they finished it or skipped.
+ *
+ * Idempotent by design: replaying the tour from the dashboard later must not
+ * move the date, or "when did this customer first see the guide" stops being
+ * answerable. The route restricts this to customers; staff have no tour.
+ */
+const completeClientTour = asyncHandler(async (req, res) => {
+  const user = req.user; // fresh document loaded by requireAuth
+
+  if (!user.clientTourSeenAt) {
+    user.clientTourSeenAt = new Date();
+    await user.save();
+  }
+
+  res.json({ success: true, data: { clientTourSeenAt: user.clientTourSeenAt } });
+});
+
+/**
  * POST /api/auth/forgot-password — emails a reset link. The response is
  * identical whether or not the email has an account (no enumeration).
  */
@@ -232,6 +251,7 @@ module.exports = {
   me,
   updateProfile,
   changePassword,
+  completeClientTour,
   forgotPassword,
   resetPassword,
 };

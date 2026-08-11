@@ -95,6 +95,54 @@ describe('login & sessions', () => {
   });
 });
 
+describe('customer walkthrough', () => {
+  it('starts unseen on a fresh registration, so the guide can open itself', async () => {
+    const agent = supertest.agent(app);
+    const res = await agent.post('/api/auth/register').send({
+      firstName: 'Tour',
+      lastName: 'Newcomer',
+      email: 'tour-new@test.com',
+      password: PASSWORD,
+    });
+
+    expect(res.status).toBe(201);
+    expect(res.body.data.user.clientTourSeenAt).toBeNull();
+  });
+
+  it('records the tour as seen, and keeps the first date on replay', async () => {
+    await createUser({ email: 'tour-seen@test.com' });
+    const agent = await loginAgent(app, 'tour-seen@test.com');
+
+    const first = await agent.post('/api/auth/client-tour/complete');
+    expect(first.status).toBe(200);
+    expect(first.body.data.clientTourSeenAt).toBeTruthy();
+
+    // Replaying it later must not move the date — "when did they first see
+    // the guide" has to stay answerable.
+    const again = await agent.post('/api/auth/client-tour/complete');
+    expect(again.status).toBe(200);
+    expect(again.body.data.clientTourSeenAt).toBe(first.body.data.clientTourSeenAt);
+
+    const me = await agent.get('/api/auth/me');
+    expect(me.body.data.user.clientTourSeenAt).toBe(first.body.data.clientTourSeenAt);
+  });
+
+  it('refuses staff — the walkthrough belongs to the customer module', async () => {
+    await createUser({ email: 'tour-cashier@test.com', role: 'cashier' });
+    const cashier = await loginAgent(app, 'tour-cashier@test.com');
+    expect((await cashier.post('/api/auth/client-tour/complete')).status).toBe(403);
+
+    await createUser({ email: 'tour-admin@test.com', role: 'admin' });
+    const admin = await loginAgent(app, 'tour-admin@test.com');
+    expect((await admin.post('/api/auth/client-tour/complete')).status).toBe(403);
+  });
+
+  it('refuses a signed-out visitor', async () => {
+    const res = await supertest(app).post('/api/auth/client-tour/complete');
+    expect(res.status).toBe(401);
+  });
+});
+
 describe('self-service profile', () => {
   it('updates name and phone but never email', async () => {
     await createUser({ email: 'profile@test.com', firstName: 'Before' });

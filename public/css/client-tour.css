@@ -1,0 +1,137 @@
+/**
+ * First-run walkthrough for the customer module (public/js/client-tour.js).
+ * Loaded only by the customer dashboard — no other page shows a tour.
+ *
+ * Builds on .modal / .modal-backdrop from components.css; everything here is
+ * the step content and the progress row.
+ */
+
+.tour-modal {
+  max-width: 520px;
+}
+
+.tour-body {
+  /* Steps differ in length. A floor keeps the dialog from resizing under the
+     reader's cursor as they page through it. */
+  min-height: 210px;
+}
+
+.tour-step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 0.875rem;
+  border-radius: var(--radius-md);
+  background-color: var(--primary-50);
+  color: var(--primary-600);
+}
+
+.tour-step-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.tour-step-body {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.tour-step-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 1.125rem;
+}
+
+/* ---------- Progress row ---------- */
+.tour-footer {
+  /* The dots sit at the left, the buttons at the right; on a narrow screen
+     they stack rather than crushing the button row. */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.tour-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tour-dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--border);
+  cursor: pointer;
+  transition:
+    width var(--speed-fast) ease,
+    background-color var(--speed-fast) ease;
+}
+
+/* Steps already read: tinted toward the accent, but well short of the
+   current step, so the row reads left-to-right as progress. */
+.tour-dot.is-seen {
+  background-color: color-mix(in srgb, var(--primary-600) 45%, var(--border));
+}
+
+/* The current step reads as a bar rather than a dot, so position is legible
+   at a glance without counting. */
+.tour-dot.is-current {
+  width: 22px;
+  border-radius: 999px;
+  background-color: var(--primary-600);
+}
+
+.tour-dot:focus-visible {
+  outline: 2px solid var(--primary-600);
+  outline-offset: 2px;
+}
+
+.tour-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* ---------- Replay entry on the dashboard ---------- */
+.tour-replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary-600);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tour-replay:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 520px) {
+  .tour-actions {
+    width: 100%;
+  }
+
+  .tour-actions .btn {
+    flex: 1;
+  }
+}

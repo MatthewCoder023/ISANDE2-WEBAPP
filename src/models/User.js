@@ -52,6 +52,16 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    /**
+     * When this customer finished or skipped the first-run walkthrough
+     * (see public/js/client-tour.js). Null means it has not been shown yet.
+     * Kept on the account rather than in the browser so signing in from a
+     * second device does not replay a tour they have already been through.
+     */
+    clientTourSeenAt: {
+      type: Date,
+      default: null,
+    },
     // Self-service reset: only the sha256 HASH of the emailed token is
     // stored, so a database leak cannot be turned into working reset links.
     resetPasswordToken: {

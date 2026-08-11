@@ -33,6 +33,7 @@ used to prove a record exists.
 | GET | `/me` | any | The signed-in user |
 | PATCH | `/profile` | any | Name and phone. Email is immutable — it is the login identity |
 | POST | `/change-password` | any | Requires the current password; signs out every other session |
+| POST | `/client-tour/complete` | client | Retires the first-run walkthrough for this account. Idempotent — a replay does not move `clientTourSeenAt` |
 
 ## Products — `/api/products`
 
